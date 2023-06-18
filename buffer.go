@@ -17,7 +17,9 @@ func (s *bytesBuffer) Read(x bool) (byte, bool) {
 	}
 
 	b := s.data[s.position]
-	s.position++
+	if x {
+		s.position++
+	}
 
 	return b, true
 }

@@ -1,22 +1,23 @@
 package parsec
 
+import (
+	"fmt"
+)
+
 type Combinator[T any, S any] func(Buffer[T]) (S, bool)
 type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T,S) B
 type Composer3[T, S, B, M any] func(T, S, B) M
 
-func flip[T,S,B any](c func(T,S) B) func(S,T)B {
-	return func(s S, t T) B {
-		return c(t, s)
-	}
-}
+func Nothing[T any](x T) bool { return false }
+func Anything[T any](x T) bool { return true }
 
 func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	return func(buffer Buffer[T]) (T, bool) {
 		token, ok := buffer.Read(greedy)
 		if !ok {
 			return *new(T), false
-		}
+	 	}
 
 		if f(token) {
 			return token, true
@@ -109,7 +110,7 @@ func Slice[T comparable, S any](cs ...Combinator[T,S]) Combinator[T, []S] {
 	}
 }
 
-func Optional[T any, S any](greedy bool, c Combinator[T, S]) Combinator[T, *S] {
+func Optional[T any, S any](c Combinator[T, S]) Combinator[T, *S] {
 	return func(buffer Buffer[T]) (*S, bool) {
 		t, ok := c(buffer)
 		if ok {
@@ -141,10 +142,7 @@ func Some[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
 		cc := Many(cap, c)
 
-		t, ok := cc(buffer)
-		if !ok {
-			return t, ok
-		}
+		t, _ := cc(buffer)
 		if len(t) > 0 {
 			return t, true
 		}
@@ -154,31 +152,19 @@ func Some[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
 }
 
 func Before[T any, S any, B any, Z any](
-	pre Combinator[T,S],
 	body Combinator[T,B],
+	before Combinator[T,S],
 	compose Composer[S,B,Z],
 ) Combinator[T, Z] {
-	return func(buffer Buffer[T]) (Z, bool) {
-		prefix, ok := pre(buffer)
-		if !ok {
-			return *new(Z), false
-		}
-
-		suffix, ok := body(buffer)
-		if !ok {
-			return *new(Z), false
-		}
-
-		return compose(prefix, suffix), true
-	}
+	return And(before, body, compose)
 }
 
 func After[T any, S any, B any, Z any](
-	pre Combinator[T,S],
 	body Combinator[T,B],
-	compose Composer[S,B,Z],
+	after Combinator[T,S],
+	compose Composer[B,S,Z],
 ) Combinator[T, Z] {
-	return Before(body, pre, flip(compose))
+	return And(body, after, compose)
 }
 
 func Between[T any, S any, B any, M any, Z any](
@@ -197,6 +183,8 @@ func Between[T any, S any, B any, M any, Z any](
 		if !ok {
 			return *new(Z), false
 		}
+
+		fmt.Println("WTF", body, ok)
 
 		suffix, ok := suf(buffer)
 		if !ok {
