@@ -1,66 +1,15 @@
 package parsec
 
-
-type Buffer[T any] interface {
-	Read(bool) (T, bool)
-	Seek(int)
-	Position() int
-}
-
 type Combinator[T any, S any] func(Buffer[T]) (S, bool)
-
-func Parse[T any, S any](buffer Buffer[T], parse Combinator[T, S]) (S, bool) {
-	result, ok := parse(buffer)
-	if ok {
-		return result, ok
-	}
-
-	return *new(S), false
-}
-
-//
-
-type bytesBuffer struct {
-	data []byte
-	position int
-}
-
-func (s *bytesBuffer) Read(x bool) (byte, bool) {
-	if s.position >= len(s.data) {
-		return 0, false
-	}
-
-	b := s.data[s.position]
-	s.position++
-
-	return b, true
-}
-
-func (s *bytesBuffer) Seek(x int) {
-	s.position = x
-}
-
-func (s *bytesBuffer) Position() int {
-	return s.position
-}
-
-func BytesBuffer(data []byte) *bytesBuffer {
-	b := new(bytesBuffer)
-	b.data = data
-	b.position = 0
-	return b
-}
-
-func ParseBytes[S any](data []byte, parse Combinator[byte, S]) (S, bool) {
-	buf := BytesBuffer(data)
-	return Parse[byte, S](buf, parse)
-}
-
-//
-
 type Condition[T any] func(T) bool
-
 type Composer[T any, S any, B any] func(T,S) B
+type Composer3[T, S, B, M any] func(T, S, B) M
+
+func flip[T,S,B any](c func(T,S) B) func(S,T)B {
+	return func(s S, t T) B {
+		return c(t, s)
+	}
+}
 
 func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	return func(buffer Buffer[T]) (T, bool) {
@@ -224,12 +173,6 @@ func Before[T any, S any, B any, Z any](
 	}
 }
 
-func flip[T,S,B any](c func(T,S) B) func(S,T)B {
-	return func(s S, t T) B {
-		return c(t, s)
-	}
-}
-
 func After[T any, S any, B any, Z any](
 	pre Combinator[T,S],
 	body Combinator[T,B],
@@ -237,8 +180,6 @@ func After[T any, S any, B any, Z any](
 ) Combinator[T, Z] {
 	return Before(body, pre, flip(compose))
 }
-
-type Composer3[T, S, B, M any] func(T, S, B) M
 
 func Between[T any, S any, B any, M any, Z any](
 	pre Combinator[T,S],
