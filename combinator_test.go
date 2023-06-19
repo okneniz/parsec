@@ -32,28 +32,50 @@ func TestSatisfy(t *testing.T) {
 	})
 }
 
-func TestToken(t *testing.T) {
+func TestEq(t *testing.T) {
 	c := byte('c')
 
-	comb := Token[byte](true, c)
+	comb := Eq[byte](true, c)
 
 	result, ok := ParseBytes([]byte("a"), comb)
-	assert(t, !ok, "expected true")
+	assert(t, !ok, "expected false")
 	assertEq(t, result, 0)
 
 	result, ok = ParseBytes([]byte("b"), comb)
-	assert(t, !ok, "expected true")
+	assert(t, !ok, "expected false")
 	assertEq(t, result, 0)
 
 	result, ok = ParseBytes([]byte("c"), comb)
-	assert(t, ok, "expected false")
+	assert(t, ok, "expected true")
 	assertEq(t, result, c)
+}
+
+func TestNotEq(t *testing.T) {
+	c := byte('c')
+
+	comb := NotEq[byte](true, c)
+
+	result, ok := ParseBytes([]byte("a"), comb)
+	assert(t, ok, "expected true")
+	assertEq(t, result, byte('a'))
+
+	result, ok = ParseBytes([]byte("b"), comb)
+	assert(t, ok, "expected true")
+	assertEq(t, result, byte('b'))
+
+	result, ok = ParseBytes([]byte("abc"), comb)
+	assert(t, ok, "expected true")
+	assertEq(t, result, byte('a'))
+
+	result, ok = ParseBytes([]byte("c"), comb)
+	assert(t, !ok, "expected false")
+	assertEq(t, result, 0)
 }
 
 func TestSlice(t *testing.T) {
 	comb := Slice(
-		Token[byte](true, byte('a')),
-		Token[byte](true, byte('b')),
+		Eq[byte](true, byte('a')),
+		Eq[byte](true, byte('b')),
 		Satisfy[byte](true, func(x byte) bool { return x != byte('z') }),
 	)
 
@@ -75,7 +97,7 @@ func TestSlice(t *testing.T) {
 }
 
 func TestMany(t *testing.T) {
-	comb := Many(0, Token[byte](true, byte('a')))
+	comb := Many(0, Eq[byte](true, byte('a')))
 
 	result, ok := ParseBytes([]byte("aaa"), comb)
 	assert(t, ok, "expected true")
@@ -94,7 +116,7 @@ func TestSome(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Some(
 			0,
-			Token[byte](true, byte('a')),
+			Eq[byte](true, byte('a')),
 		)
 
 		result, ok := ParseBytes([]byte("aaa"), comb)
@@ -123,7 +145,7 @@ func TestSome(t *testing.T) {
 }
 
 func TestOptional(t *testing.T) {
-	comb := Optional(Token[byte](true, byte('a')))
+	comb := Optional(Eq[byte](true, byte('a')))
 
 	result, ok := ParseBytes([]byte("aaa"), comb)
 	assert(t, ok, "expected true")
@@ -183,8 +205,8 @@ func TestNot(t *testing.T) {
 
 func TestOr(t *testing.T) {
 	comb := Or(
-		Try(Token(true, byte('a'))),
-		Token(true, byte('b')),
+		Try(Eq(true, byte('a'))),
+		Eq(true, byte('b')),
 	)
 
 	result, ok := ParseBytes([]byte("a"), comb)
@@ -202,8 +224,8 @@ func TestOr(t *testing.T) {
 
 func TestAnd(t *testing.T) {
 	comb := And(
-		Token(true, byte('a')),
-		Token(true, byte('b')),
+		Eq(true, byte('a')),
+		Eq(true, byte('b')),
 		func(x, y byte) []byte { return []byte{x,y} },
 	)
 
@@ -222,8 +244,8 @@ func TestAnd(t *testing.T) {
 
 func TestBefore(t *testing.T) {
 	comb := Before(
-		Token(true, byte('a')),
-		Token(true, byte('b')),
+		Eq(true, byte('a')),
+		Eq(true, byte('b')),
 		func(x, y byte) []byte { return []byte{x,y} },
 	)
 
@@ -242,8 +264,8 @@ func TestBefore(t *testing.T) {
 
 func TestAfter(t *testing.T) {
 	comb := After(
-		Token(true, byte('a')),
-		Token(true, byte('b')),
+		Eq(true, byte('a')),
+		Eq(true, byte('b')),
 		func(x, y byte) []byte { return []byte{x,y} },
 	)
 
@@ -262,9 +284,9 @@ func TestBetween(t *testing.T) {
 	})
 
 	comb := Between(
-		Token(true, byte('(')),
+		Eq(true, byte('(')),
 		Some(0, Try(notBrackets)),
-		Token(true, byte(')')),
+		Eq(true, byte(')')),
 		func(x byte, y []byte, z byte) []byte { return y },
 	)
 
@@ -311,6 +333,97 @@ func TestBetween(t *testing.T) {
 	result, ok = ParseBytes([]byte("((abc)"), comb)
 	assert(t, !ok, "expected false")
 	assertSlice(t, result, nil)
+}
+
+func TestOneOf(t *testing.T) {
+	comb := OneOf(true, byte('a'), byte('b'), byte('c'))
+
+	result, ok := ParseBytes([]byte("a"), comb)
+	assert(t, ok, "expected true")
+	assertEq(t, result, byte('a'))
+
+	result, ok = ParseBytes([]byte("b"), comb)
+	assert(t, ok, "expected true")
+	assertEq(t, result, byte('b'))
+
+	result, ok = ParseBytes([]byte("c"), comb)
+	assert(t, ok, "expected true")
+	assertEq(t, result, byte('c'))
+
+	result, ok = ParseBytes([]byte("d"), comb)
+	assert(t, !ok, "expected false")
+	assertEq(t, result, 0)
+}
+
+func TestCount(t *testing.T) {
+	comb := Count(2, Eq(true, byte('a')))
+
+	result, ok := ParseBytes([]byte("aabbcc"), comb)
+	assert(t, ok, "expected true")
+	assertSlice(t, result, []byte{'a', 'a'})
+
+	result, ok = ParseBytes([]byte("abbcc"), comb)
+	assert(t, !ok, "expected false")
+	assertSlice(t, result, nil)
+
+	result, ok = ParseBytes([]byte("bbaacc"), comb)
+	assert(t, !ok, "expected false")
+	assertSlice(t, result, nil)
+}
+
+func TestSkip(t *testing.T) {
+	t.Run("case 1", func(t *testing.T) {
+		comb := Skip(
+			Eq(true, byte('a')),
+			Eq(true, byte('b')),
+		)
+
+		result, ok := ParseBytes([]byte("abc"), comb)
+		assert(t, ok, "expected true")
+		assertEq(t, result, byte('b'))
+
+		result, ok = ParseBytes([]byte("cba"), comb)
+		assert(t, ok, "expected true")
+		assertEq(t, result, byte('b'))
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		phrase := Slice(
+			Eq(true, byte('a')),
+			Eq(true, byte('b')),
+			Eq(true, byte('c')),
+		)
+
+		noice := Many(
+			0,
+			Try(
+				NoneOf(
+					true,
+					byte('a'),
+					byte('b'),
+					byte('c'),
+				),
+			),
+		)
+
+		comb := Skip(noice, phrase)
+
+		result, ok := ParseBytes([]byte("abc"), comb)
+		assert(t, ok, "expected true")
+		assertSlice(t, result, []byte{'a', 'b', 'c'})
+
+		result, ok = ParseBytes([]byte("abc123"), comb)
+		assert(t, ok, "expected true")
+		assertSlice(t, result, []byte{'a', 'b', 'c'})
+
+		result, ok = ParseBytes([]byte("123abc"), comb)
+		assert(t, ok, "expected true")
+		assertSlice(t, result, []byte{'a', 'b', 'c'})
+
+		result, ok = ParseBytes([]byte("123abc123"), comb)
+		assert(t, ok, "expected true")
+		assertSlice(t, result, []byte{'a', 'b', 'c'})
+	})
 }
 
 func assert(t *testing.T, x bool, m string) {

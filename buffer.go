@@ -4,6 +4,7 @@ type Buffer[T any] interface {
 	Read(bool) (T, bool)
 	Seek(int)
 	Position() int
+	IsEOF() bool
 }
 
 type bytesBuffer struct {
@@ -30,6 +31,10 @@ func (s *bytesBuffer) Seek(x int) {
 
 func (s *bytesBuffer) Position() int {
 	return s.position
+}
+
+func (s *bytesBuffer) IsEOF() bool {
+	return s.position >= len(s.data)
 }
 
 func BytesBuffer(data []byte) *bytesBuffer {

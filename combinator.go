@@ -1,8 +1,8 @@
 package parsec
 
-import (
-	"fmt"
-)
+// import (
+// 	"fmt"
+// )
 
 type Combinator[T any, S any] func(Buffer[T]) (S, bool)
 type Condition[T any] func(T) bool
@@ -82,15 +82,16 @@ func And[T any, S any, B any, M any](
 	}
 }
 
-func Token[T comparable](greedy bool, t T) Combinator[T, T] {
-	return func(buffer Buffer[T]) (T, bool) {
-		r, ok := buffer.Read(greedy)
-		if !ok || (r != t) {
-			return *new(T), false
-		}
+func Eq[T comparable](greedy bool, t T) Combinator[T, T] {
+	return Satisfy[T](greedy, func(x T) bool {
+		return t == x
+	})
+}
 
-		return r, true
-	}
+func NotEq[T comparable](greedy bool, t T) Combinator[T, T] {
+	return Satisfy[T](greedy, func(x T) bool {
+		return t != x
+	})
 }
 
 func Slice[T comparable, S any](cs ...Combinator[T,S]) Combinator[T, []S] {
@@ -125,7 +126,7 @@ func Many[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
 		result := make([]S, 0, cap)
 
-		for {
+		for !buffer.IsEOF() {
 			t, ok := c(buffer)
 			if !ok {
 				break
@@ -184,13 +185,35 @@ func Between[T any, S any, B any, M any, Z any](
 			return *new(Z), false
 		}
 
-		fmt.Println("WTF", body, ok)
-
 		suffix, ok := suf(buffer)
 		if !ok {
 			return *new(Z), false
 		}
 
 		return compose(prefix, body, suffix), true
+	}
+}
+
+func Count[T any, S any](x int, next Combinator[T,S]) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		tokens := make([]S, 0, x)
+
+		for i := 0; i < x; i++ {
+			token, ok := next(buffer)
+			if !ok {
+				return nil, false
+			}
+
+			tokens = append(tokens, token)
+		}
+
+		return tokens, true
+	}
+}
+
+func Skip[T any, S any](skip, next Combinator[T,S]) Combinator[T, S] {
+	return func(buffer Buffer[T]) (S, bool) {
+		skip(buffer)
+		return next(buffer)
 	}
 }
