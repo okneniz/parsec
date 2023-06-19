@@ -12,6 +12,8 @@ type Composer3[T, S, B, M any] func(T, S, B) M
 func Nothing[T any](x T) bool { return false }
 func Anything[T any](x T) bool { return true }
 
+func First[T any](x,_ T) T { return x }
+
 func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	return func(buffer Buffer[T]) (T, bool) {
 		token, ok := buffer.Read(greedy)
@@ -211,9 +213,73 @@ func Count[T any, S any](x int, next Combinator[T,S]) Combinator[T, []S] {
 	}
 }
 
-func Skip[T any, S any](skip, next Combinator[T,S]) Combinator[T, S] {
+func Skip[T any, S any, B any](
+	skip Combinator[T,B],
+	next Combinator[T,S],
+) Combinator[T, S] {
 	return func(buffer Buffer[T]) (S, bool) {
-		skip(buffer)
-		return next(buffer)
+		_, ok := skip(buffer)
+		if ok {
+			return next(buffer)
+		}
+
+		return *new(S), false
 	}
+}
+
+func SepBy[T any, S any](cap int, body, sep Combinator[T,S]) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		result := make([]S, 0, cap)
+
+		token, ok := body(buffer)
+		if !ok {
+			return result, true
+		}
+		result = append(result, token)
+
+		c := Try[T,S](Skip(sep, body))
+
+		for !buffer.IsEOF() {
+			token, ok = c(buffer)
+			if !ok {
+				break
+			}
+
+			result = append(result, token)
+		}
+
+		return result, true
+	}
+}
+
+func SepBy1[T any, S any](cap int, body, sep Combinator[T,S]) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		token, ok := body(buffer)
+		if !ok {
+			return nil, false
+		}
+		result := make([]S, 0, cap)
+		result = append(result, token)
+
+		c := Try[T,S](Skip(sep, body))
+
+		for !buffer.IsEOF() {
+			token, ok = c(buffer)
+			if !ok {
+				break
+			}
+
+			result = append(result, token)
+		}
+
+		return result, true
+	}
+}
+
+func EndBy[T any, S any](cap int, body, sep Combinator[T,S]) Combinator[T, []S] {
+	return Many(cap, Try(And(body, sep, First[S])))
+}
+
+func EndBy1[T any, S any](cap int, body, sep Combinator[T,S]) Combinator[T, []S] {
+	return Some(cap, Try(And(body, sep, First[S])))
 }
