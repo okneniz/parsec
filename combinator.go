@@ -5,6 +5,7 @@ package parsec
 // )
 
 type Combinator[T any, S any] func(Buffer[T]) (S, bool)
+
 type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T,S) B
 type Composer3[T, S, B, M any] func(T, S, B) M
@@ -309,5 +310,35 @@ func SepEndBy1[T any, S any](cap int, body, sep Combinator[T,S]) Combinator[T, [
 			return nil, false
 		}
 		return result, ok
+	}
+}
+
+func Chainl[T any, S any](
+	c Combinator[T,S],
+	op Combinator[T,func(S,S)S],
+) Combinator[T, S] {
+	return func(buffer Buffer[T]) (S, bool) {
+		x, ok := c(buffer)
+		if !ok {
+			return *new(S), false
+		}
+
+		rest := x
+
+		for !buffer.IsEOF() {
+			f, ok := op(buffer)
+			if !ok {
+				return *new(S), false
+			}
+
+			y, ok := c(buffer)
+			if !ok {
+				return *new(S), false
+			}
+
+			rest = f(rest, y)
+		}
+
+		return x, true
 	}
 }

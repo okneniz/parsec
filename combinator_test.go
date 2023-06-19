@@ -2,6 +2,7 @@ package parsec
 
 import (
 	"testing"
+	"encoding/json"
 )
 
 func TestSatisfy(t *testing.T) {
@@ -650,6 +651,80 @@ func TestSepEndBy1(t *testing.T) {
 	result, ok = ParseBytes([]byte(",a,b,c"), comb)
 	assert(t, !ok, "expected false")
 	assertSlice(t, result, nil)
+}
+
+func TestChainl(t *testing.T) {
+	type node struct {
+		Value byte `json:"v"`
+		Next *node `json:"n,omitempty"`
+	}
+
+	next := Satisfy(true, Anything[byte])
+
+	comb := Chainl(
+		func(buffer Buffer[byte]) (*node, bool) {
+			x, ok := next(buffer)
+			if !ok {
+				return nil, false
+			}
+
+			return &node{Value: x}, true
+		},
+		func(buffer Buffer[byte]) (func(*node, *node) *node, bool) {
+			return func(x, y *node) *node {
+				x.Next = y
+				return y
+			}, true
+		},
+	)
+
+	result, ok := ParseBytes([]byte("abc"), comb)
+	assert(t, ok, "expected true")
+	assertEqDump(
+		t,
+		result,
+		&node{
+			Value: byte('a'),
+			Next: &node{
+				Value: byte('b'),
+				Next: &node{
+					Value: byte('c'),
+				},
+			},
+		},
+	)
+
+	result, ok = ParseBytes([]byte("a"), comb)
+	assert(t, ok, "expected true")
+	assertEqDump(
+		t,
+		result,
+		&node{Value: byte('a')},
+	)
+
+	result, ok = ParseBytes([]byte(""), comb)
+	assert(t, !ok, "expected false")
+	assertEqDump(t, result, nil)
+}
+
+func assertEqDump[T any](t *testing.T, actual, expected T) {
+	t.Helper()
+
+	ex, err := json.Marshal(expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ac, err := json.Marshal(actual)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(ex) != string(ac) {
+		t.Errorf("expected %v", string(ex))
+		t.Errorf("actual %v", string(ac))
+		t.Fatal("invalid result")
+	}
 }
 
 func assert(t *testing.T, x bool, m string) {
