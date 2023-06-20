@@ -1,11 +1,11 @@
 package parsec
 
 import (
-	"testing"
 	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
+	"testing"
 	"time"
 )
 
@@ -154,15 +154,15 @@ func TestSome(t *testing.T) {
 }
 
 func TestOptional(t *testing.T) {
-	comb := Optional(Eq[byte](true, byte('a')))
+	comb := Optional(Eq[byte](true, byte('a')), 0)
 
 	result, ok := ParseBytes([]byte("aaa"), comb)
 	assert(t, ok, "expected true")
-	assertEqPointer(t, result, pointer(byte('a')))
+	assertEq(t, result, byte('a'))
 
 	result, ok = ParseBytes([]byte("bcd"), comb)
 	assert(t, ok, "expected true")
-	assertEqPointer(t, result, nil)
+	assertEq(t, result, 0)
 }
 
 func TestTry(t *testing.T) {
@@ -217,7 +217,7 @@ func TestAnd(t *testing.T) {
 	comb := And(
 		Eq(true, byte('a')),
 		Eq(true, byte('b')),
-		func(x, y byte) []byte { return []byte{x,y} },
+		func(x, y byte) []byte { return []byte{x, y} },
 	)
 
 	result, ok := ParseBytes([]byte("abc"), comb)
@@ -237,7 +237,7 @@ func TestBefore(t *testing.T) {
 	comb := Before(
 		Eq(true, byte('a')),
 		Eq(true, byte('b')),
-		func(x, y byte) []byte { return []byte{x,y} },
+		func(x, y byte) []byte { return []byte{x, y} },
 	)
 
 	result, ok := ParseBytes([]byte("bac"), comb)
@@ -257,7 +257,7 @@ func TestAfter(t *testing.T) {
 	comb := After(
 		Eq(true, byte('a')),
 		Eq(true, byte('b')),
-		func(x, y byte) []byte { return []byte{x,y} },
+		func(x, y byte) []byte { return []byte{x, y} },
 	)
 
 	result, ok := ParseBytes([]byte("abc"), comb)
@@ -367,7 +367,7 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Skip(
-			Optional(Eq(true, byte('a'))),
+			Optional(Eq(true, byte('a')), 0),
 			Eq(true, byte('b')),
 		)
 
@@ -647,7 +647,6 @@ func TestChainl(t *testing.T) {
 				return "", false
 			}
 
-
 			return string(x), true
 		},
 		func(buffer Buffer[byte]) (func(string, string) string, bool) {
@@ -688,7 +687,6 @@ func TestChainl1(t *testing.T) {
 			if !ok {
 				return "", false
 			}
-
 
 			return string(x), true
 		},

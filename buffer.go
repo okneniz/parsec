@@ -8,7 +8,7 @@ type Buffer[T any] interface {
 }
 
 type bytesBuffer struct {
-	data []byte
+	data     []byte
 	position int
 }
 
