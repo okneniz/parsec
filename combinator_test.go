@@ -79,8 +79,9 @@ func TestNotEq(t *testing.T) {
 	assertEq(t, result, 0)
 }
 
-func TestSlice(t *testing.T) {
-	comb := Slice(
+func TestSequence(t *testing.T) {
+	comb := Sequence(
+		3,
 		Eq[byte](true, byte('a')),
 		Eq[byte](true, byte('b')),
 		Satisfy[byte](true, func(x byte) bool { return x != byte('z') }),
@@ -381,7 +382,8 @@ func TestSkip(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		phrase := Slice(
+		phrase := Sequence(
+			3,
 			Eq(true, byte('a')),
 			Eq(true, byte('b')),
 			Eq(true, byte('c')),

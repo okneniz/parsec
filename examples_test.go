@@ -18,7 +18,8 @@ func TestCards(t *testing.T) {
 	visa := Try(
 		Cast(
 			Trace(t, "visa",
-				Slice(
+				Sequence(
+					16,
 					Count(1, Eq(true, byte('4'))),
 					Count(12, digit),
 					Optional(Count(3, digit), []byte{}),
@@ -31,7 +32,8 @@ func TestCards(t *testing.T) {
 	master := Try(
 		Cast(
 			Trace(t, "master",
-				Slice(
+				Sequence(
+					15,
 					Choice(
 						Concat(
 							4,
@@ -62,13 +64,15 @@ func TestCards(t *testing.T) {
 							Count(1, Range(true, byte('3'), byte('6'))),
 							Count(2, Range(true, byte('0'), byte('9'))),
 						),
-						Slice(
+						Sequence(
+							4,
 							Eq(true, byte('2')),
 							Eq(true, byte('7')),
 							OneOf(true, byte('0'), byte('1')),
 							Range(true, byte('0'), byte('9')),
 						),
-						Slice(
+						Sequence(
+							4,
 							Eq(true, byte('2')),
 							Eq(true, byte('7')),
 							Eq(true, byte('2')),
@@ -85,8 +89,10 @@ func TestCards(t *testing.T) {
 	americaExpress := Try(
 		Cast(
 			Trace(t, "american express",
-				Slice(
-					Slice(
+				Sequence(
+					15,
+					Sequence(
+						2,
 						Eq(true, byte('3')),
 						OneOf(true, byte('4'), byte('7')),
 					),

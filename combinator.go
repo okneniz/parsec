@@ -109,9 +109,7 @@ func NotRange[T constraints.Ordered](greedy bool, from T, to T) Combinator[T, T]
 	})
 }
 
-// TODO : rename to Sequence
-func Slice[T comparable, S any](cs ...Combinator[T, S]) Combinator[T, []S] {
-	// TODO : add cap param
+func Sequence[T comparable, S any](cap int, cs ...Combinator[T, S]) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
 		result := make([]S, 0, len(cs))
 
@@ -124,7 +122,9 @@ func Slice[T comparable, S any](cs ...Combinator[T, S]) Combinator[T, []S] {
 			result = append(result, t)
 		}
 
-		// TODO : check length
+		if len(result) != len(cs) {
+			return nil, false
+		}
 
 		return result, true
 	}
@@ -133,6 +133,7 @@ func Slice[T comparable, S any](cs ...Combinator[T, S]) Combinator[T, []S] {
 func Concat[T comparable, S any](cap int, cs ...Combinator[T, []S]) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
 		result := make([]S, 0, 0)
+		x := 0
 
 		for _, c := range cs {
 			t, ok := c(buffer)
@@ -141,9 +142,12 @@ func Concat[T comparable, S any](cap int, cs ...Combinator[T, []S]) Combinator[T
 			}
 
 			result = append(result, t...)
+			x++
 		}
 
-		// TODO : check length
+		if x != len(cs) {
+			return nil, false
+		}
 
 		return result, true
 	}
