@@ -13,8 +13,7 @@ type Composer3[T, S, B, M any] func(T, S, B) M
 // func Nothing[T any](x T) bool { return false }
 func Anything[T any](x T) bool { return true }
 
-// TODO : hide it
-func First[T any](x, _ T) T { return x }
+func first[T any](x, _ T) T { return x }
 
 func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	return func(buffer Buffer[T]) (T, bool) {
@@ -305,11 +304,11 @@ func SepBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S
 }
 
 func EndBy[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
-	return Many(cap, Try(And(body, sep, First[S])))
+	return Many(cap, Try(And(body, sep, first[S])))
 }
 
 func EndBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
-	return Some(cap, Try(And(body, sep, First[S])))
+	return Some(cap, Try(And(body, sep, first[S])))
 }
 
 func SepEndBy[T any, S any, B any](
