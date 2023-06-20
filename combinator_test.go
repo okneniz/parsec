@@ -841,6 +841,47 @@ func TestEOF(t *testing.T) {
 	})
 }
 
+func TestManyTill(t *testing.T) {
+	t.Parallel()
+
+	t.Run("case 1", func(t *testing.T) {
+		comb := ManyTill(
+			0,
+			Any[byte](true),
+			EOF[byte](),
+		)
+
+		result, ok := ParseBytes([]byte("abcd"), comb)
+		assert(t, ok, "expected true")
+		assertSlice(t, result, []byte{
+			byte('a'),
+			byte('b'),
+			byte('c'),
+			byte('d'),
+		})
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		comb := ManyTill(
+			0,
+			Any[byte](true),
+			Satisfy[byte](false, func(x byte) bool { return x == byte('d') }),
+		)
+
+		result, ok := ParseBytes([]byte("abcd"), comb)
+		assert(t, ok, "expected true")
+		assertSlice(t, result, []byte{
+			byte('a'),
+			byte('b'),
+			byte('c'),
+		})
+
+		result, ok = ParseBytes([]byte(""), comb)
+		assert(t, !ok, "expected false")
+		assertSlice(t, result, nil)
+	})
+}
+
 func assertEqDump[T any](t *testing.T, actual, expected T) {
 	t.Helper()
 

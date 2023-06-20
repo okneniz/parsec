@@ -10,7 +10,7 @@ type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T,S) B
 type Composer3[T, S, B, M any] func(T, S, B) M
 
-func Nothing[T any](x T) bool { return false }
+// func Nothing[T any](x T) bool { return false }
 func Anything[T any](x T) bool { return true }
 
 func First[T any](x,_ T) T { return x }
@@ -425,5 +425,36 @@ func EOF[T any]() Combinator[T, struct{}] {
 	return func(buffer Buffer[T]) (struct{}, bool) {
 		x := buffer.IsEOF()
 		return struct{}{}, x
+	}
+}
+
+func ManyTill[T any, S any, B any](
+	cap int,
+	c Combinator[T, S],
+	end Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		if buffer.IsEOF() {
+			return nil, false
+		}
+
+		result := make([]S, 0, cap)
+		z := Try(end)
+
+		for {
+			_, ok := z(buffer)
+			if ok {
+				break
+			}
+
+			x, ok := c(buffer)
+			if !ok {
+				return nil, false
+			}
+
+			result = append(result, x)
+		}
+
+		return result, true
 	}
 }
