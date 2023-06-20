@@ -4,6 +4,9 @@ import (
 	"testing"
 	"encoding/json"
 	"fmt"
+	"math"
+	"math/rand"
+	"time"
 )
 
 func TestSatisfy(t *testing.T) {
@@ -31,7 +34,7 @@ func TestSatisfy(t *testing.T) {
 		comb := Satisfy[byte](true, func(x byte) bool { return false })
 
 		result, ok := ParseBytes([]byte{}, comb)
-		assert(t, !ok, "expected true")
+		assert(t, !ok, "expected false")
 		assertEq(t, result, 0)
 	})
 }
@@ -134,7 +137,7 @@ func TestSome(t *testing.T) {
 		assertSlice(t, result, []byte("aaa"))
 
 		result, ok = ParseBytes([]byte("xaaabc"), comb)
-		assert(t, !ok, "expected true")
+		assert(t, !ok, "expected false")
 		assertSlice(t, result, nil)
 	})
 
@@ -189,26 +192,6 @@ func TestTry(t *testing.T) {
 	assert(t, !ok, "expected false")
 	assertEq(t, result, 0)
 	assertEq(t, buf.Position(), 2)
-}
-
-func TestNot(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		comb := Not(Satisfy(true, Nothing[byte]))
-
-		result, ok := ParseBytes([]byte("abc"), comb)
-		assert(t, ok, "expected true")
-		assertEq(t, result, 0) // ?
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := Not(Satisfy(true, Anything[byte]))
-
-		result, ok := ParseBytes([]byte("abc"), comb)
-		assert(t, !ok, "expected false")
-		assertEq(t, result, 0)
-	})
 }
 
 func TestOr(t *testing.T) {
@@ -319,7 +302,7 @@ func TestBetween(t *testing.T) {
 	assertSlice(t, result, nil)
 
 	result, ok = ParseBytes([]byte("()"), comb)
-	assert(t, !ok, "expected true")
+	assert(t, !ok, "expected false")
 	assertSlice(t, result, nil)
 
 	result, ok = ParseBytes([]byte("(()"), comb)
@@ -818,6 +801,45 @@ func TestChainr1(t *testing.T) {
 	})
 }
 
+func TestAny(t *testing.T) {
+	t.Parallel()
+
+	t.Run("case 1", func(t *testing.T) {
+		source := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+		comb := Any[byte](true)
+
+		for i := 0; i < 10000; i++ {
+			b := byte(source.Intn(math.MaxUint8 + 1))
+
+			result, ok := ParseBytes([]byte{b}, comb)
+			assert(t, ok, "expected true")
+			assertEq(t, result, b)
+		}
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		comb := Any[byte](true)
+
+		result, ok := ParseBytes([]byte{}, comb)
+		assert(t, !ok, "expected false")
+		assertEq(t, result, 0)
+	})
+}
+
+func TestEOF(t *testing.T) {
+	t.Parallel()
+
+	t.Run("case 1", func(t *testing.T) {
+		_, ok := ParseBytes([]byte("abcd"), EOF[byte]())
+		assert(t, !ok, "expected false")
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		_, ok := ParseBytes([]byte(""), EOF[byte]())
+		assert(t, ok, "expected true")
+	})
+}
 
 func assertEqDump[T any](t *testing.T, actual, expected T) {
 	t.Helper()

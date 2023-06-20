@@ -30,6 +30,17 @@ func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	}
 }
 
+func Any[T any](greedy bool) Combinator[T, T] {
+	return func(buffer Buffer[T]) (T, bool) {
+		token, ok := buffer.Read(greedy)
+		if !ok {
+			return *new(T), false
+	 	}
+
+		return token, true
+	}
+}
+
 func Try[T any, S any](c Combinator[T, S]) Combinator[T, S] {
 	return func(buffer Buffer[T]) (S, bool) {
 		pos := buffer.Position()
@@ -40,17 +51,6 @@ func Try[T any, S any](c Combinator[T, S]) Combinator[T, S] {
 		}
 
 		return r, ok
-	}
-}
-
-func Not[T any, S any](c Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		r, ok := c(buffer)
-		if ok {
-			return *new(S), false
-		}
-
-		return r, true
 	}
 }
 
@@ -418,5 +418,12 @@ func Chainr1[T any, S any](
 		}
 
 		return chain[0], true
+	}
+}
+
+func EOF[T any]() Combinator[T, struct{}] {
+	return func(buffer Buffer[T]) (struct{}, bool) {
+		x := buffer.IsEOF()
+		return struct{}{}, x
 	}
 }
