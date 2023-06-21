@@ -162,7 +162,7 @@ func shuffler[T any](seed int64) func ([]T) []T {
 	}
 }
 
-func sorted[T  constraints.Ordered](data ...T) []T {
+func sorted[T constraints.Ordered](data ...T) []T {
 	result := copyOf(data)
 
 	sort.SliceStable(result, func(i, j int) bool {

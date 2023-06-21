@@ -1,16 +1,11 @@
 package parsec
 
-import (
-	"golang.org/x/exp/constraints"
-)
-
 type Combinator[T any, S any] func(Buffer[T]) (S, bool)
 
 type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T, S) B
 type Composer3[T, S, B, M any] func(T, S, B) M
 
-// func Nothing[T any](x T) bool { return false }
 func Anything[T any](x T) bool { return true }
 
 func first[T any](x, _ T) T { return x }
@@ -51,146 +46,6 @@ func Try[T any, S any](c Combinator[T, S]) Combinator[T, S] {
 		}
 
 		return r, ok
-	}
-}
-
-func Or[T any, S any](x, y Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		r, ok := x(buffer)
-		if !ok {
-			return y(buffer)
-		}
-
-		return r, ok
-	}
-}
-
-func And[T any, S any, B any, M any](
-	x Combinator[T, S],
-	y Combinator[T, B],
-	compose Composer[S, B, M],
-) Combinator[T, M] {
-	return func(buffer Buffer[T]) (M, bool) {
-		first, ok := x(buffer)
-		if !ok {
-			return *new(M), false
-		}
-
-		second, ok := y(buffer)
-		if !ok {
-			return *new(M), false
-		}
-
-		return compose(first, second), true
-	}
-}
-
-func Eq[T comparable](greedy bool, t T) Combinator[T, T] {
-	return Satisfy[T](greedy, func(x T) bool {
-		return t == x
-	})
-}
-
-func NotEq[T comparable](greedy bool, t T) Combinator[T, T] {
-	return Satisfy[T](greedy, func(x T) bool {
-		return t != x
-	})
-}
-
-func Range[T constraints.Ordered](greedy bool, from T, to T) Combinator[T, T] {
-	return Satisfy[T](greedy, func(x T) bool {
-		return x >= from && x <= to
-	})
-}
-
-func NotRange[T constraints.Ordered](greedy bool, from T, to T) Combinator[T, T] {
-	return Satisfy[T](greedy, func(x T) bool {
-		return x < from || x > to
-	})
-}
-
-func Sequence[T comparable, S any](cap int, cs ...Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		result := make([]S, 0, len(cs))
-
-		for _, c := range cs {
-			t, ok := c(buffer)
-			if !ok {
-				return nil, false
-			}
-
-			result = append(result, t)
-		}
-
-		if len(result) != len(cs) {
-			return nil, false
-		}
-
-		return result, true
-	}
-}
-
-func Concat[T comparable, S any](cap int, cs ...Combinator[T, []S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		result := make([]S, 0, 0)
-		x := 0
-
-		for _, c := range cs {
-			t, ok := c(buffer)
-			if !ok {
-				return nil, false
-			}
-
-			result = append(result, t...)
-			x++
-		}
-
-		if x != len(cs) {
-			return nil, false
-		}
-
-		return result, true
-	}
-}
-
-func Optional[T any, S any](c Combinator[T, S], def S) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		t, ok := c(buffer)
-		if ok {
-			return t, ok
-		}
-
-		return def, true
-	}
-}
-
-func Many[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		result := make([]S, 0, cap)
-
-		for !buffer.IsEOF() {
-			t, ok := c(buffer)
-			if !ok {
-				break
-			}
-
-			result = append(result, t)
-		}
-
-		return result, true
-	}
-}
-
-func Some[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		cc := Many(cap, c)
-
-		t, _ := cc(buffer)
-		if len(t) > 0 {
-			return t, true
-		}
-
-		return nil, false
 	}
 }
 
@@ -236,23 +91,6 @@ func Between[T any, S any, B any, M any, Z any](
 	}
 }
 
-func Count[T any, S any](x int, next Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		tokens := make([]S, 0, x)
-
-		for i := 0; i < x; i++ {
-			token, ok := next(buffer)
-			if !ok {
-				return nil, false
-			}
-
-			tokens = append(tokens, token)
-		}
-
-		return tokens, true
-	}
-}
-
 func Skip[T any, S any, B any](
 	skip Combinator[T, B],
 	next Combinator[T, S],
@@ -267,7 +105,30 @@ func Skip[T any, S any, B any](
 	}
 }
 
-func SepBy[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
+func SkipAfter[T any, S any, B any](
+	skip Combinator[T, B],
+	next Combinator[T, S],
+) Combinator[T, S] {
+	return func(buffer Buffer[T]) (S, bool) {
+		result, ok := next(buffer)
+		if !ok {
+			return *new(S), false
+		}
+
+		_, ok = skip(buffer)
+		if !ok {
+			return *new(S), false
+		}
+
+		return result, true
+	}
+}
+
+func SepBy[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
 		result := make([]S, 0, cap)
 
@@ -277,7 +138,7 @@ func SepBy[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S]
 		}
 		result = append(result, token)
 
-		c := Try[T, S](Skip(sep, body))
+		c := Try(Skip(sep, body))
 
 		for !buffer.IsEOF() {
 			token, ok = c(buffer)
@@ -292,7 +153,11 @@ func SepBy[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S]
 	}
 }
 
-func SepBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
+func SepBy1[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
 		c := SepBy(cap, body, sep)
 
@@ -307,15 +172,7 @@ func SepBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S
 	}
 }
 
-func EndBy[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
-	return Many(cap, Try(And(body, sep, first[S])))
-}
-
-func EndBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
-	return Some(cap, Try(And(body, sep, first[S])))
-}
-
-func SepEndBy[T any, S any, B any](
+func EndBy[T any, S any, B any](
 	cap int,
 	body Combinator[T, S],
 	sep Combinator[T, B],
@@ -323,27 +180,28 @@ func SepEndBy[T any, S any, B any](
 	return func(buffer Buffer[T]) ([]S, bool) {
 		result := make([]S, 0, cap)
 
+		c := Try(SkipAfter(sep, body))
+
 		for !buffer.IsEOF() {
-			token, ok := body(buffer)
+			token, ok := c(buffer)
 			if !ok {
 				break
 			}
 
 			result = append(result, token)
-
-			_, ok = sep(buffer)
-			if !ok {
-				break
-			}
 		}
 
 		return result, true
 	}
 }
 
-func SepEndBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, []S] {
+func EndBy1[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
 	return func(buffer Buffer[T]) ([]S, bool) {
-		c := SepEndBy(cap, body, sep)
+		c := EndBy(cap, body, sep)
 
 		result, ok := c(buffer)
 		if !ok {
@@ -356,111 +214,50 @@ func SepEndBy1[T any, S any](cap int, body, sep Combinator[T, S]) Combinator[T, 
 	}
 }
 
-func Chainl[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
-	def S,
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		f := Chainl1(c, op)
+func SepEndBy[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		result := make([]S, 0, cap)
 
-		result, ok := f(buffer)
-		if !ok {
-			return def, true
-		}
-
-		return result, ok
-	}
-}
-
-func Chainl1[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		x, ok := c(buffer)
-		if !ok {
-			return *new(S), false
-		}
-
-		rest := x
+		s := Try(sep)
 
 		for !buffer.IsEOF() {
-			f, ok := op(buffer)
+			token, ok := body(buffer)
 			if !ok {
-				return *new(S), false
+				break
 			}
 
-			y, ok := c(buffer)
-			if !ok {
-				return *new(S), false
-			}
+			result = append(result, token)
 
-			rest = f(rest, y)
+			_, ok = s(buffer)
+			if !ok {
+				break
+			}
 		}
 
-		return rest, true
+		return result, true
 	}
 }
 
-func Chainr[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
-	def S,
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		f := Chainr1(c, op)
+func SepEndBy1[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		c := SepEndBy(cap, body, sep)
 
-		result, ok := f(buffer)
+		result, ok := c(buffer)
 		if !ok {
-			return def, true
+			return nil, false
 		}
-
+		if len(result) == 0 {
+			return nil, false
+		}
 		return result, ok
-	}
-}
-
-func Chainr1[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		x, ok := c(buffer)
-		if !ok {
-			return *new(S), false
-		}
-
-		chain := make([]S, 0)
-		chainF := make([]func(S, S) S, 0)
-
-		chain = append(chain, x)
-
-		for !buffer.IsEOF() {
-			f, ok := op(buffer)
-			if !ok {
-				return *new(S), false
-			}
-
-			y, ok := c(buffer)
-			if !ok {
-				return *new(S), false
-			}
-
-			chainF = append(chainF, f)
-			chain = append(chain, y)
-		}
-
-		for len(chain) > 1 {
-			a, b := chain[len(chain)-1], chain[len(chain)-2]
-			g := chainF[len(chainF)-1]
-
-			chain = chain[:len(chain)-2]
-			chainF = chainF[:len(chainF)-1]
-
-			chain = append(chain, g(b, a))
-		}
-
-		return chain[0], true
 	}
 }
 
@@ -524,28 +321,6 @@ func Choice[T any, S any](cs ...Combinator[T, S]) Combinator[T, S] {
 				return result, ok
 			}
 		}
-
-		return *new(S), false
-	}
-}
-
-type Logged interface {
-	Log(args ...any)
-}
-
-func Trace[T any, S any](l Logged, m string, c Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		l.Log(m)
-		x, ok := buffer.Read(false)
-		l.Log("\tposition", buffer.Position(), x, ok)
-
-		result, ok := c(buffer)
-		if ok {
-			l.Log("\tparsed", result)
-			return result, ok
-		}
-
-		l.Log("\tnot parsed", result)
 
 		return *new(S), false
 	}
