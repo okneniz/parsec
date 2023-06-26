@@ -1,12 +1,12 @@
 package parsec
 
 import (
+	"golang.org/x/exp/constraints"
 	"math"
 	"math/rand"
+	"sort"
 	"testing"
 	"time"
-	"sort"
-	"golang.org/x/exp/constraints"
 )
 
 func TestCards(t *testing.T) {
@@ -148,7 +148,7 @@ func copyOf[T any](data []T) []T {
 	return result
 }
 
-func shuffler[T any](seed int64) func ([]T) []T {
+func shuffler[T any](seed int64) func([]T) []T {
 	source := rand.New(rand.NewSource(seed))
 
 	return func(data []T) []T {
@@ -175,12 +175,12 @@ func sorted[T constraints.Ordered](data ...T) []T {
 func joinBy(f func() string, data ...string) string {
 	result := ""
 
-	for i := 0; i < len(data) - 1; i++ {
+	for i := 0; i < len(data)-1; i++ {
 		result += data[i]
 		result += f()
 	}
 
-	result += data[len(data) - 1]
+	result += data[len(data)-1]
 	return result
 }
 

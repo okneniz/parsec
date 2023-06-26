@@ -32,12 +32,12 @@ func Chainl1[T any, S any](
 		for !buffer.IsEOF() {
 			f, ok := op(buffer)
 			if !ok {
-				return *new(S), false
+				break
 			}
 
 			y, ok := c(buffer)
 			if !ok {
-				return *new(S), false
+				break
 			}
 
 			rest = f(rest, y)
@@ -82,16 +82,20 @@ func Chainr1[T any, S any](
 		for !buffer.IsEOF() {
 			f, ok := op(buffer)
 			if !ok {
-				return *new(S), false
+				break
 			}
 
 			y, ok := c(buffer)
 			if !ok {
-				return *new(S), false
+				break
 			}
 
 			chainF = append(chainF, f)
 			chain = append(chain, y)
+		}
+
+		if len(chainF) == 0 {
+			return x, true
 		}
 
 		for len(chain) > 1 {
@@ -105,5 +109,170 @@ func Chainr1[T any, S any](
 		}
 
 		return chain[0], true
+	}
+}
+
+func SepBy[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		result := make([]S, 0, cap)
+
+		token, ok := body(buffer)
+		if !ok {
+			return result, true
+		}
+		result = append(result, token)
+
+		c := Try(
+			And(
+				sep,
+				body,
+				func(_ B, x S) S { return x },
+			),
+		)
+
+		for !buffer.IsEOF() {
+			token, ok = c(buffer)
+			if !ok {
+				break
+			}
+
+			result = append(result, token)
+		}
+
+		return result, true
+	}
+}
+
+func SepBy1[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		c := SepBy(cap, body, sep)
+
+		result, _ := c(buffer)
+		if len(result) == 0 {
+			return nil, false
+		}
+		return result, true
+	}
+}
+
+func EndBy[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		result := make([]S, 0, cap)
+
+		c := Try(SkipAfter(sep, body))
+
+		for !buffer.IsEOF() {
+			token, ok := c(buffer)
+			if !ok {
+				break
+			}
+
+			result = append(result, token)
+		}
+
+		return result, true
+	}
+}
+
+func EndBy1[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		c := EndBy(cap, body, sep)
+
+		result, _ := c(buffer)
+		if len(result) == 0 {
+			return nil, false
+		}
+		return result, true
+	}
+}
+
+func SepEndBy[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		result := make([]S, 0, cap)
+
+		s := Try(sep)
+
+		for !buffer.IsEOF() {
+			token, ok := body(buffer)
+			if !ok {
+				break
+			}
+
+			result = append(result, token)
+
+			_, ok = s(buffer)
+			if !ok {
+				break
+			}
+		}
+
+		return result, true
+	}
+}
+
+func SepEndBy1[T any, S any, B any](
+	cap int,
+	body Combinator[T, S],
+	sep Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		c := SepEndBy(cap, body, sep)
+
+		result, _ := c(buffer)
+		if len(result) == 0 {
+			return nil, false
+		}
+		return result, true
+	}
+}
+
+func ManyTill[T any, S any, B any](
+	cap int,
+	c Combinator[T, S],
+	end Combinator[T, B],
+) Combinator[T, []S] {
+	return func(buffer Buffer[T]) ([]S, bool) {
+		if buffer.IsEOF() {
+			return nil, false
+		}
+
+		result := make([]S, 0, cap)
+		z := Try(end)
+
+		for {
+			_, ok := z(buffer)
+			if ok {
+				break
+			}
+
+			x, ok := c(buffer)
+			if !ok {
+				return nil, false
+			}
+
+			result = append(result, x)
+		}
+
+		return result, true
 	}
 }

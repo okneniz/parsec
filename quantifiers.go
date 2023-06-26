@@ -1,6 +1,5 @@
 package parsec
 
-
 func Optional[T any, S any](c Combinator[T, S], def S) Combinator[T, S] {
 	return func(buffer Buffer[T]) (S, bool) {
 		t, ok := c(buffer)

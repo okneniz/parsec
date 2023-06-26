@@ -7,8 +7,7 @@ type Composer[T any, S any, B any] func(T, S) B
 type Composer3[T, S, B, M any] func(T, S, B) M
 
 func Anything[T any](x T) bool { return true }
-
-func first[T any](x, _ T) T { return x }
+func Nothing[T any](x T) bool  { return false }
 
 func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	return func(buffer Buffer[T]) (T, bool) {
@@ -124,178 +123,10 @@ func SkipAfter[T any, S any, B any](
 	}
 }
 
-func SepBy[T any, S any, B any](
-	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		result := make([]S, 0, cap)
-
-		token, ok := body(buffer)
-		if !ok {
-			return result, true
-		}
-		result = append(result, token)
-
-		c := Try(Skip(sep, body))
-
-		for !buffer.IsEOF() {
-			token, ok = c(buffer)
-			if !ok {
-				break
-			}
-
-			result = append(result, token)
-		}
-
-		return result, true
-	}
-}
-
-func SepBy1[T any, S any, B any](
-	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		c := SepBy(cap, body, sep)
-
-		result, ok := c(buffer)
-		if !ok {
-			return nil, false
-		}
-		if len(result) == 0 {
-			return nil, false
-		}
-		return result, ok
-	}
-}
-
-func EndBy[T any, S any, B any](
-	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		result := make([]S, 0, cap)
-
-		c := Try(SkipAfter(sep, body))
-
-		for !buffer.IsEOF() {
-			token, ok := c(buffer)
-			if !ok {
-				break
-			}
-
-			result = append(result, token)
-		}
-
-		return result, true
-	}
-}
-
-func EndBy1[T any, S any, B any](
-	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		c := EndBy(cap, body, sep)
-
-		result, ok := c(buffer)
-		if !ok {
-			return nil, false
-		}
-		if len(result) == 0 {
-			return nil, false
-		}
-		return result, ok
-	}
-}
-
-func SepEndBy[T any, S any, B any](
-	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		result := make([]S, 0, cap)
-
-		s := Try(sep)
-
-		for !buffer.IsEOF() {
-			token, ok := body(buffer)
-			if !ok {
-				break
-			}
-
-			result = append(result, token)
-
-			_, ok = s(buffer)
-			if !ok {
-				break
-			}
-		}
-
-		return result, true
-	}
-}
-
-func SepEndBy1[T any, S any, B any](
-	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		c := SepEndBy(cap, body, sep)
-
-		result, ok := c(buffer)
-		if !ok {
-			return nil, false
-		}
-		if len(result) == 0 {
-			return nil, false
-		}
-		return result, ok
-	}
-}
-
 func EOF[T any]() Combinator[T, struct{}] {
 	return func(buffer Buffer[T]) (struct{}, bool) {
 		x := buffer.IsEOF()
 		return struct{}{}, x
-	}
-}
-
-func ManyTill[T any, S any, B any](
-	cap int,
-	c Combinator[T, S],
-	end Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		if buffer.IsEOF() {
-			return nil, false
-		}
-
-		result := make([]S, 0, cap)
-		z := Try(end)
-
-		for {
-			_, ok := z(buffer)
-			if ok {
-				break
-			}
-
-			x, ok := c(buffer)
-			if !ok {
-				return nil, false
-			}
-
-			result = append(result, x)
-		}
-
-		return result, true
 	}
 }
 
