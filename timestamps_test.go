@@ -151,6 +151,10 @@ func TestTimestamps(t *testing.T) {
 	zoneStr := Trace(t, "zone", Cast(
 		Count(3, Range(true, byte('A'), byte('Z'))),
 		func(x []byte) (*time.Location, error) {
+			if string(x) == "LMT" {
+				return time.Local, nil
+			}
+
 			return time.LoadLocation(string(x))
 		},
 	))
@@ -432,7 +436,7 @@ func TestTimestamps(t *testing.T) {
 	source := rand.New(rand.NewSource(seed))
 	r := rand.New(source)
 
-	dates := randomDates(r, 300)
+	dates := randomDates(r, 1000)
 	formattedDates := randomFormattedDates(r, dates)
 	input := joinBy(func() string { return "\n" }, formattedDates...)
 
@@ -484,9 +488,7 @@ func randomDate(r *rand.Rand) *time.Time {
 var (
 	allowZones = []string{
 		"UTC",
-		"UTC",
-		// "Europe/London",
-		// "MST",
+		"MST",
 	}
 
 	allowLayouts = []string{
