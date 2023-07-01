@@ -1,7 +1,7 @@
 package parsec
 
 type Buffer[T any] interface {
-	Read(bool) (T, bool)
+	Read(bool) (T, error)
 	Seek(int)
 	Position() int
 	IsEOF() bool
@@ -12,9 +12,9 @@ type bytesBuffer struct {
 	position int
 }
 
-func (s *bytesBuffer) Read(x bool) (byte, bool) {
+func (s *bytesBuffer) Read(x bool) (byte, error) {
 	if s.position >= len(s.data) {
-		return 0, false
+		return 0, EndOfFile
 	}
 
 	b := s.data[s.position]
@@ -22,7 +22,7 @@ func (s *bytesBuffer) Read(x bool) (byte, bool) {
 		s.position++
 	}
 
-	return b, true
+	return b, nil
 }
 
 func (s *bytesBuffer) Seek(x int) {

@@ -10,16 +10,16 @@ func TestOr(t *testing.T) {
 		Eq(true, byte('b')),
 	)
 
-	result, ok := ParseBytes([]byte("a"), comb)
-	assert(t, ok, "expected true")
+	result, err := ParseBytes([]byte("a"), comb)
+	check(t, err)
 	assertEq(t, result, byte('a'))
 
-	result, ok = ParseBytes([]byte("b"), comb)
-	assert(t, ok, "expected true")
+	result, err = ParseBytes([]byte("b"), comb)
+	check(t, err)
 	assertEq(t, result, byte('b'))
 
-	result, ok = ParseBytes([]byte("c"), comb)
-	assert(t, !ok, "expected false")
+	result, err = ParseBytes([]byte("c"), comb)
+	assertError(t, err)
 	assertEq(t, result, 0)
 }
 
@@ -30,15 +30,15 @@ func TestAnd(t *testing.T) {
 		func(x, y byte) []byte { return []byte{x, y} },
 	)
 
-	result, ok := ParseBytes([]byte("abc"), comb)
-	assert(t, ok, "expected true")
+	result, err := ParseBytes([]byte("abc"), comb)
+	check(t, err)
 	assertSlice(t, result, []byte{'a', 'b'})
 
-	result, ok = ParseBytes([]byte("bca"), comb)
-	assert(t, !ok, "expected false")
+	result, err = ParseBytes([]byte("bca"), comb)
+	assertError(t, err)
 	assertSlice(t, result, nil)
 
-	result, ok = ParseBytes([]byte("acb"), comb)
-	assert(t, !ok, "expected false")
+	result, err = ParseBytes([]byte("acb"), comb)
+	assertError(t, err)
 	assertSlice(t, result, nil)
 }

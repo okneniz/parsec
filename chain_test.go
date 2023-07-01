@@ -12,32 +12,32 @@ func TestChainl(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainl(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 			"default",
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "(((a b) c) d)")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertEq(t, result, "default")
 	})
 
@@ -46,41 +46,41 @@ func TestChainl(t *testing.T) {
 		c := 0
 
 		comb := Chainl(
-			func(buffer Buffer[byte]) (string, bool) {
+			func(buffer Buffer[byte]) (string, error) {
 				c++
 				if c > 1 {
-					return "-", false
+					return "-", fmt.Errorf("test error")
 				}
 
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 			"default",
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertEq(t, result, "default")
 	})
 
@@ -88,30 +88,30 @@ func TestChainl(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainl(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
-				return func(x, y string) string { return "" }, false
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
+				return func(x, y string) string { return "" }, fmt.Errorf("test error")
 			},
 			"default",
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertEq(t, result, "default")
 	})
 }
@@ -123,31 +123,31 @@ func TestChainl1(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainl1(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "(((a b) c) d)")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertEq(t, result, "")
 	})
 
@@ -156,40 +156,40 @@ func TestChainl1(t *testing.T) {
 		c := 0
 
 		comb := Chainl1(
-			func(buffer Buffer[byte]) (string, bool) {
+			func(buffer Buffer[byte]) (string, error) {
 				c++
 				if c > 1 {
-					return "-", false
+					return "-", fmt.Errorf("test error")
 				}
 
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertEq(t, result, "")
 	})
 
@@ -197,29 +197,29 @@ func TestChainl1(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainl1(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "--", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
-				return func(x, y string) string { return "" }, false
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
+				return func(x, y string) string { return "++" }, fmt.Errorf("test error")
 			},
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertEq(t, result, "")
 	})
 }
@@ -231,32 +231,32 @@ func TestChainr(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainr(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 			"default",
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "(a (b (c d)))")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertEq(t, result, "default")
 	})
 
@@ -265,42 +265,41 @@ func TestChainr(t *testing.T) {
 		c := 0
 
 		comb := Chainr(
-			func(buffer Buffer[byte]) (string, bool) {
+			func(buffer Buffer[byte]) (string, error) {
 				c++
-
 				if c > 1 {
-					return "-", c <= 1
+					return "-", fmt.Errorf("test error")
 				}
 
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 			"default",
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertEq(t, result, "default")
 	})
 
@@ -308,30 +307,30 @@ func TestChainr(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainr(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
-				return func(x, y string) string { return "" }, false
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
+				return func(x, y string) string { return "" }, fmt.Errorf("test error")
 			},
 			"default",
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertEq(t, result, "default")
 	})
 }
@@ -343,31 +342,31 @@ func TestChainr1(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainr1(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "(a (b (c d)))")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertEq(t, result, "")
 	})
 
@@ -376,40 +375,40 @@ func TestChainr1(t *testing.T) {
 		c := 0
 
 		comb := Chainr1(
-			func(buffer Buffer[byte]) (string, bool) {
+			func(buffer Buffer[byte]) (string, error) {
 				c++
 				if c > 1 {
-					return "-", false
+					return "-", fmt.Errorf("test error")
 				}
 
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
-				}, true
+				}, nil
 			},
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte("a"), comb)
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
-		assert(t, ok, "expected true")
 
 		c = 0
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertEq(t, result, "")
 	})
 
@@ -417,29 +416,31 @@ func TestChainr1(t *testing.T) {
 		next := Satisfy(true, Anything[byte])
 
 		comb := Chainr1(
-			func(buffer Buffer[byte]) (string, bool) {
-				x, ok := next(buffer)
-				if !ok {
-					return "", false
+			func(buffer Buffer[byte]) (string, error) {
+				x, err := next(buffer)
+				if err != nil {
+					return "", err
 				}
 
-				return string(x), true
+				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, bool) {
-				return func(x, y string) string { return "" }, false
+			func(buffer Buffer[byte]) (func(string, string) string, error) {
+				return func(x, y string) string {
+					return ""
+				}, fmt.Errorf("test error")
 			},
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertEq(t, result, "a")
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertEq(t, result, "")
 	})
 }
@@ -454,32 +455,32 @@ func TestSepBy(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{})
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(","), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{})
 
-		result, ok = ParseBytes([]byte(",a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(",a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{})
 
-		result, ok = ParseBytes([]byte("a,b,c,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte("a,b,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b'})
 
-		result, ok = ParseBytes([]byte("abc"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("abc"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 	})
 
@@ -490,12 +491,12 @@ func TestSepBy(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -506,12 +507,12 @@ func TestSepBy(t *testing.T) {
 			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 }
@@ -526,32 +527,32 @@ func TestSepBy1(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(","), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(",a,b,c"), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(",a,b,c"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a,b,c,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte("a,b,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b'})
 
-		result, ok = ParseBytes([]byte("abc"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("abc"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 	})
 
@@ -562,12 +563,12 @@ func TestSepBy1(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, !ok, "expected false")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -578,12 +579,12 @@ func TestSepBy1(t *testing.T) {
 			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 }
@@ -598,40 +599,40 @@ func TestEndBy(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b'})
 
-		result, ok = ParseBytes([]byte("a,b,c,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(","), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(",a"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(",a"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a,,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(",a,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(",a,"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -642,12 +643,12 @@ func TestEndBy(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -658,12 +659,12 @@ func TestEndBy(t *testing.T) {
 			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 }
@@ -678,40 +679,40 @@ func TestEndBy1(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b'})
 
-		result, ok = ParseBytes([]byte("a,b,c,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(","), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a"), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte("a"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(",a"), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(",a"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte("a,,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(",a,"), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(",a,"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -722,12 +723,12 @@ func TestEndBy1(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, !ok, "expected false")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -738,12 +739,12 @@ func TestEndBy1(t *testing.T) {
 			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, !ok, "expected false")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 }
@@ -758,28 +759,28 @@ func TestSepEndBy(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte("a,b,c,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte("a,b,c,,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(","), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(",a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(",a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -790,16 +791,16 @@ func TestSepEndBy(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(","), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -810,16 +811,16 @@ func TestSepEndBy(t *testing.T) {
 			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(","), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 }
@@ -834,28 +835,28 @@ func TestSepEndBy1(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte("a,b,c,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte("a,b,c,,"), comb)
-		assert(t, ok, "expected true")
+		result, err = ParseBytes([]byte("a,b,c,,"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a', 'b', 'c'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(","), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(","), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(",a,b,c"), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(",a,b,c"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -866,12 +867,12 @@ func TestSepEndBy1(t *testing.T) {
 			Eq(true, byte(',')),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, !ok, "expected false")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 
@@ -882,12 +883,12 @@ func TestSepEndBy1(t *testing.T) {
 			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("a,b,c"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("a,b,c"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{'a'})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		assertError(t, err)
 		assertSlice(t, result, nil)
 	})
 }
@@ -899,60 +900,56 @@ func TestManyTill(t *testing.T) {
 		comb := ManyTill(
 			0,
 			Any[byte](true),
-			EOF[byte](),
+			Satisfy[byte](false, func(x byte) bool { return x == byte('d') }),
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{
 			byte('a'),
 			byte('b'),
 			byte('c'),
-			byte('d'),
 		})
+
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
+		assertSlice(t, result, nil)
 	})
 
 	t.Run("case 2", func(t *testing.T) {
 		comb := ManyTill(
 			0,
 			Any[byte](true),
-			Satisfy[byte](false, func(x byte) bool { return x == byte('d') }),
+			Satisfy(true, Nothing[byte]),
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, ok, "expected true")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
 		assertSlice(t, result, []byte{
 			byte('a'),
 			byte('b'),
 			byte('c'),
+			byte('d'),
 		})
 
-		result, ok = ParseBytes([]byte(""), comb)
-		assert(t, !ok, "expected false")
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Satisfy(true, Nothing[byte]),
-			EOF[byte](),
-		)
-
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, !ok, "expected false")
-		assertSlice(t, result, nil)
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		comb := ManyTill(
-			0,
 			Any[byte](true),
-			Satisfy(true, Nothing[byte]),
+			Any[byte](true),
 		)
 
-		result, ok := ParseBytes([]byte("abcd"), comb)
-		assert(t, !ok, "expected false")
+		result, err := ParseBytes([]byte("abcd"), comb)
+		check(t, err)
+		assertSlice(t, result, nil)
+
+		result, err = ParseBytes([]byte(""), comb)
+		check(t, err)
 		assertSlice(t, result, nil)
 	})
 }

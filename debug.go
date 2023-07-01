@@ -5,19 +5,18 @@ type Logged interface {
 }
 
 func Trace[T any, S any](l Logged, m string, c Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
+	return func(buffer Buffer[T]) (S, error) {
 		l.Log(m)
-		x, ok := buffer.Read(false)
-		l.Log("\tposition", buffer.Position(), x, ok)
+		l.Log("\tposition", buffer.Position())
 
-		result, ok := c(buffer)
-		if ok {
-			l.Log("\tparsed", result)
-			return result, ok
+		result, err := c(buffer)
+		if err != nil {
+			l.Log("\tnot parsed", result, err)
+			return *new(S), err
 		}
 
-		l.Log("\tnot parsed", result)
+		l.Log("\tparsed", result)
+		return result, err
 
-		return *new(S), false
 	}
 }

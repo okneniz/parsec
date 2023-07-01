@@ -9,16 +9,16 @@ func TestEq(t *testing.T) {
 
 	comb := Eq[byte](true, c)
 
-	result, ok := ParseBytes([]byte("a"), comb)
-	assert(t, !ok, "expected false")
+	result, err := ParseBytes([]byte("a"), comb)
+	assertError(t, err)
 	assertEq(t, result, 0)
 
-	result, ok = ParseBytes([]byte("b"), comb)
-	assert(t, !ok, "expected false")
+	result, err = ParseBytes([]byte("b"), comb)
+	assertError(t, err)
 	assertEq(t, result, 0)
 
-	result, ok = ParseBytes([]byte("c"), comb)
-	assert(t, ok, "expected true")
+	result, err = ParseBytes([]byte("c"), comb)
+	check(t, err)
 	assertEq(t, result, c)
 }
 
@@ -27,39 +27,39 @@ func TestNotEq(t *testing.T) {
 
 	comb := NotEq[byte](true, c)
 
-	result, ok := ParseBytes([]byte("a"), comb)
-	assert(t, ok, "expected true")
+	result, err := ParseBytes([]byte("a"), comb)
+	check(t, err)
 	assertEq(t, result, byte('a'))
 
-	result, ok = ParseBytes([]byte("b"), comb)
-	assert(t, ok, "expected true")
+	result, err = ParseBytes([]byte("b"), comb)
+	check(t, err)
 	assertEq(t, result, byte('b'))
 
-	result, ok = ParseBytes([]byte("abc"), comb)
-	assert(t, ok, "expected true")
+	result, err = ParseBytes([]byte("abc"), comb)
+	check(t, err)
 	assertEq(t, result, byte('a'))
 
-	result, ok = ParseBytes([]byte("c"), comb)
-	assert(t, !ok, "expected false")
+	result, err = ParseBytes([]byte("c"), comb)
+	assertError(t, err)
 	assertEq(t, result, 0)
 }
 
 func TestOneOf(t *testing.T) {
 	comb := OneOf(true, byte('a'), byte('b'), byte('c'))
 
-	result, ok := ParseBytes([]byte("a"), comb)
-	assert(t, ok, "expected true")
+	result, err := ParseBytes([]byte("a"), comb)
+	check(t, err)
 	assertEq(t, result, byte('a'))
 
-	result, ok = ParseBytes([]byte("b"), comb)
-	assert(t, ok, "expected true")
+	result, err = ParseBytes([]byte("b"), comb)
+	check(t, err)
 	assertEq(t, result, byte('b'))
 
-	result, ok = ParseBytes([]byte("c"), comb)
-	assert(t, ok, "expected true")
+	result, err = ParseBytes([]byte("c"), comb)
+	check(t, err)
 	assertEq(t, result, byte('c'))
 
-	result, ok = ParseBytes([]byte("d"), comb)
-	assert(t, !ok, "expected false")
+	result, err = ParseBytes([]byte("d"), comb)
+	assertError(t, err)
 	assertEq(t, result, 0)
 }

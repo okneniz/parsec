@@ -1,6 +1,6 @@
 package parsec
 
-type Combinator[T any, S any] func(Buffer[T]) (S, bool)
+type Combinator[T any, S any] func(Buffer[T]) (S, error)
 
 type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T, S) B
@@ -10,41 +10,42 @@ func Anything[T any](x T) bool { return true }
 func Nothing[T any](x T) bool  { return false }
 
 func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
-	return func(buffer Buffer[T]) (T, bool) {
-		token, ok := buffer.Read(greedy)
-		if !ok {
-			return *new(T), false
+	return func(buffer Buffer[T]) (T, error) {
+		token, err := buffer.Read(greedy)
+		if err != nil {
+			return *new(T), err
 		}
 
 		if f(token) {
-			return token, true
+			return token, nil
 		}
 
-		return *new(T), false
+		return *new(T), NothingMatched
 	}
 }
 
 func Any[T any](greedy bool) Combinator[T, T] {
-	return func(buffer Buffer[T]) (T, bool) {
-		token, ok := buffer.Read(greedy)
-		if !ok {
-			return *new(T), false
+	return func(buffer Buffer[T]) (T, error) {
+		token, err := buffer.Read(greedy)
+		if err != nil {
+			return *new(T), err
 		}
 
-		return token, true
+		return token, nil
 	}
 }
 
 func Try[T any, S any](c Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
+	return func(buffer Buffer[T]) (S, error) {
 		pos := buffer.Position()
 
-		r, ok := c(buffer)
-		if !ok {
+		result, err := c(buffer)
+		if err != nil {
 			buffer.Seek(pos)
+			return *new(S), err
 		}
 
-		return r, ok
+		return result, nil
 	}
 }
 
@@ -70,23 +71,23 @@ func Between[T any, S any, B any, M any, Z any](
 	suf Combinator[T, M],
 	compose Composer3[S, B, M, Z],
 ) Combinator[T, Z] {
-	return func(buffer Buffer[T]) (Z, bool) {
-		prefix, ok := pre(buffer)
-		if !ok {
-			return *new(Z), false
+	return func(buffer Buffer[T]) (Z, error) {
+		prefix, err := pre(buffer)
+		if err != nil {
+			return *new(Z), err
 		}
 
-		body, ok := c(buffer)
-		if !ok {
-			return *new(Z), false
+		body, err := c(buffer)
+		if err != nil {
+			return *new(Z), err
 		}
 
-		suffix, ok := suf(buffer)
-		if !ok {
-			return *new(Z), false
+		suffix, err := suf(buffer)
+		if err != nil {
+			return *new(Z), err
 		}
 
-		return compose(prefix, body, suffix), true
+		return compose(prefix, body, suffix), nil
 	}
 }
 
@@ -94,39 +95,42 @@ func Skip[T any, S any, B any](
 	skip Combinator[T, B],
 	next Combinator[T, S],
 ) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		_, ok := skip(buffer)
-		if ok {
-			return next(buffer)
+	return func(buffer Buffer[T]) (S, error) {
+		_, err := skip(buffer)
+		if err != nil {
+			return *new(S), err
 		}
 
-		return *new(S), false
+		return next(buffer)
 	}
 }
 
 func SkipAfter[T any, S any, B any](
-	skip Combinator[T, B],
-	next Combinator[T, S],
+	skip Combinator[T, B], // TODO : change order of params?
+	pre Combinator[T, S],
 ) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		result, ok := next(buffer)
-		if !ok {
-			return *new(S), false
+	return func(buffer Buffer[T]) (S, error) {
+		result, err := pre(buffer)
+		if err != nil {
+			return *new(S), err
 		}
 
-		_, ok = skip(buffer)
-		if !ok {
-			return *new(S), false
+		_, err = skip(buffer)
+		if err != nil {
+			return *new(S), err
 		}
 
-		return result, true
+		return result, nil
 	}
 }
 
-func EOF[T any]() Combinator[T, struct{}] {
-	return func(buffer Buffer[T]) (struct{}, bool) {
-		x := buffer.IsEOF()
-		return struct{}{}, x
+func EOF[T any]() Combinator[T, bool] {
+	return func(buffer Buffer[T]) (bool, error) {
+		if buffer.IsEOF() {
+			return true, nil
+		}
+
+		return false, nil
 	}
 }
 
@@ -134,25 +138,12 @@ func Cast[T any, S any, B any](
 	c Combinator[T, S],
 	f func(S) B,
 ) Combinator[T, B] {
-	return func(buffer Buffer[T]) (B, bool) {
-		result, ok := c(buffer)
-		if !ok {
-			return *new(B), false
+	return func(buffer Buffer[T]) (B, error) {
+		result, err := c(buffer)
+		if err != nil {
+			return *new(B), err
 		}
 
-		return f(result), true
-	}
-}
-
-func Choice[T any, S any](cs ...Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		for _, c := range cs {
-			result, ok := c(buffer)
-			if ok {
-				return result, ok
-			}
-		}
-
-		return *new(S), false
+		return f(result), nil
 	}
 }

@@ -5,15 +5,15 @@ func Chainl[T any, S any](
 	op Combinator[T, func(S, S) S],
 	def S,
 ) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
+	return func(buffer Buffer[T]) (S, error) {
 		f := Chainl1(c, op)
 
-		result, ok := f(buffer)
-		if !ok {
-			return def, true
+		result, err := f(buffer)
+		if err != nil {
+			return def, nil
 		}
 
-		return result, ok
+		return result, nil
 	}
 }
 
@@ -21,29 +21,29 @@ func Chainl1[T any, S any](
 	c Combinator[T, S],
 	op Combinator[T, func(S, S) S],
 ) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		x, ok := c(buffer)
-		if !ok {
-			return *new(S), false
+	return func(buffer Buffer[T]) (S, error) {
+		x, err := c(buffer)
+		if err != nil {
+			return *new(S), err
 		}
 
 		rest := x
 
 		for !buffer.IsEOF() {
-			f, ok := op(buffer)
-			if !ok {
+			f, err := op(buffer)
+			if err != nil {
 				break
 			}
 
-			y, ok := c(buffer)
-			if !ok {
+			y, err := c(buffer)
+			if err != nil {
 				break
 			}
 
 			rest = f(rest, y)
 		}
 
-		return rest, true
+		return rest, nil
 	}
 }
 
@@ -52,15 +52,15 @@ func Chainr[T any, S any](
 	op Combinator[T, func(S, S) S],
 	def S,
 ) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
+	return func(buffer Buffer[T]) (S, error) {
 		f := Chainr1(c, op)
 
-		result, ok := f(buffer)
-		if !ok {
-			return def, true
+		result, err := f(buffer)
+		if err != nil {
+			return def, nil
 		}
 
-		return result, ok
+		return result, nil
 	}
 }
 
@@ -68,10 +68,10 @@ func Chainr1[T any, S any](
 	c Combinator[T, S],
 	op Combinator[T, func(S, S) S],
 ) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, bool) {
-		x, ok := c(buffer)
-		if !ok {
-			return *new(S), false
+	return func(buffer Buffer[T]) (S, error) {
+		x, err := c(buffer)
+		if err != nil {
+			return *new(S), err
 		}
 
 		chain := make([]S, 0)
@@ -80,13 +80,13 @@ func Chainr1[T any, S any](
 		chain = append(chain, x)
 
 		for !buffer.IsEOF() {
-			f, ok := op(buffer)
-			if !ok {
+			f, err := op(buffer)
+			if err != nil {
 				break
 			}
 
-			y, ok := c(buffer)
-			if !ok {
+			y, err := c(buffer)
+			if err != nil {
 				break
 			}
 
@@ -95,7 +95,7 @@ func Chainr1[T any, S any](
 		}
 
 		if len(chainF) == 0 {
-			return x, true
+			return x, nil
 		}
 
 		for len(chain) > 1 {
@@ -108,7 +108,7 @@ func Chainr1[T any, S any](
 			chain = append(chain, g(b, a))
 		}
 
-		return chain[0], true
+		return chain[0], nil
 	}
 }
 
@@ -117,12 +117,12 @@ func SepBy[T any, S any, B any](
 	body Combinator[T, S],
 	sep Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
+	return func(buffer Buffer[T]) ([]S, error) {
 		result := make([]S, 0, cap)
 
-		token, ok := body(buffer)
-		if !ok {
-			return result, true
+		token, err := body(buffer)
+		if err != nil {
+			return result, nil
 		}
 		result = append(result, token)
 
@@ -135,15 +135,15 @@ func SepBy[T any, S any, B any](
 		)
 
 		for !buffer.IsEOF() {
-			token, ok = c(buffer)
-			if !ok {
+			token, err = c(buffer)
+			if err != nil {
 				break
 			}
 
 			result = append(result, token)
 		}
 
-		return result, true
+		return result, nil
 	}
 }
 
@@ -152,14 +152,16 @@ func SepBy1[T any, S any, B any](
 	body Combinator[T, S],
 	sep Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
+	return func(buffer Buffer[T]) ([]S, error) {
 		c := SepBy(cap, body, sep)
 
+		// ignore error because SepBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
-			return nil, false
+			return nil, NotEnoughElements
 		}
-		return result, true
+
+		return result, nil
 	}
 }
 
@@ -168,21 +170,21 @@ func EndBy[T any, S any, B any](
 	body Combinator[T, S],
 	sep Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
+	return func(buffer Buffer[T]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		c := Try(SkipAfter(sep, body))
 
 		for !buffer.IsEOF() {
-			token, ok := c(buffer)
-			if !ok {
+			token, err := c(buffer)
+			if err != nil {
 				break
 			}
 
 			result = append(result, token)
 		}
 
-		return result, true
+		return result, nil
 	}
 }
 
@@ -191,14 +193,16 @@ func EndBy1[T any, S any, B any](
 	body Combinator[T, S],
 	sep Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
+	return func(buffer Buffer[T]) ([]S, error) {
 		c := EndBy(cap, body, sep)
 
+		// ignore error because EndBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
-			return nil, false
+			return nil, NotEnoughElements
 		}
-		return result, true
+
+		return result, nil
 	}
 }
 
@@ -207,26 +211,26 @@ func SepEndBy[T any, S any, B any](
 	body Combinator[T, S],
 	sep Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
+	return func(buffer Buffer[T]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		s := Try(sep)
 
 		for !buffer.IsEOF() {
-			token, ok := body(buffer)
-			if !ok {
+			token, err := body(buffer)
+			if err != nil {
 				break
 			}
 
 			result = append(result, token)
 
-			_, ok = s(buffer)
-			if !ok {
+			_, err = s(buffer)
+			if err != nil {
 				break
 			}
 		}
 
-		return result, true
+		return result, nil
 	}
 }
 
@@ -235,14 +239,15 @@ func SepEndBy1[T any, S any, B any](
 	body Combinator[T, S],
 	sep Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
+	return func(buffer Buffer[T]) ([]S, error) {
 		c := SepEndBy(cap, body, sep)
 
+		// ignore error because SepEndBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
-			return nil, false
+			return nil, NotEnoughElements
 		}
-		return result, true
+		return result, nil
 	}
 }
 
@@ -251,28 +256,24 @@ func ManyTill[T any, S any, B any](
 	c Combinator[T, S],
 	end Combinator[T, B],
 ) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, bool) {
-		if buffer.IsEOF() {
-			return nil, false
-		}
-
+	return func(buffer Buffer[T]) ([]S, error) {
 		result := make([]S, 0, cap)
 		z := Try(end)
 
 		for {
-			_, ok := z(buffer)
-			if ok {
+			_, err := z(buffer)
+			if err == nil {
 				break
 			}
 
-			x, ok := c(buffer)
-			if !ok {
-				return nil, false
+			x, err := c(buffer)
+			if err != nil {
+				break
 			}
 
 			result = append(result, x)
 		}
 
-		return result, true
+		return result, nil
 	}
 }

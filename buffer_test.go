@@ -10,54 +10,54 @@ func TestBuffer(t *testing.T) {
 	assertEq(t, b.Position(), 0)
 	assertEq(t, b.IsEOF(), false)
 
-	x, ok := b.Read(false)
+	x, err := b.Read(false)
+	check(t, err)
 
 	assertEq(t, x, byte('f'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 0)
 	assertEq(t, b.IsEOF(), false)
 
-	x, ok = b.Read(false)
+	x, err = b.Read(false)
+	check(t, err)
 
 	assertEq(t, x, byte('f'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 0)
 	assertEq(t, b.IsEOF(), false)
 
-	x, ok = b.Read(true)
+	x, err = b.Read(true)
+	check(t, err)
 
 	assertEq(t, x, byte('f'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 1)
 	assertEq(t, b.IsEOF(), false)
 
-	x, ok = b.Read(true)
+	x, err = b.Read(true)
+	check(t, err)
 
 	assertEq(t, x, byte('o'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 2)
 	assertEq(t, b.IsEOF(), false)
 
-	x, ok = b.Read(true)
+	x, err = b.Read(true)
+	check(t, err)
 
 	assertEq(t, x, byte('o'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 3)
 	assertEq(t, b.IsEOF(), true)
 
 	b.Seek(1)
 
-	x, ok = b.Read(true)
+	x, err = b.Read(true)
+	check(t, err)
 
 	assertEq(t, x, byte('o'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 2)
 	assertEq(t, b.IsEOF(), false)
 
-	x, ok = b.Read(true)
+	x, err = b.Read(true)
+	check(t, err)
 
 	assertEq(t, x, byte('o'))
-	assertEq(t, ok, true)
 	assertEq(t, b.Position(), 3)
 	assertEq(t, b.IsEOF(), true)
 }
