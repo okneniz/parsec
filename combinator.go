@@ -136,7 +136,7 @@ func EOF[T any]() Combinator[T, bool] {
 
 func Cast[T any, S any, B any](
 	c Combinator[T, S],
-	f func(S) B,
+	f func(S) (B, error),
 ) Combinator[T, B] {
 	return func(buffer Buffer[T]) (B, error) {
 		result, err := c(buffer)
@@ -144,6 +144,11 @@ func Cast[T any, S any, B any](
 			return *new(B), err
 		}
 
-		return f(result), nil
+		value, err := f(result)
+		if err != nil {
+			return *new(B), err
+		}
+
+		return value, nil
 	}
 }

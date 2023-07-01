@@ -37,61 +37,61 @@ func TestCards(t *testing.T) {
 					15,
 					Choice(
 						Trace(t, "master 1",
-						Concat(
-							4,
-							Count(1, Eq(true, byte('5'))),
-							Count(1, Range(true, byte('1'), byte('5'))),
-							Count(2, Range(true, byte('0'), byte('9'))),
-						),
+							Concat(
+								4,
+								Count(1, Eq(true, byte('5'))),
+								Count(1, Range(true, byte('1'), byte('5'))),
+								Count(2, Range(true, byte('0'), byte('9'))),
+							),
 						),
 						Trace(t, "master 2",
-						Concat(
-							4,
-							Count(3, Eq(true, byte('2'))),
-							Count(1, Range(true, byte('1'), byte('9'))),
-						),
+							Concat(
+								4,
+								Count(3, Eq(true, byte('2'))),
+								Count(1, Range(true, byte('1'), byte('9'))),
+							),
 						),
 						Trace(t, "master 3",
-						Concat(
-							4,
-							Count(2, Eq(true, byte('2'))),
-							Count(1, Range(true, byte('3'), byte('9'))),
-							Count(1, Range(true, byte('0'), byte('9'))),
-						),
+							Concat(
+								4,
+								Count(2, Eq(true, byte('2'))),
+								Count(1, Range(true, byte('3'), byte('9'))),
+								Count(1, Range(true, byte('0'), byte('9'))),
+							),
 						),
 						Trace(t, "master 4",
-						Concat(
-							4,
-							Count(1, Eq(true, byte('2'))),
-							Count(1, Range(true, byte('3'), byte('6'))),
-							Count(2, Range(true, byte('0'), byte('9'))),
-						),
-						),
-						Trace(t, "master 5",
-						Concat(
-							4,
-							Count(1, Eq(true, byte('2'))),
-							Count(1, Range(true, byte('3'), byte('6'))),
-							Count(2, Range(true, byte('0'), byte('9'))),
-						),
+							Concat(
+								4,
+								Count(1, Eq(true, byte('2'))),
+								Count(1, Range(true, byte('3'), byte('6'))),
+								Count(2, Range(true, byte('0'), byte('9'))),
+							),
 						),
 						Trace(t, "master 5",
-						Sequence(
-							4,
-							Eq(true, byte('2')),
-							Eq(true, byte('7')),
-							OneOf(true, byte('0'), byte('1')),
-							Range(true, byte('0'), byte('9')),
+							Concat(
+								4,
+								Count(1, Eq(true, byte('2'))),
+								Count(1, Range(true, byte('3'), byte('6'))),
+								Count(2, Range(true, byte('0'), byte('9'))),
+							),
 						),
+						Trace(t, "master 5",
+							Sequence(
+								4,
+								Eq(true, byte('2')),
+								Eq(true, byte('7')),
+								OneOf(true, byte('0'), byte('1')),
+								Range(true, byte('0'), byte('9')),
+							),
 						),
 						Trace(t, "master 6",
-						Sequence(
-							4,
-							Eq(true, byte('2')),
-							Eq(true, byte('7')),
-							Eq(true, byte('2')),
-							Eq(true, byte('0')),
-						),
+							Sequence(
+								4,
+								Eq(true, byte('2')),
+								Eq(true, byte('7')),
+								Eq(true, byte('2')),
+								Eq(true, byte('0')),
+							),
 						),
 					),
 					Count(12, Range(true, byte('0'), byte('9'))),
@@ -222,10 +222,10 @@ func noicer(seed int64, from, to byte) func() string {
 	}
 }
 
-func toString(xs [][]byte) string {
+func toString(xs [][]byte) (string, error) {
 	s := ""
 	for _, x := range xs {
 		s += string(x)
 	}
-	return s
+	return s, nil
 }

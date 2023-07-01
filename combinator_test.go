@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"testing"
 	"time"
+	"fmt"
 )
 
 func TestSatisfy(t *testing.T) {
@@ -338,7 +339,7 @@ func TestCast(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Cast[byte, byte, int](
 			Satisfy[byte](true, Anything[byte]),
-			func(x byte) int { return int(x) },
+			func(x byte) (int, error) { return int(x), nil },
 		)
 
 		result, err := ParseBytes([]byte("a"), comb)
@@ -354,7 +355,16 @@ func TestCast(t *testing.T) {
 		assertEq(t, result, 0)
 	})
 
-	// TODO : more cases
+	t.Run("case 2", func(t *testing.T) {
+		comb := Cast[byte, byte, int](
+			Any[byte](true),
+			func(x byte) (int, error) { return -1, fmt.Errorf("test error") },
+		)
+
+		result, err := ParseBytes([]byte("abc"), comb)
+		assertError(t, err)
+		assertEq(t, result, 0)
+	})
 }
 
 func assertEqDump[T any](t *testing.T, actual, expected T) {
