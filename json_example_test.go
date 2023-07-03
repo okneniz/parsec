@@ -107,8 +107,8 @@ type JSPair struct {
 }
 
 func TestJSON(t *testing.T) {
-	notZero := Range(true, byte('1'), byte('9'))
-	digit := Range(true, byte('0'), byte('9'))
+	notZero := Range(byte('1'), byte('9'))
+	digit := Range(byte('0'), byte('9'))
 	quote := Eq(byte('"'))
 	any := Any[byte]()
 	colon := Eq(byte(':'))

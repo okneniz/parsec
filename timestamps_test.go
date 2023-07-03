@@ -9,7 +9,7 @@ import (
 )
 
 func TestTimestamps(t *testing.T) {
-	digit := Range(true, byte('0'), byte('9'))
+	digit := Range(byte('0'), byte('9'))
 
 	dwDict := map[string]time.Weekday{
 		"Mon": time.Monday,
@@ -23,13 +23,13 @@ func TestTimestamps(t *testing.T) {
 
 	dayOfWeekPrefix := Trace(t, "day of week", Cast(
 		Choice(
-			Try(Sequence(3, Eq(byte('M')), Eq(byte('o')), Eq(byte('n')))),
-			Try(Sequence(3, Eq(byte('T')), Eq(byte('u')), Eq(byte('e')))),
-			Try(Sequence(3, Eq(byte('W')), Eq(byte('e')), Eq(byte('d')))),
-			Try(Sequence(3, Eq(byte('T')), Eq(byte('h')), Eq(byte('u')))),
-			Try(Sequence(3, Eq(byte('F')), Eq(byte('r')), Eq(byte('i')))),
-			Try(Sequence(3, Eq(byte('S')), Eq(byte('a')), Eq(byte('t')))),
-			Try(Sequence(3, Eq(byte('S')), Eq(byte('u')), Eq(byte('n')))),
+			Try(SequenceOf[byte]('M', 'o', 'n')),
+			Try(SequenceOf[byte]('T', 'u', 'e')),
+			Try(SequenceOf[byte]('W', 'e', 'd')),
+			Try(SequenceOf[byte]('T', 'h', 'u')),
+			Try(SequenceOf[byte]('F', 'r', 'i')),
+			Try(SequenceOf[byte]('S', 'a', 't')),
+			Try(SequenceOf[byte]('S', 'u', 'n')),
 		),
 		func(x []byte) (time.Weekday, error) {
 			s := string(x)
@@ -60,18 +60,18 @@ func TestTimestamps(t *testing.T) {
 
 	monthPrefix := Trace(t, "month prefix", Cast(
 		Choice(
-			Try(Sequence(3, Eq(byte('J')), Eq(byte('a')), Eq(byte('n')))),
-			Try(Sequence(3, Eq(byte('F')), Eq(byte('e')), Eq(byte('b')))),
-			Try(Sequence(3, Eq(byte('M')), Eq(byte('a')), Eq(byte('r')))),
-			Try(Sequence(3, Eq(byte('A')), Eq(byte('p')), Eq(byte('r')))),
-			Try(Sequence(3, Eq(byte('M')), Eq(byte('a')), Eq(byte('y')))),
-			Try(Sequence(3, Eq(byte('J')), Eq(byte('u')), Eq(byte('n')))),
-			Try(Sequence(3, Eq(byte('J')), Eq(byte('u')), Eq(byte('l')))),
-			Try(Sequence(3, Eq(byte('A')), Eq(byte('u')), Eq(byte('g')))),
-			Try(Sequence(3, Eq(byte('S')), Eq(byte('e')), Eq(byte('p')))),
-			Try(Sequence(3, Eq(byte('O')), Eq(byte('c')), Eq(byte('t')))),
-			Try(Sequence(3, Eq(byte('N')), Eq(byte('o')), Eq(byte('v')))),
-			Try(Sequence(3, Eq(byte('D')), Eq(byte('e')), Eq(byte('c')))),
+			Try(SequenceOf[byte]('J', 'a', 'n')),
+			Try(SequenceOf[byte]('F', 'e', 'b')),
+			Try(SequenceOf[byte]('M', 'a', 'r')),
+			Try(SequenceOf[byte]('A', 'p', 'r')),
+			Try(SequenceOf[byte]('M', 'a', 'y')),
+			Try(SequenceOf[byte]('J', 'u', 'n')),
+			Try(SequenceOf[byte]('J', 'u', 'l')),
+			Try(SequenceOf[byte]('A', 'u', 'g')),
+			Try(SequenceOf[byte]('S', 'e', 'p')),
+			Try(SequenceOf[byte]('O', 'c', 't')),
+			Try(SequenceOf[byte]('N', 'o', 'v')),
+			Try(SequenceOf[byte]('D', 'e', 'c')),
 		),
 		func(x []byte) (time.Month, error) {
 			s := string(x)
@@ -90,7 +90,7 @@ func TestTimestamps(t *testing.T) {
 		digitsToNum,
 	))
 
-	pad := OneOf(byte('0'), byte(' '))
+	pad := OneOf[byte]('0', ' ')
 
 	paddedDayNum := Trace(t, "day",
 		Cast(
@@ -149,7 +149,7 @@ func TestTimestamps(t *testing.T) {
 	}))
 
 	zoneStr := Trace(t, "zone", Cast(
-		Count(3, Range(true, byte('A'), byte('Z'))),
+		Count(3, Range(byte('A'), byte('Z'))),
 		func(x []byte) (*time.Location, error) {
 			if string(x) == "LMT" {
 				return time.Local, nil

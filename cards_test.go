@@ -10,8 +10,8 @@ import (
 )
 
 func TestCards(t *testing.T) {
-	digit := Range(true, byte('0'), byte('9'))
-	notDigit := NotRange(true, byte('0'), byte('9'))
+	digit := Range(byte('0'), byte('9'))
+	notDigit := NotRange(byte('0'), byte('9'))
 
 	// from https://www.regular-expressions.info/creditcard.html
 
@@ -39,39 +39,39 @@ func TestCards(t *testing.T) {
 							Concat(
 								4,
 								Count(1, Eq(byte('5'))),
-								Count(1, Range(true, byte('1'), byte('5'))),
-								Count(2, Range(true, byte('0'), byte('9'))),
+								Count(1, Range(byte('1'), byte('5'))),
+								Count(2, Range(byte('0'), byte('9'))),
 							),
 						),
 						Trace(t, "master 2",
 							Concat(
 								4,
 								Count(3, Eq(byte('2'))),
-								Count(1, Range(true, byte('1'), byte('9'))),
+								Count(1, Range(byte('1'), byte('9'))),
 							),
 						),
 						Trace(t, "master 3",
 							Concat(
 								4,
 								Count(2, Eq(byte('2'))),
-								Count(1, Range(true, byte('3'), byte('9'))),
-								Count(1, Range(true, byte('0'), byte('9'))),
+								Count(1, Range(byte('3'), byte('9'))),
+								Count(1, Range(byte('0'), byte('9'))),
 							),
 						),
 						Trace(t, "master 4",
 							Concat(
 								4,
 								Count(1, Eq(byte('2'))),
-								Count(1, Range(true, byte('3'), byte('6'))),
-								Count(2, Range(true, byte('0'), byte('9'))),
+								Count(1, Range(byte('3'), byte('6'))),
+								Count(2, Range(byte('0'), byte('9'))),
 							),
 						),
 						Trace(t, "master 5",
 							Concat(
 								4,
 								Count(1, Eq(byte('2'))),
-								Count(1, Range(true, byte('3'), byte('6'))),
-								Count(2, Range(true, byte('0'), byte('9'))),
+								Count(1, Range(byte('3'), byte('6'))),
+								Count(2, Range(byte('0'), byte('9'))),
 							),
 						),
 						Trace(t, "master 5",
@@ -80,7 +80,7 @@ func TestCards(t *testing.T) {
 								Eq(byte('2')),
 								Eq(byte('7')),
 								OneOf(byte('0'), byte('1')),
-								Range(true, byte('0'), byte('9')),
+								Range(byte('0'), byte('9')),
 							),
 						),
 						Trace(t, "master 6",
@@ -93,7 +93,7 @@ func TestCards(t *testing.T) {
 							),
 						),
 					),
-					Count(12, Range(true, byte('0'), byte('9'))),
+					Count(12, Range(byte('0'), byte('9'))),
 				),
 			),
 			toString,
@@ -110,7 +110,7 @@ func TestCards(t *testing.T) {
 						Eq(byte('3')),
 						OneOf(byte('4'), byte('7')),
 					),
-					Count(13, Range(true, byte('0'), byte('9'))),
+					Count(13, Range(byte('0'), byte('9'))),
 				),
 			),
 			toString,
