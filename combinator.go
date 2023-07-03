@@ -24,9 +24,9 @@ func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	}
 }
 
-func Any[T any](greedy bool) Combinator[T, T] {
+func Any[T any]() Combinator[T, T] {
 	return func(buffer Buffer[T]) (T, error) {
-		token, err := buffer.Read(greedy)
+		token, err := buffer.Read(true)
 		if err != nil {
 			return *new(T), err
 		}

@@ -44,8 +44,7 @@ func TestAny(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		source := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-		comb := Any[byte](true)
+		comb := Any[byte]()
 
 		for i := 0; i < 10000; i++ {
 			b := byte(source.Intn(math.MaxUint8 + 1))
@@ -57,7 +56,7 @@ func TestAny(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Any[byte](true)
+		comb := Any[byte]()
 
 		result, err := ParseBytes([]byte{}, comb)
 		assertError(t, err)
@@ -383,7 +382,7 @@ func TestCast(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		comb := Cast[byte, byte, int](
-			Any[byte](true),
+			Any[byte](),
 			func(x byte) (int, error) { return -1, fmt.Errorf("test error") },
 		)
 

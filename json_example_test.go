@@ -110,7 +110,7 @@ func TestJSON(t *testing.T) {
 	notZero := Range(true, byte('1'), byte('9'))
 	digit := Range(true, byte('0'), byte('9'))
 	quote := Eq(true, byte('"'))
-	any := Any[byte](true)
+	any := Any[byte]()
 	colon := Eq(true, byte(':'))
 	comma := Eq(true, byte(','))
 	whitespace := OneOf(true, byte(' '), byte('\n'), byte('\r'), byte('\t'))

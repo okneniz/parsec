@@ -899,7 +899,7 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Any[byte](true),
+			Any[byte](),
 			Satisfy[byte](false, func(x byte) bool { return x == byte('d') }),
 		)
 
@@ -919,7 +919,7 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Any[byte](true),
+			Any[byte](),
 			Satisfy(true, Nothing[byte]),
 		)
 
@@ -940,8 +940,8 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Any[byte](true),
-			Any[byte](true),
+			Any[byte](),
+			Any[byte](),
 		)
 
 		result, err := ParseBytes([]byte("abcd"), comb)
