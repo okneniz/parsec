@@ -15,103 +15,91 @@ func TestCards(t *testing.T) {
 
 	// from https://www.regular-expressions.info/creditcard.html
 
-	visa := Try(
+	visa := Trace(t, "visa",
 		Cast(
-			Trace(t, "visa",
-				Sequence(
-					16,
-					Count(1, Eq[byte]('4')),
-					Count(12, digit),
-					Optional(Count(3, digit), []byte{}),
-				),
+			Sequence(
+				16,
+				Count(1, Eq[byte]('4')),
+				Count(12, digit),
+				Optional(Count(3, digit), []byte{}),
 			),
 			toString,
 		),
 	)
 
-	master := Try(
+	master := Trace(t, "master",
 		Cast(
-			Trace(t, "master",
-				Sequence(
-					15,
-					Choice(
-						Trace(t, "master 1",
-							Concat(
-								4,
-								Count(1, Eq[byte]('5')),
-								Count(1, Range[byte]('1', '5')),
-								Count(2, Range[byte]('0', '9')),
-							),
-						),
-						Trace(t, "master 2",
-							Concat(
-								4,
-								Count(3, Eq[byte]('2')),
-								Count(1, Range[byte]('1', '9')),
-							),
-						),
-						Trace(t, "master 3",
-							Concat(
-								4,
-								Count(2, Eq[byte]('2')),
-								Count(1, Range[byte]('3', '9')),
-								Count(1, Range[byte]('0', '9')),
-							),
-						),
-						Trace(t, "master 4",
-							Concat(
-								4,
-								Count(1, Eq[byte]('2')),
-								Count(1, Range[byte]('3', '6')),
-								Count(2, Range[byte]('0', '9')),
-							),
-						),
-						Trace(t, "master 5",
-							Concat(
-								4,
-								Count(1, Eq[byte]('2')),
-								Count(1, Range[byte]('3', '6')),
-								Count(2, Range[byte]('0', '9')),
-							),
-						),
-						Trace(t, "master 5",
-							Sequence(
-								4,
-								Eq[byte]('2'),
-								Eq[byte]('7'),
-								OneOf[byte]('0', '1'),
-								Range[byte]('0', '9'),
-							),
-						),
-						Trace(t, "master 6",
-							Sequence(
-								4,
-								Eq[byte]('2'),
-								Eq[byte]('7'),
-								Eq[byte]('2'),
-								Eq[byte]('0'),
-							),
+			Sequence(
+				15,
+				Choice(
+					Trace(t, "master 1",
+						Concat(
+							4,
+							Count(1, Eq[byte]('5')),
+							Count(1, Range[byte]('1', '5')),
+							Count(2, Range[byte]('0', '9')),
 						),
 					),
-					Count(12, Range[byte]('0', '9')),
+					Trace(t, "master 2",
+						Concat(
+							4,
+							Count(3, Eq[byte]('2')),
+							Count(1, Range[byte]('1', '9')),
+						),
+					),
+					Trace(t, "master 3",
+						Concat(
+							4,
+							Count(2, Eq[byte]('2')),
+							Count(1, Range[byte]('3', '9')),
+							Count(1, Range[byte]('0', '9')),
+						),
+					),
+					Trace(t, "master 4",
+						Concat(
+							4,
+							Count(1, Eq[byte]('2')),
+							Count(1, Range[byte]('3', '6')),
+							Count(2, Range[byte]('0', '9')),
+						),
+					),
+					Trace(t, "master 5",
+						Concat(
+							4,
+							Count(1, Eq[byte]('2')),
+							Count(1, Range[byte]('3', '6')),
+							Count(2, Range[byte]('0', '9')),
+						),
+					),
+					Trace(t, "master 5",
+						Sequence(
+							4,
+							Eq[byte]('2'),
+							Eq[byte]('7'),
+							OneOf[byte]('0', '1'),
+							Range[byte]('0', '9'),
+						),
+					),
+					Trace(t, "master 6",
+						SequenceOf[byte]('2', '7', '2', '0'),
+					),
 				),
+				Count(12, Range[byte]('0', '9')),
 			),
 			toString,
 		),
 	)
 
-	americanExpress := Try(
+	americanExpress := Trace(t, "american express",
 		Cast(
-			Trace(t, "american express",
+			Sequence(
+				2,
 				Sequence(
 					2,
-					Sequence(
-						2,
-						Eq[byte]('3'),
-						OneOf[byte]('4', '7'),
-					),
-					Count(13, Range[byte]('0', '9')),
+					Eq[byte]('3'),
+					OneOf[byte]('4', '7'),
 				),
+				Count(13, Range[byte]('0', '9')),
 			),
 			toString,
 		),
