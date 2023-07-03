@@ -317,6 +317,33 @@ func TestSkipAfter(t *testing.T) {
 	})
 }
 
+func TestPadded(t *testing.T) {
+	t.Parallel()
+
+	t.Run("case 1", func(t *testing.T){
+		comb := Padded(
+			Eq(true, byte('.')),
+			Range(true, byte('0'), byte('9')),
+		)
+
+		result, err := ParseBytes([]byte("1"), comb)
+		check(t, err)
+		assertEq(t, result, '1')
+
+		result, err = ParseBytes([]byte(".1"), comb)
+		check(t, err)
+		assertEq(t, result, '1')
+
+		result, err = ParseBytes([]byte("...1"), comb)
+		check(t, err)
+		assertEq(t, result, '1')
+
+		result, err = ParseBytes([]byte("..1..."), comb)
+		check(t, err)
+		assertEq(t, result, '1')
+	})
+}
+
 func TestEOF(t *testing.T) {
 	t.Parallel()
 

@@ -129,9 +129,8 @@ func Padded[T any, S any, B any](
 	skip Combinator[T, B],
 	body Combinator[T, S],
 ) Combinator[T, S] {
-	// x := Many(0, skip)
-	// return Skip(x, SkipAfter(x, body))
-	return body
+	x := Many(0, Try(skip))
+	return Skip(x, SkipAfter(x, body))
 }
 
 func EOF[T any]() Combinator[T, bool] {

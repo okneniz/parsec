@@ -7,18 +7,7 @@ import (
 )
 
 type JSON interface {
-	// IsString() bool
-	// IsNumber() bool
-	// IsObject() bool
-	// IsArray() bool
-	// IsBool() bool
-	// IsNull() bool
-
 	ToString() (string, error)
-	// ToNumber() (int, error)
-	// ToObject() (map[string]JSON, error)
-	// ToArray() ([]JSON, error)
-	// ToBool() (bool, error)
 }
 
 type JSString struct {
@@ -124,7 +113,7 @@ func TestJSON(t *testing.T) {
 	any := Any[byte](true)
 	colon := Eq(true, byte(':'))
 	comma := Eq(true, byte(','))
-	whitespace := OneOf(true, byte(' '), byte('\n'), byte('\r'))
+	whitespace := OneOf(true, byte(' '), byte('\n'), byte('\r'), byte('\t'))
 
 	var value Combinator[byte, JSON]
 
@@ -187,8 +176,10 @@ func TestJSON(t *testing.T) {
 		return &JSString{string(s)}, nil
 	})
 
+	keyComb := Try(Padded(whitespace, str))
+
 	pair := Trace(t, "pair", func(buffer Buffer[byte]) (*JSPair, error) {
-		key, err := Try(str)(buffer)
+		key, err := keyComb(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -266,7 +257,7 @@ func TestJSON(t *testing.T) {
 
 	comb := value
 
-	// t.Parallel()
+	t.Parallel()
 
 	t.Run("numbers", func(t *testing.T) {
 		result, err := ParseBytes([]byte("1"), comb)
@@ -276,10 +267,34 @@ func TestJSON(t *testing.T) {
 		result, err = ParseBytes([]byte("777"), comb)
 		check(t, err)
 		assertJSEq(t, result, &JSNumber{777})
+
+		result, err = ParseBytes([]byte("777 "), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSNumber{777})
+
+		result, err = ParseBytes([]byte(" 777"), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSNumber{777})
+
+		result, err = ParseBytes([]byte(" 777 "), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSNumber{777})
 	})
 
 	t.Run("null", func(t *testing.T) {
 		result, err := ParseBytes([]byte("null"), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSNull{})
+
+		result, err = ParseBytes([]byte("  null"), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSNull{})
+
+		result, err = ParseBytes([]byte("null "), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSNull{})
+
+		result, err = ParseBytes([]byte("\n\r null "), comb)
 		check(t, err)
 		assertJSEq(t, result, &JSNull{})
 	})
@@ -296,6 +311,18 @@ func TestJSON(t *testing.T) {
 		result, err = ParseBytes([]byte(`""`), comb)
 		check(t, err)
 		assertJSEq(t, result, &JSString{""})
+
+		result, err = ParseBytes([]byte(`  "another"`), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSString{"another"})
+
+		result, err = ParseBytes([]byte(`"another"   `), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSString{"another"})
+
+		result, err = ParseBytes([]byte(`    "another"  `), comb)
+		check(t, err)
+		assertJSEq(t, result, &JSString{"another"})
 	})
 
 	t.Run("array", func(t *testing.T) {
@@ -337,7 +364,8 @@ func TestJSON(t *testing.T) {
 			},
 		})
 
-		result, err = ParseBytes([]byte(`["test",1,null,[],[2,3,"4"]]`), comb)
+		result, err = ParseBytes([]byte(`["test",1 , null, [ ],[ 2,  3,"4"]
+		]`), comb)
 		check(t, err)
 		assertJSEq(t, result, &JSArray{
 			[]JSON{
@@ -369,7 +397,7 @@ func TestJSON(t *testing.T) {
 			},
 		})
 
-		result, err = ParseBytes([]byte(`{"foo":{"bar":[1,null]}}`), comb)
+		result, err = ParseBytes([]byte(`{ "foo" :{"bar": [ 1, null]}  }`), comb)
 		check(t, err)
 		assertJSEq(t, result, &JSObject{
 			map[string]JSON{
