@@ -65,30 +65,28 @@ func After[T any, S any, B any, Z any](
 	return And(body, after, compose)
 }
 
-func Between[T any, S any, B any, M any, Z any](
+func Between[T any, S any, B any, M any](
 	pre Combinator[T, S],
 	c Combinator[T, B],
 	suf Combinator[T, M],
-	compose Composer3[S, B, M, Z],
-) Combinator[T, Z] {
-	return func(buffer Buffer[T]) (Z, error) {
-		prefix, err := pre(buffer)
+) Combinator[T, B] {
+	return func(buffer Buffer[T]) (B, error) {
+		_, err := pre(buffer)
 		if err != nil {
-			return *new(Z), err
+			return *new(B), err
 		}
 
 		body, err := c(buffer)
 		if err != nil {
-			return *new(Z), err
+			return *new(B), err
 		}
 
-		suffix, err := suf(buffer)
+		_, err = suf(buffer)
 		if err != nil {
-			return *new(Z), err
+			return *new(B), err
 		}
 
-		// TODO : а зачем здесь вообще compose?
-		return compose(prefix, body, suffix), nil // TODO : compose return error?
+		return body, nil
 	}
 }
 
@@ -107,11 +105,11 @@ func Skip[T any, S any, B any](
 }
 
 func SkipAfter[T any, S any, B any](
-	skip Combinator[T, B], // TODO : change order of params?
-	pre Combinator[T, S],
+	skip Combinator[T, B],
+	body Combinator[T, S],
 ) Combinator[T, S] {
 	return func(buffer Buffer[T]) (S, error) {
-		result, err := pre(buffer)
+		result, err := body(buffer)
 		if err != nil {
 			return *new(S), err
 		}

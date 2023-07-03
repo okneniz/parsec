@@ -154,7 +154,6 @@ func TestBetween(t *testing.T) {
 			Eq(true, byte('(')),
 			Some(0, Try(notBrackets)),
 			Eq(true, byte(')')),
-			func(x byte, y []byte, z byte) []byte { return y },
 		)
 
 		result, err := ParseBytes([]byte("(abc)"), comb)

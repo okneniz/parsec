@@ -204,7 +204,7 @@ func TestJSON(t *testing.T) {
 
 	obj := Trace(t, "object", Between(
 		Eq(true, byte('{')),
-		func(buffer Buffer[byte]) (*JSObject, error) {
+		func(buffer Buffer[byte]) (JSON, error) {
 			listOfPairs := SepBy(0, pair, comma)
 
 			list, err := listOfPairs(buffer)
@@ -220,14 +220,11 @@ func TestJSON(t *testing.T) {
 			return &JSObject{m}, nil
 		},
 		Eq(true, byte('}')),
-		func(x byte, y *JSObject, z byte) JSON {
-			return y
-		},
 	))
 
 	arr := Trace(t, "array", Between(
 		Eq(true, byte('[')),
-		func(buffer Buffer[byte]) (*JSArray, error) {
+		func(buffer Buffer[byte]) (JSON, error) {
 			listOfValues := SepBy(0, value, comma)
 
 			list, err := listOfValues(buffer)
@@ -238,9 +235,6 @@ func TestJSON(t *testing.T) {
 			return &JSArray{list}, nil
 		},
 		Eq(true, byte(']')),
-		func(x byte, y *JSArray, z byte) JSON {
-			return y
-		},
 	))
 
 	value = Padded(
