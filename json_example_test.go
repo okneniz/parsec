@@ -2,8 +2,8 @@ package parsec
 
 import (
 	"fmt"
-	"testing"
 	"strings"
+	"testing"
 )
 
 type JSON interface {
@@ -95,7 +95,7 @@ func (j *JSBool) ToString() (string, error) {
 	return fmt.Sprintf("%t", j.value), nil
 }
 
-type JSNull struct {}
+type JSNull struct{}
 
 func (j *JSNull) ToString() (string, error) {
 	return "null", nil
@@ -153,14 +153,14 @@ func TestJSON(t *testing.T) {
 		Count(1, notZero),
 		Many(0, Try(digit)),
 	),
-	func(x []byte) (JSON, error) {
-		v, err := digitsToNum(x)
-		if err != nil {
-			return nil, err
-		}
+		func(x []byte) (JSON, error) {
+			v, err := digitsToNum(x)
+			if err != nil {
+				return nil, err
+			}
 
-		return &JSNumber{v}, nil
-	}))
+			return &JSNumber{v}, nil
+		}))
 
 	str := Trace(t, "string", func(buffer Buffer[byte]) (JSON, error) {
 		_, err := quote(buffer)
@@ -199,7 +199,7 @@ func TestJSON(t *testing.T) {
 			return nil, fmt.Errorf("receive %#v as string", key)
 		}
 
-		return &JSPair{*ks,val}, nil
+		return &JSPair{*ks, val}, nil
 	})
 
 	obj := Trace(t, "object", Between(
@@ -427,7 +427,7 @@ func isJSEq(x, y JSON) bool {
 	}
 
 	switch xv := x.(type) {
-    case *JSString:
+	case *JSString:
 		yv, ok := y.(*JSString)
 		if !ok {
 			return false

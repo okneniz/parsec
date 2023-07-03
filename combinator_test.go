@@ -319,7 +319,7 @@ func TestSkipAfter(t *testing.T) {
 func TestPadded(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T){
+	t.Run("case 1", func(t *testing.T) {
 		comb := Padded(
 			Eq(true, byte('.')),
 			Range(true, byte('0'), byte('9')),
