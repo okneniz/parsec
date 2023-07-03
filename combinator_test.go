@@ -319,8 +319,8 @@ func TestPadded(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Padded(
-			Eq(byte('.')),
-			Range(byte('0'), byte('9')),
+			Eq[byte]('.'),
+			Range[byte]('0', '9'),
 		)
 
 		result, err := ParseBytes([]byte("1"), comb)
