@@ -2,10 +2,10 @@ package parsec
 
 import (
 	"fmt"
-	"time"
-	"math/rand"
 	"math"
+	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestTimestamps(t *testing.T) {
@@ -200,7 +200,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = sep(buffer)
+		_, err = sep(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected separator ':'")
 		}
@@ -210,7 +210,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = sep(buffer)
+		_, err = sep(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected separator ':'")
 		}
@@ -220,7 +220,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = space(buffer)
+		_, err = space(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected space")
 		}
@@ -284,7 +284,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = sep(buffer)
+		_, err = sep(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected separator ':'")
 		}
@@ -294,7 +294,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = sep(buffer)
+		_, err = sep(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected separator ':'")
 		}
@@ -314,7 +314,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = space(buffer)
+		_, err = space(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected space")
 		}
@@ -388,7 +388,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = sep(buffer)
+		_, err = sep(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected separator ':'")
 		}
@@ -398,7 +398,7 @@ func TestTimestamps(t *testing.T) {
 			return nil, err
 		}
 
-		 _, err = sep(buffer)
+		_, err = sep(buffer)
 		if err != nil {
 			return nil, fmt.Errorf("expected separator ':'")
 		}
@@ -468,7 +468,7 @@ func randomFormattedDates(r *rand.Rand, dt []*time.Time) []string {
 func randomDates(r *rand.Rand, count int) []*time.Time {
 	result := make([]*time.Time, count)
 	for i := 0; i < count; i++ {
-    	result[i] = randomDate(r)
+		result[i] = randomDate(r)
 	}
 	return result
 }
@@ -499,7 +499,7 @@ var (
 )
 
 func randomLocation(r *rand.Rand) *time.Location {
-	x := randomInt(r, 0, len(allowZones) - 1)
+	x := randomInt(r, 0, len(allowZones)-1)
 	loc, err := time.LoadLocation(allowZones[x])
 	if err != nil {
 		panic(fmt.Sprintf("generate random location error: %s (x=%v,name=%v)", err, x, allowZones[x]))
@@ -508,11 +508,11 @@ func randomLocation(r *rand.Rand) *time.Location {
 }
 
 func randomInt(r *rand.Rand, from, to int) int {
-	return from + r.Intn(to - from)
+	return from + r.Intn(to-from)
 }
 
 func randomLayout(r *rand.Rand) string {
-	x := randomInt(r, 0, len(allowLayouts) - 1)
+	x := randomInt(r, 0, len(allowLayouts)-1)
 	return allowLayouts[x]
 }
 
@@ -537,7 +537,7 @@ func digitsToNum(ds []byte) (int, error) {
 	num := m[ds[len(ds)-1]]
 
 	for i, d := range ds[:len(ds)-1] {
-		l := math.Pow(10, float64(len(ds) - i - 1))
+		l := math.Pow(10, float64(len(ds)-i-1))
 		v := int(l) * m[d]
 		num += v
 	}
@@ -545,23 +545,22 @@ func digitsToNum(ds []byte) (int, error) {
 	return num, nil
 }
 
-
 func TestDigitsToNum(t *testing.T) {
 	examples := map[string]int{
-		"0": 0,
-		"1": 1,
-		"2": 2,
-		"3": 3,
-		"4": 4,
-		"5": 5,
-		"6": 6,
-		"7": 7,
-		"8": 8,
-		"9": 9,
-		"10": 10,
-		"11": 11,
-		"101": 101,
-		"123": 123,
+		"0":     0,
+		"1":     1,
+		"2":     2,
+		"3":     3,
+		"4":     4,
+		"5":     5,
+		"6":     6,
+		"7":     7,
+		"8":     8,
+		"9":     9,
+		"10":    10,
+		"11":    11,
+		"101":   101,
+		"123":   123,
 		"10723": 10723,
 		"50221": 50221,
 	}

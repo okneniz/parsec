@@ -2,11 +2,11 @@ package parsec
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/rand"
 	"testing"
 	"time"
-	"fmt"
 )
 
 func TestSatisfy(t *testing.T) {

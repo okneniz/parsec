@@ -101,11 +101,11 @@ func TestCards(t *testing.T) {
 		),
 	)
 
-	americaExpress := Try(
+	americanExpress := Try(
 		Cast(
 			Trace(t, "american express",
 				Sequence(
-					15,
+					2,
 					Sequence(
 						2,
 						Eq(true, byte('3')),
@@ -121,7 +121,7 @@ func TestCards(t *testing.T) {
 	cards := Choice(
 		Try(visa),
 		Try(master),
-		Try(americaExpress),
+		Try(americanExpress),
 	)
 
 	noice := Many(10, Try(notDigit))

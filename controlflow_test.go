@@ -118,7 +118,7 @@ func TestSequence(t *testing.T) {
 }
 
 func TestChoice(t *testing.T) {
-	t.Run("case 1", func(t *testing.T){
+	t.Run("case 1", func(t *testing.T) {
 		comb := Choice(
 			Try(Eq(true, byte('a'))),
 			Try(Eq(true, byte('b'))),
@@ -138,7 +138,7 @@ func TestChoice(t *testing.T) {
 		assertEq(t, result, byte('c'))
 	})
 
-	t.Run("case 2", func(t *testing.T){
+	t.Run("case 2", func(t *testing.T) {
 		comb := Many(
 			4,
 			Choice(
@@ -159,7 +159,7 @@ func TestChoice(t *testing.T) {
 		})
 	})
 
-	t.Run("case 3", func(t *testing.T){
+	t.Run("case 3", func(t *testing.T) {
 		comb := Many(
 			0,
 			Choice(

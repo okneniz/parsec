@@ -87,7 +87,8 @@ func Between[T any, S any, B any, M any, Z any](
 			return *new(Z), err
 		}
 
-		return compose(prefix, body, suffix), nil
+		// TODO : а зачем здесь вообще compose?
+		return compose(prefix, body, suffix), nil // TODO : compose return error?
 	}
 }
 
@@ -122,6 +123,15 @@ func SkipAfter[T any, S any, B any](
 
 		return result, nil
 	}
+}
+
+func Padded[T any, S any, B any](
+	skip Combinator[T, B],
+	body Combinator[T, S],
+) Combinator[T, S] {
+	// x := Many(0, skip)
+	// return Skip(x, SkipAfter(x, body))
+	return body
 }
 
 func EOF[T any]() Combinator[T, bool] {
