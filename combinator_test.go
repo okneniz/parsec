@@ -102,8 +102,8 @@ func TestBefore(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Before(
-			Eq(true, byte('a')),
-			Eq(true, byte('b')),
+			Eq(byte('a')),
+			Eq(byte('b')),
 			func(x, y byte) []byte { return []byte{x, y} },
 		)
 
@@ -126,8 +126,8 @@ func TestAfter(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := After(
-			Eq(true, byte('a')),
-			Eq(true, byte('b')),
+			Eq(byte('a')),
+			Eq(byte('b')),
 			func(x, y byte) []byte { return []byte{x, y} },
 		)
 
@@ -150,9 +150,9 @@ func TestBetween(t *testing.T) {
 		})
 
 		comb := Between(
-			Eq(true, byte('(')),
+			Eq(byte('(')),
 			Some(0, Try(notBrackets)),
-			Eq(true, byte(')')),
+			Eq(byte(')')),
 		)
 
 		result, err := ParseBytes([]byte("(abc)"), comb)
@@ -206,8 +206,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Skip(
-			Optional(Eq(true, byte('a')), 0),
-			Eq(true, byte('b')),
+			Optional(Eq(byte('a')), 0),
+			Eq(byte('b')),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -222,16 +222,15 @@ func TestSkip(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		phrase := Sequence(
 			3,
-			Eq(true, byte('a')),
-			Eq(true, byte('b')),
-			Eq(true, byte('c')),
+			Eq(byte('a')),
+			Eq(byte('b')),
+			Eq(byte('c')),
 		)
 
 		noice := Many(
 			0,
 			Try(
 				NoneOf(
-					true,
 					byte('a'),
 					byte('b'),
 					byte('c'),
@@ -260,8 +259,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := Skip(
-			NotEq(true, byte('a')),
-			Eq(true, byte('a')),
+			NotEq(byte('a')),
+			Eq(byte('a')),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -275,8 +274,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq(true, byte('b')),
-			Eq(true, byte('a')),
+			Eq(byte('b')),
+			Eq(byte('a')),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -294,7 +293,7 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq(true, byte('b')),
+			Eq(byte('b')),
 			Satisfy[byte](true, Nothing[byte]),
 		)
 
@@ -306,7 +305,7 @@ func TestSkipAfter(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SkipAfter(
 			Satisfy[byte](true, Nothing[byte]),
-			Eq(true, byte('a')),
+			Eq(byte('a')),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -320,7 +319,7 @@ func TestPadded(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Padded(
-			Eq(true, byte('.')),
+			Eq(byte('.')),
 			Range(true, byte('0'), byte('9')),
 		)
 

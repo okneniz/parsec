@@ -109,29 +109,29 @@ type JSPair struct {
 func TestJSON(t *testing.T) {
 	notZero := Range(true, byte('1'), byte('9'))
 	digit := Range(true, byte('0'), byte('9'))
-	quote := Eq(true, byte('"'))
+	quote := Eq(byte('"'))
 	any := Any[byte]()
-	colon := Eq(true, byte(':'))
-	comma := Eq(true, byte(','))
-	whitespace := OneOf(true, byte(' '), byte('\n'), byte('\r'), byte('\t'))
+	colon := Eq(byte(':'))
+	comma := Eq(byte(','))
+	whitespace := OneOf(byte(' '), byte('\n'), byte('\r'), byte('\t'))
 
 	var value Combinator[byte, JSON]
 
 	bool := Trace(t, "bool", Cast(Choice(
 		Try(Sequence(
 			4,
-			Eq(true, byte('t')),
-			Eq(true, byte('r')),
-			Eq(true, byte('u')),
-			Eq(true, byte('e')),
+			Eq(byte('t')),
+			Eq(byte('r')),
+			Eq(byte('u')),
+			Eq(byte('e')),
 		)),
 		Try(Sequence(
 			5,
-			Eq(true, byte('f')),
-			Eq(true, byte('a')),
-			Eq(true, byte('l')),
-			Eq(true, byte('s')),
-			Eq(true, byte('e')),
+			Eq(byte('f')),
+			Eq(byte('a')),
+			Eq(byte('l')),
+			Eq(byte('s')),
+			Eq(byte('e')),
 		)),
 	), func(x []byte) (JSON, error) {
 		lit := string(x)
@@ -140,10 +140,10 @@ func TestJSON(t *testing.T) {
 
 	null := Trace(t, "null", Cast(Sequence(
 		4,
-		Eq(true, byte('n')),
-		Eq(true, byte('u')),
-		Eq(true, byte('l')),
-		Eq(true, byte('l')),
+		Eq(byte('n')),
+		Eq(byte('u')),
+		Eq(byte('l')),
+		Eq(byte('l')),
 	), func(_ []byte) (JSON, error) {
 		return new(JSNull), nil
 	}))
@@ -203,7 +203,7 @@ func TestJSON(t *testing.T) {
 	})
 
 	obj := Trace(t, "object", Between(
-		Eq(true, byte('{')),
+		Eq(byte('{')),
 		func(buffer Buffer[byte]) (JSON, error) {
 			listOfPairs := SepBy(0, pair, comma)
 
@@ -219,11 +219,11 @@ func TestJSON(t *testing.T) {
 
 			return &JSObject{m}, nil
 		},
-		Eq(true, byte('}')),
+		Eq(byte('}')),
 	))
 
 	arr := Trace(t, "array", Between(
-		Eq(true, byte('[')),
+		Eq(byte('[')),
 		func(buffer Buffer[byte]) (JSON, error) {
 			listOfValues := SepBy(0, value, comma)
 
@@ -234,7 +234,7 @@ func TestJSON(t *testing.T) {
 
 			return &JSArray{list}, nil
 		},
-		Eq(true, byte(']')),
+		Eq(byte(']')),
 	))
 
 	value = Padded(
@@ -407,7 +407,6 @@ func TestJSON(t *testing.T) {
 				},
 			},
 		})
-
 	})
 }
 

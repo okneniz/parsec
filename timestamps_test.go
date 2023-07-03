@@ -23,13 +23,13 @@ func TestTimestamps(t *testing.T) {
 
 	dayOfWeekPrefix := Trace(t, "day of week", Cast(
 		Choice(
-			Try(Sequence(3, Eq(true, byte('M')), Eq(true, byte('o')), Eq(true, byte('n')))),
-			Try(Sequence(3, Eq(true, byte('T')), Eq(true, byte('u')), Eq(true, byte('e')))),
-			Try(Sequence(3, Eq(true, byte('W')), Eq(true, byte('e')), Eq(true, byte('d')))),
-			Try(Sequence(3, Eq(true, byte('T')), Eq(true, byte('h')), Eq(true, byte('u')))),
-			Try(Sequence(3, Eq(true, byte('F')), Eq(true, byte('r')), Eq(true, byte('i')))),
-			Try(Sequence(3, Eq(true, byte('S')), Eq(true, byte('a')), Eq(true, byte('t')))),
-			Try(Sequence(3, Eq(true, byte('S')), Eq(true, byte('u')), Eq(true, byte('n')))),
+			Try(Sequence(3, Eq(byte('M')), Eq(byte('o')), Eq(byte('n')))),
+			Try(Sequence(3, Eq(byte('T')), Eq(byte('u')), Eq(byte('e')))),
+			Try(Sequence(3, Eq(byte('W')), Eq(byte('e')), Eq(byte('d')))),
+			Try(Sequence(3, Eq(byte('T')), Eq(byte('h')), Eq(byte('u')))),
+			Try(Sequence(3, Eq(byte('F')), Eq(byte('r')), Eq(byte('i')))),
+			Try(Sequence(3, Eq(byte('S')), Eq(byte('a')), Eq(byte('t')))),
+			Try(Sequence(3, Eq(byte('S')), Eq(byte('u')), Eq(byte('n')))),
 		),
 		func(x []byte) (time.Weekday, error) {
 			s := string(x)
@@ -60,18 +60,18 @@ func TestTimestamps(t *testing.T) {
 
 	monthPrefix := Trace(t, "month prefix", Cast(
 		Choice(
-			Try(Sequence(3, Eq(true, byte('J')), Eq(true, byte('a')), Eq(true, byte('n')))),
-			Try(Sequence(3, Eq(true, byte('F')), Eq(true, byte('e')), Eq(true, byte('b')))),
-			Try(Sequence(3, Eq(true, byte('M')), Eq(true, byte('a')), Eq(true, byte('r')))),
-			Try(Sequence(3, Eq(true, byte('A')), Eq(true, byte('p')), Eq(true, byte('r')))),
-			Try(Sequence(3, Eq(true, byte('M')), Eq(true, byte('a')), Eq(true, byte('y')))),
-			Try(Sequence(3, Eq(true, byte('J')), Eq(true, byte('u')), Eq(true, byte('n')))),
-			Try(Sequence(3, Eq(true, byte('J')), Eq(true, byte('u')), Eq(true, byte('l')))),
-			Try(Sequence(3, Eq(true, byte('A')), Eq(true, byte('u')), Eq(true, byte('g')))),
-			Try(Sequence(3, Eq(true, byte('S')), Eq(true, byte('e')), Eq(true, byte('p')))),
-			Try(Sequence(3, Eq(true, byte('O')), Eq(true, byte('c')), Eq(true, byte('t')))),
-			Try(Sequence(3, Eq(true, byte('N')), Eq(true, byte('o')), Eq(true, byte('v')))),
-			Try(Sequence(3, Eq(true, byte('D')), Eq(true, byte('e')), Eq(true, byte('c')))),
+			Try(Sequence(3, Eq(byte('J')), Eq(byte('a')), Eq(byte('n')))),
+			Try(Sequence(3, Eq(byte('F')), Eq(byte('e')), Eq(byte('b')))),
+			Try(Sequence(3, Eq(byte('M')), Eq(byte('a')), Eq(byte('r')))),
+			Try(Sequence(3, Eq(byte('A')), Eq(byte('p')), Eq(byte('r')))),
+			Try(Sequence(3, Eq(byte('M')), Eq(byte('a')), Eq(byte('y')))),
+			Try(Sequence(3, Eq(byte('J')), Eq(byte('u')), Eq(byte('n')))),
+			Try(Sequence(3, Eq(byte('J')), Eq(byte('u')), Eq(byte('l')))),
+			Try(Sequence(3, Eq(byte('A')), Eq(byte('u')), Eq(byte('g')))),
+			Try(Sequence(3, Eq(byte('S')), Eq(byte('e')), Eq(byte('p')))),
+			Try(Sequence(3, Eq(byte('O')), Eq(byte('c')), Eq(byte('t')))),
+			Try(Sequence(3, Eq(byte('N')), Eq(byte('o')), Eq(byte('v')))),
+			Try(Sequence(3, Eq(byte('D')), Eq(byte('e')), Eq(byte('c')))),
 		),
 		func(x []byte) (time.Month, error) {
 			s := string(x)
@@ -90,7 +90,7 @@ func TestTimestamps(t *testing.T) {
 		digitsToNum,
 	))
 
-	pad := OneOf(true, byte('0'), byte(' '))
+	pad := OneOf(byte('0'), byte(' '))
 
 	paddedDayNum := Trace(t, "day",
 		Cast(
@@ -159,9 +159,9 @@ func TestTimestamps(t *testing.T) {
 		},
 	))
 
-	space := Eq(true, byte(' '))
-	sep := Eq(true, byte(':'))
-	comma := Eq(true, byte(','))
+	space := Eq(byte(' '))
+	sep := Eq(byte(':'))
+	comma := Eq(byte(','))
 
 	// ANSIC = "Mon Jan _2 15:04:05 2006"
 	ansic := Trace(t, "ansic", func(buffer Buffer[byte]) (*time.Time, error) {
@@ -449,7 +449,7 @@ func TestTimestamps(t *testing.T) {
 		Try(rfc1123),
 	)
 
-	comb := SepBy(len(dates), oneOfDate, Eq(true, byte('\n')))
+	comb := SepBy(len(dates), oneOfDate, Eq(byte('\n')))
 
 	result, err := ParseBytes([]byte(input), comb)
 	check(t, err)

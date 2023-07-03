@@ -7,7 +7,7 @@ import (
 func TestEq(t *testing.T) {
 	c := byte('c')
 
-	comb := Eq[byte](true, c)
+	comb := Eq[byte](c)
 
 	result, err := ParseBytes([]byte("a"), comb)
 	assertError(t, err)
@@ -25,7 +25,7 @@ func TestEq(t *testing.T) {
 func TestNotEq(t *testing.T) {
 	c := byte('c')
 
-	comb := NotEq[byte](true, c)
+	comb := NotEq[byte](c)
 
 	result, err := ParseBytes([]byte("a"), comb)
 	check(t, err)
@@ -45,7 +45,7 @@ func TestNotEq(t *testing.T) {
 }
 
 func TestOneOf(t *testing.T) {
-	comb := OneOf(true, byte('a'), byte('b'), byte('c'))
+	comb := OneOf(byte('a'), byte('b'), byte('c'))
 
 	result, err := ParseBytes([]byte("a"), comb)
 	check(t, err)

@@ -451,8 +451,8 @@ func TestSepBy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepBy(
 			0,
-			NotEq(true, byte(',')),
-			Eq(true, byte(',')),
+			NotEq(byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -488,7 +488,7 @@ func TestSepBy(t *testing.T) {
 		comb := SepBy(
 			0,
 			Satisfy(true, Nothing[byte]),
-			Eq(true, byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -503,7 +503,7 @@ func TestSepBy(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepBy(
 			0,
-			NotEq(true, byte(',')),
+			NotEq(byte(',')),
 			Satisfy(true, Nothing[byte]),
 		)
 
@@ -523,8 +523,8 @@ func TestSepBy1(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepBy1(
 			0,
-			NotEq(true, byte(',')),
-			Eq(true, byte(',')),
+			NotEq(byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -560,7 +560,7 @@ func TestSepBy1(t *testing.T) {
 		comb := SepBy1(
 			0,
 			Satisfy(true, Nothing[byte]),
-			Eq(true, byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -575,7 +575,7 @@ func TestSepBy1(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepBy1(
 			0,
-			NotEq(true, byte(',')),
+			NotEq(byte(',')),
 			Satisfy(true, Nothing[byte]),
 		)
 
@@ -595,8 +595,8 @@ func TestEndBy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := EndBy(
 			0,
-			NotEq(true, byte(',')),
-			Eq(true, byte(',')),
+			NotEq(byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -640,7 +640,7 @@ func TestEndBy(t *testing.T) {
 		comb := EndBy(
 			0,
 			Satisfy(true, Nothing[byte]),
-			Eq(true, byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -655,7 +655,7 @@ func TestEndBy(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := EndBy(
 			0,
-			NotEq(true, byte(',')),
+			NotEq(byte(',')),
 			Satisfy(true, Nothing[byte]),
 		)
 
@@ -675,8 +675,8 @@ func TestEndBy1(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := EndBy1(
 			0,
-			NotEq(true, byte(',')),
-			Eq(true, byte(',')),
+			NotEq(byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -720,7 +720,7 @@ func TestEndBy1(t *testing.T) {
 		comb := EndBy1(
 			0,
 			Satisfy(true, Nothing[byte]),
-			Eq(true, byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -735,7 +735,7 @@ func TestEndBy1(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := EndBy1(
 			0,
-			NotEq(true, byte(',')),
+			NotEq(byte(',')),
 			Satisfy(true, Nothing[byte]),
 		)
 
@@ -755,8 +755,8 @@ func TestSepEndBy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepEndBy(
 			0,
-			NotEq(true, byte(',')),
-			Eq(true, byte(',')),
+			NotEq(byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -788,7 +788,7 @@ func TestSepEndBy(t *testing.T) {
 		comb := SepEndBy(
 			0,
 			Satisfy(true, Nothing[byte]),
-			Eq(true, byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -807,7 +807,7 @@ func TestSepEndBy(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepEndBy(
 			0,
-			NotEq(true, byte(',')),
+			NotEq(byte(',')),
 			Satisfy(true, Nothing[byte]),
 		)
 
@@ -831,8 +831,8 @@ func TestSepEndBy1(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepEndBy1(
 			0,
-			NotEq(true, byte(',')),
-			Eq(true, byte(',')),
+			NotEq(byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -864,7 +864,7 @@ func TestSepEndBy1(t *testing.T) {
 		comb := SepEndBy1(
 			0,
 			Satisfy(true, Nothing[byte]),
-			Eq(true, byte(',')),
+			Eq(byte(',')),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -879,7 +879,7 @@ func TestSepEndBy1(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepEndBy1(
 			0,
-			NotEq(true, byte(',')),
+			NotEq(byte(',')),
 			Satisfy(true, Nothing[byte]),
 		)
 
