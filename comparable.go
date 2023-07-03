@@ -35,3 +35,24 @@ func NoneOf[T comparable](greedy bool, data ...T) Combinator[T, T] {
 		return !exists
 	})
 }
+
+func SequenceOf[T comparable](data ...T) Combinator[T, []T] {
+	return func(buffer Buffer[T]) ([]T, error) {
+		result := make([]T, 0, len(data))
+
+		for _, x := range data {
+			token, err := buffer.Read(true)
+			if err != nil {
+				return nil, err
+			}
+
+			if x != token {
+				return nil, NothingMatched
+			}
+
+			result = append(result, token)
+		}
+
+		return result, nil
+	}
+}

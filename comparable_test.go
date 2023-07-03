@@ -63,3 +63,31 @@ func TestOneOf(t *testing.T) {
 	assertError(t, err)
 	assertEq(t, result, 0)
 }
+
+func TestSequenceOf(t *testing.T) {
+	comb := SequenceOf[byte]('f', 'o', 'o')
+
+	result, err := ParseBytes([]byte("foo"), comb)
+	check(t, err)
+	assertSlice(t, result, []byte{'f', 'o', 'o'})
+
+	result, err = ParseBytes([]byte("foobar"), comb)
+	check(t, err)
+	assertSlice(t, result, []byte{'f', 'o', 'o'})
+
+	result, err = ParseBytes([]byte("fo"), comb)
+	assertError(t, err)
+	assertSlice(t, result, nil)
+
+	result, err = ParseBytes([]byte(" foobar"), comb)
+	assertError(t, err)
+	assertSlice(t, result, nil)
+
+	result, err = ParseBytes([]byte(" "), comb)
+	assertError(t, err)
+	assertSlice(t, result, nil)
+
+	result, err = ParseBytes([]byte(""), comb)
+	assertError(t, err)
+	assertSlice(t, result, nil)
+}
