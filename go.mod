@@ -1,4 +1,4 @@
-module github.com/okneniz/parsec
+module git.sr.ht/~okneniz/parsec
 
 go 1.20
 
