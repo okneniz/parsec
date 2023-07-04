@@ -48,22 +48,6 @@ func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
 	}
 }
 
-func Before[T any, P any, S any, B any, Z any](
-	body Combinator[T, P, B], // TODO : change order of params to parsing order
-	before Combinator[T, P, S],
-	compose Composer[S, B, Z],
-) Combinator[T, P, Z] {
-	return And(before, body, compose)
-}
-
-func After[T any, P any, S any, B any, Z any](
-	body Combinator[T, P, B],
-	after Combinator[T, P, S],
-	compose Composer[B, S, Z],
-) Combinator[T, P, Z] {
-	return And(body, after, compose)
-}
-
 func Between[T any, P any, S any, B any, M any](
 	pre Combinator[T, P, S],
 	c Combinator[T, P, B],

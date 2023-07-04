@@ -97,50 +97,6 @@ func TestTry(t *testing.T) {
 	})
 }
 
-func TestBefore(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		comb := Before(
-			Eq[byte,int]('a'),
-			Eq[byte,int]('b'),
-			func(x, y byte) []byte { return []byte{x, y} },
-		)
-
-		result, err := ParseBytes([]byte("bac"), comb)
-		check(t, err)
-		assertSlice(t, result, []byte{'b', 'a'})
-
-		result, err = ParseBytes([]byte("bca"), comb)
-		assertError(t, err)
-		assertSlice(t, result, nil)
-
-		result, err = ParseBytes([]byte("abc"), comb)
-		assertError(t, err)
-		assertSlice(t, result, nil)
-	})
-}
-
-func TestAfter(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		comb := After(
-			Eq[byte,int]('a'),
-			Eq[byte,int]('b'),
-			func(x, y byte) []byte { return []byte{x, y} },
-		)
-
-		result, err := ParseBytes([]byte("abc"), comb)
-		check(t, err)
-		assertSlice(t, result, []byte{'a', 'b'})
-
-		result, err = ParseBytes([]byte("bac"), comb)
-		assertError(t, err)
-		assertSlice(t, result, nil)
-	})
-}
-
 func TestBetween(t *testing.T) {
 	t.Parallel()
 
