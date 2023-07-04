@@ -385,22 +385,6 @@ func assertEq[T comparable](t *testing.T, x, y T) {
 	}
 }
 
-func assertEqPointer[T comparable](t *testing.T, x, y *T) {
-	t.Helper()
-
-	if x == nil && y == nil {
-		return
-	}
-
-	if (x == nil && y != nil) || (x != nil && y == nil) {
-		t.Fatalf("%v != %v", x, y)
-	}
-
-	if *x != *y {
-		t.Fatalf("%v != %v", *x, *y)
-	}
-}
-
 func assertSlice[T comparable](t *testing.T, xs, ys []T) {
 	t.Helper()
 
@@ -413,8 +397,4 @@ func assertSlice[T comparable](t *testing.T, xs, ys []T) {
 			t.Fatalf("%v != %v", xs, ys)
 		}
 	}
-}
-
-func pointer[T any](t T) *T {
-	return &t
 }
