@@ -5,9 +5,9 @@ func Chainl[T any, P any, S any](
 	op Combinator[T, P, func(S, S) S],
 	def S,
 ) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
-		f := Chainl1(c, op) // TODO : move upper?
+	f := Chainl1(c, op)
 
+	return func(buffer Buffer[T, P]) (S, error) {
 		result, err := f(buffer)
 		if err != nil {
 			return def, nil
@@ -52,9 +52,9 @@ func Chainr[T any, P any, S any](
 	op Combinator[T, P, func(S, S) S],
 	def S,
 ) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
-		f := Chainr1(c, op) // TODO : move upper?
+	f := Chainr1(c, op)
 
+	return func(buffer Buffer[T, P]) (S, error) {
 		result, err := f(buffer)
 		if err != nil {
 			return def, nil
@@ -117,6 +117,14 @@ func SepBy[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
+		c := Try(
+			And(
+				sep,
+				body,
+				func(_ B, x S) S { return x },
+			),
+		)
+
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
@@ -125,14 +133,6 @@ func SepBy[T any, P any, S any, B any](
 			return result, nil
 		}
 		result = append(result, token)
-
-		c := Try(
-			And(
-				sep,
-				body,
-				func(_ B, x S) S { return x },
-			),
-		)
 
 		for !buffer.IsEOF() {
 			token, err = c(buffer)
@@ -152,9 +152,9 @@ func SepBy1[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, error) {
-		c := SepBy(cap, body, sep) // TODO : move upper?
+	c := SepBy(cap, body, sep)
 
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		// ignore error because SepBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
@@ -170,10 +170,10 @@ func EndBy[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
+	c := Try(SkipAfter(sep, body))
+
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
-
-		c := Try(SkipAfter(sep, body)) // TODO : move upper?
 
 		for !buffer.IsEOF() {
 			token, err := c(buffer)
@@ -193,9 +193,9 @@ func EndBy1[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, error) {
-		c := EndBy(cap, body, sep) // TODO : move upper?
+	c := EndBy(cap, body, sep)
 
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		// ignore error because EndBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
@@ -211,10 +211,10 @@ func SepEndBy[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
+	s := Try(sep)
+
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
-
-		s := Try(sep) // TODO : move upper?
 
 		for !buffer.IsEOF() {
 			token, err := body(buffer)
@@ -239,9 +239,9 @@ func SepEndBy1[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, error) {
-		c := SepEndBy(cap, body, sep) // TODO : move upper?
+	c := SepEndBy(cap, body, sep)
 
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		// ignore error because SepEndBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
@@ -256,9 +256,10 @@ func ManyTill[T any, P any, S any, B any](
 	c Combinator[T, P, S],
 	end Combinator[T, P, B],
 ) Combinator[T, P, []S] {
+	z := Try(end)
+
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
-		z := Try(end) // TODO : move upper?
 
 		for {
 			_, err := z(buffer)
