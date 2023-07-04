@@ -1,6 +1,5 @@
 package strings
 
-
 import (
 	. "git.sr.ht/~okneniz/parsec/testing"
 	"testing"

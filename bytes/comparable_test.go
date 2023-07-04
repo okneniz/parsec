@@ -1,8 +1,8 @@
 package bytes
 
 import (
-	"testing"
 	. "git.sr.ht/~okneniz/parsec/testing"
+	"testing"
 )
 
 func TestEq(t *testing.T) {

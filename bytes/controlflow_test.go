@@ -1,9 +1,9 @@
 package bytes
 
 import (
-	"testing"
-	. "git.sr.ht/~okneniz/parsec/testing"
 	p "git.sr.ht/~okneniz/parsec/common"
+	. "git.sr.ht/~okneniz/parsec/testing"
+	"testing"
 )
 
 func TestConcat(t *testing.T) {

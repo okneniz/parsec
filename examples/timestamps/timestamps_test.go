@@ -2,12 +2,12 @@ package timestamp
 
 import (
 	"fmt"
-	. "git.sr.ht/~okneniz/parsec/strings"
 	p "git.sr.ht/~okneniz/parsec/common"
+	. "git.sr.ht/~okneniz/parsec/strings"
 	. "git.sr.ht/~okneniz/parsec/testing"
+	"math/rand"
 	"testing"
 	"time"
-	"math/rand"
 )
 
 func TestTimestamps(t *testing.T) {

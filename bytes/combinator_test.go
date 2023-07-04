@@ -2,8 +2,8 @@ package bytes
 
 import (
 	"fmt"
-	. "git.sr.ht/~okneniz/parsec/testing"
 	p "git.sr.ht/~okneniz/parsec/common"
+	. "git.sr.ht/~okneniz/parsec/testing"
 	"math"
 	"math/rand"
 	"testing"

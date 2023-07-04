@@ -117,13 +117,13 @@ func SepBy[T any, P any, S any, B any](
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
-		c := Try(
-			And(
-				sep,
-				body,
-				func(_ B, x S) S { return x },
-			),
-		)
+	c := Try(
+		And(
+			sep,
+			body,
+			func(_ B, x S) S { return x },
+		),
+	)
 
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)

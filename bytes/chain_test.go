@@ -2,9 +2,9 @@ package bytes
 
 import (
 	"fmt"
-	"testing"
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/testing"
+	"testing"
 )
 
 func TestChainl(t *testing.T) {

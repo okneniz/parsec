@@ -2,12 +2,12 @@ package testing
 
 import (
 	"encoding/json"
-	"testing"
 	"fmt"
+	"golang.org/x/exp/constraints"
 	"math"
 	"math/rand"
 	"sort"
-	"golang.org/x/exp/constraints"
+	"testing"
 )
 
 func Check(t *testing.T, err error) {
@@ -77,7 +77,6 @@ func AssertEqDump[T any](t *testing.T, actual, expected T) {
 		t.Fatal("invalid result")
 	}
 }
-
 
 func CopyOf[T any](data []T) []T {
 	result := make([]T, len(data))
