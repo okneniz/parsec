@@ -10,8 +10,8 @@ import (
 )
 
 func TestCards(t *testing.T) {
-	digit := Range[byte]('0', '9')
-	notDigit := NotRange[byte]('0', '9')
+	digit := Range[byte, int]('0', '9')
+	notDigit := NotRange[byte, int]('0', '9')
 
 	// from https://www.regular-expressions.info/creditcard.html
 
@@ -19,7 +19,7 @@ func TestCards(t *testing.T) {
 		Cast(
 			Sequence(
 				16,
-				Count(1, Eq[byte]('4')),
+				Count(1, Eq[byte, int]('4')),
 				Count(12, digit),
 				Optional(Count(3, digit), []byte{}),
 			),
@@ -35,56 +35,56 @@ func TestCards(t *testing.T) {
 					Trace(t, "master 1",
 						Concat(
 							4,
-							Count(1, Eq[byte]('5')),
-							Count(1, Range[byte]('1', '5')),
-							Count(2, Range[byte]('0', '9')),
+							Count(1, Eq[byte, int]('5')),
+							Count(1, Range[byte, int]('1', '5')),
+							Count(2, Range[byte, int]('0', '9')),
 						),
 					),
 					Trace(t, "master 2",
 						Concat(
 							4,
-							Count(3, Eq[byte]('2')),
-							Count(1, Range[byte]('1', '9')),
+							Count(3, Eq[byte, int]('2')),
+							Count(1, Range[byte, int]('1', '9')),
 						),
 					),
 					Trace(t, "master 3",
 						Concat(
 							4,
-							Count(2, Eq[byte]('2')),
-							Count(1, Range[byte]('3', '9')),
-							Count(1, Range[byte]('0', '9')),
+							Count(2, Eq[byte, int]('2')),
+							Count(1, Range[byte, int]('3', '9')),
+							Count(1, Range[byte, int]('0', '9')),
 						),
 					),
 					Trace(t, "master 4",
 						Concat(
 							4,
-							Count(1, Eq[byte]('2')),
-							Count(1, Range[byte]('3', '6')),
-							Count(2, Range[byte]('0', '9')),
+							Count(1, Eq[byte, int]('2')),
+							Count(1, Range[byte, int]('3', '6')),
+							Count(2, Range[byte, int]('0', '9')),
 						),
 					),
 					Trace(t, "master 5",
 						Concat(
 							4,
-							Count(1, Eq[byte]('2')),
-							Count(1, Range[byte]('3', '6')),
-							Count(2, Range[byte]('0', '9')),
+							Count(1, Eq[byte, int]('2')),
+							Count(1, Range[byte, int]('3', '6')),
+							Count(2, Range[byte, int]('0', '9')),
 						),
 					),
 					Trace(t, "master 5",
 						Sequence(
 							4,
-							Eq[byte]('2'),
-							Eq[byte]('7'),
-							OneOf[byte]('0', '1'),
-							Range[byte]('0', '9'),
+							Eq[byte, int]('2'),
+							Eq[byte, int]('7'),
+							OneOf[byte, int]('0', '1'),
+							Range[byte, int]('0', '9'),
 						),
 					),
 					Trace(t, "master 6",
-						SequenceOf[byte]('2', '7', '2', '0'),
+						SequenceOf[byte, int]('2', '7', '2', '0'),
 					),
 				),
-				Count(12, Range[byte]('0', '9')),
+				Count(12, Range[byte, int]('0', '9')),
 			),
 			toString,
 		),
@@ -96,10 +96,10 @@ func TestCards(t *testing.T) {
 				2,
 				Sequence(
 					2,
-					Eq[byte]('3'),
-					OneOf[byte]('4', '7'),
+					Eq[byte, int]('3'),
+					OneOf[byte, int]('4', '7'),
 				),
-				Count(13, Range[byte]('0', '9')),
+				Count(13, Range[byte, int]('0', '9')),
 			),
 			toString,
 		),

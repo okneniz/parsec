@@ -9,7 +9,7 @@ import (
 )
 
 func TestTimestamps(t *testing.T) {
-	digit := Range(byte('0'), byte('9'))
+	digit := Range[byte, int]('0', '9')
 
 	dwDict := map[string]time.Weekday{
 		"Mon": time.Monday,
@@ -23,13 +23,13 @@ func TestTimestamps(t *testing.T) {
 
 	dayOfWeekPrefix := Trace(t, "day of week", Cast(
 		Choice(
-			Try(SequenceOf[byte]('M', 'o', 'n')),
-			Try(SequenceOf[byte]('T', 'u', 'e')),
-			Try(SequenceOf[byte]('W', 'e', 'd')),
-			Try(SequenceOf[byte]('T', 'h', 'u')),
-			Try(SequenceOf[byte]('F', 'r', 'i')),
-			Try(SequenceOf[byte]('S', 'a', 't')),
-			Try(SequenceOf[byte]('S', 'u', 'n')),
+			Try(SequenceOf[byte, int]('M', 'o', 'n')),
+			Try(SequenceOf[byte, int]('T', 'u', 'e')),
+			Try(SequenceOf[byte, int]('W', 'e', 'd')),
+			Try(SequenceOf[byte, int]('T', 'h', 'u')),
+			Try(SequenceOf[byte, int]('F', 'r', 'i')),
+			Try(SequenceOf[byte, int]('S', 'a', 't')),
+			Try(SequenceOf[byte, int]('S', 'u', 'n')),
 		),
 		func(x []byte) (time.Weekday, error) {
 			s := string(x)
@@ -60,18 +60,18 @@ func TestTimestamps(t *testing.T) {
 
 	monthPrefix := Trace(t, "month prefix", Cast(
 		Choice(
-			Try(SequenceOf[byte]('J', 'a', 'n')),
-			Try(SequenceOf[byte]('F', 'e', 'b')),
-			Try(SequenceOf[byte]('M', 'a', 'r')),
-			Try(SequenceOf[byte]('A', 'p', 'r')),
-			Try(SequenceOf[byte]('M', 'a', 'y')),
-			Try(SequenceOf[byte]('J', 'u', 'n')),
-			Try(SequenceOf[byte]('J', 'u', 'l')),
-			Try(SequenceOf[byte]('A', 'u', 'g')),
-			Try(SequenceOf[byte]('S', 'e', 'p')),
-			Try(SequenceOf[byte]('O', 'c', 't')),
-			Try(SequenceOf[byte]('N', 'o', 'v')),
-			Try(SequenceOf[byte]('D', 'e', 'c')),
+			Try(SequenceOf[byte,int]('J', 'a', 'n')),
+			Try(SequenceOf[byte,int]('F', 'e', 'b')),
+			Try(SequenceOf[byte,int]('M', 'a', 'r')),
+			Try(SequenceOf[byte,int]('A', 'p', 'r')),
+			Try(SequenceOf[byte,int]('M', 'a', 'y')),
+			Try(SequenceOf[byte,int]('J', 'u', 'n')),
+			Try(SequenceOf[byte,int]('J', 'u', 'l')),
+			Try(SequenceOf[byte,int]('A', 'u', 'g')),
+			Try(SequenceOf[byte,int]('S', 'e', 'p')),
+			Try(SequenceOf[byte,int]('O', 'c', 't')),
+			Try(SequenceOf[byte,int]('N', 'o', 'v')),
+			Try(SequenceOf[byte,int]('D', 'e', 'c')),
 		),
 		func(x []byte) (time.Month, error) {
 			s := string(x)
@@ -90,7 +90,7 @@ func TestTimestamps(t *testing.T) {
 		digitsToNum,
 	))
 
-	pad := OneOf[byte]('0', ' ')
+	pad := OneOf[byte,int]('0', ' ')
 
 	paddedDayNum := Trace(t, "day",
 		Cast(
@@ -149,7 +149,7 @@ func TestTimestamps(t *testing.T) {
 	}))
 
 	zoneStr := Trace(t, "zone", Cast(
-		Count(3, Range(byte('A'), byte('Z'))),
+		Count(3, Range[byte, int]('A', 'Z')),
 		func(x []byte) (*time.Location, error) {
 			if string(x) == "LMT" {
 				return time.Local, nil
@@ -159,12 +159,12 @@ func TestTimestamps(t *testing.T) {
 		},
 	))
 
-	space := Eq(byte(' '))
-	sep := Eq(byte(':'))
-	comma := Eq(byte(','))
+	space := Eq[byte, int](' ')
+	sep := Eq[byte, int](':')
+	comma := Eq[byte, int](',')
 
 	// ANSIC = "Mon Jan _2 15:04:05 2006"
-	ansic := Trace(t, "ansic", func(buffer Buffer[byte]) (*time.Time, error) {
+	ansic := Trace(t, "ansic", func(buffer Buffer[byte,int]) (*time.Time, error) {
 		dw, err := dayOfWeekPrefix(buffer)
 		if err != nil {
 			return nil, err
@@ -248,7 +248,7 @@ func TestTimestamps(t *testing.T) {
 	})
 
 	// UnixDate = "Mon Jan _2 15:04:05 MST 2006"
-	unixDate := Trace(t, "unix date", func(buffer Buffer[byte]) (*time.Time, error) {
+	unixDate := Trace(t, "unix date", func(buffer Buffer[byte,int]) (*time.Time, error) {
 		dw, err := dayOfWeekPrefix(buffer)
 		if err != nil {
 			return nil, err
@@ -337,7 +337,7 @@ func TestTimestamps(t *testing.T) {
 	})
 
 	// RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"
-	rfc1123 := Trace(t, "RFC1123", func(buffer Buffer[byte]) (*time.Time, error) {
+	rfc1123 := Trace(t, "RFC1123", func(buffer Buffer[byte,int]) (*time.Time, error) {
 		dw, err := dayOfWeekPrefix(buffer)
 		if err != nil {
 			return nil, err
@@ -449,7 +449,7 @@ func TestTimestamps(t *testing.T) {
 		Try(rfc1123),
 	)
 
-	comb := SepBy(len(dates), oneOfDate, Eq(byte('\n')))
+	comb := SepBy(len(dates), oneOfDate, Eq[byte, int]('\n'))
 
 	result, err := ParseBytes([]byte(input), comb)
 	check(t, err)

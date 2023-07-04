@@ -1,7 +1,7 @@
 package parsec
 
-func Concat[T any, S any](cap int, cs ...Combinator[T, []S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+func Concat[T any, P any, S any](cap int, cs ...Combinator[T, P, []S]) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		for _, c := range cs {
@@ -17,8 +17,8 @@ func Concat[T any, S any](cap int, cs ...Combinator[T, []S]) Combinator[T, []S] 
 	}
 }
 
-func Sequence[T any, S any](cap int, cs ...Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+func Sequence[T any, P any, S any](cap int, cs ...Combinator[T, P, S]) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		for _, c := range cs {
@@ -38,8 +38,8 @@ func Sequence[T any, S any](cap int, cs ...Combinator[T, S]) Combinator[T, []S] 
 	}
 }
 
-func Choice[T any, S any](cs ...Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Choice[T any, P any, S any](cs ...Combinator[T, P, S]) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		for _, c := range cs {
 			result, err := c(buffer)
 			if err == nil {

@@ -1,7 +1,7 @@
 package parsec
 
-func Or[T any, S any](x, y Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Or[T any, P any, S any](x, y Combinator[T, P, S]) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		result, err := x(buffer)
 		if err != nil {
 			return y(buffer)
@@ -11,12 +11,12 @@ func Or[T any, S any](x, y Combinator[T, S]) Combinator[T, S] {
 	}
 }
 
-func And[T any, S any, B any, M any](
-	x Combinator[T, S],
-	y Combinator[T, B],
+func And[T any, P any, S any, B any, M any](
+	x Combinator[T, P, S],
+	y Combinator[T, P, B],
 	compose Composer[S, B, M],
-) Combinator[T, M] {
-	return func(buffer Buffer[T]) (M, error) {
+) Combinator[T, P, M] {
+	return func(buffer Buffer[T, P]) (M, error) {
 		first, err := x(buffer)
 		if err != nil {
 			return *new(M), err

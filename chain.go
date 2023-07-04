@@ -1,12 +1,12 @@
 package parsec
 
-func Chainl[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
+func Chainl[T any, P any, S any](
+	c Combinator[T, P, S],
+	op Combinator[T, P, func(S, S) S],
 	def S,
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
-		f := Chainl1(c, op)
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
+		f := Chainl1(c, op) // TODO : move upper?
 
 		result, err := f(buffer)
 		if err != nil {
@@ -17,11 +17,11 @@ func Chainl[T any, S any](
 	}
 }
 
-func Chainl1[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Chainl1[T any, P any, S any](
+	c Combinator[T, P, S],
+	op Combinator[T, P, func(S, S) S],
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T,P]) (S, error) {
 		x, err := c(buffer)
 		if err != nil {
 			return *new(S), err
@@ -47,12 +47,12 @@ func Chainl1[T any, S any](
 	}
 }
 
-func Chainr[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
+func Chainr[T any, P any, S any](
+	c Combinator[T, P, S],
+	op Combinator[T, P, func(S, S) S],
 	def S,
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		f := Chainr1(c, op)
 
 		result, err := f(buffer)
@@ -64,11 +64,11 @@ func Chainr[T any, S any](
 	}
 }
 
-func Chainr1[T any, S any](
-	c Combinator[T, S],
-	op Combinator[T, func(S, S) S],
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Chainr1[T any, P any, S any](
+	c Combinator[T, P, S],
+	op Combinator[T, P, func(S, S) S],
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		x, err := c(buffer)
 		if err != nil {
 			return *new(S), err
@@ -112,12 +112,12 @@ func Chainr1[T any, S any](
 	}
 }
 
-func SepBy[T any, S any, B any](
+func SepBy[T any, P any, S any, B any](
 	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	body Combinator[T, P, S],
+	sep Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		token, err := body(buffer)
@@ -147,12 +147,12 @@ func SepBy[T any, S any, B any](
 	}
 }
 
-func SepBy1[T any, S any, B any](
+func SepBy1[T any, P any, S any, B any](
 	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	body Combinator[T, P, S],
+	sep Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		c := SepBy(cap, body, sep)
 
 		// ignore error because SepBy return empty list anyway
@@ -165,12 +165,12 @@ func SepBy1[T any, S any, B any](
 	}
 }
 
-func EndBy[T any, S any, B any](
+func EndBy[T any, P any, S any, B any](
 	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	body Combinator[T, P, S],
+	sep Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		c := Try(SkipAfter(sep, body))
@@ -188,12 +188,12 @@ func EndBy[T any, S any, B any](
 	}
 }
 
-func EndBy1[T any, S any, B any](
+func EndBy1[T any, P any, S any, B any](
 	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	body Combinator[T, P, S],
+	sep Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		c := EndBy(cap, body, sep)
 
 		// ignore error because EndBy return empty list anyway
@@ -206,12 +206,12 @@ func EndBy1[T any, S any, B any](
 	}
 }
 
-func SepEndBy[T any, S any, B any](
+func SepEndBy[T any, P any, S any, B any](
 	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	body Combinator[T, P, S],
+	sep Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		s := Try(sep)
@@ -234,12 +234,12 @@ func SepEndBy[T any, S any, B any](
 	}
 }
 
-func SepEndBy1[T any, S any, B any](
+func SepEndBy1[T any, P any, S any, B any](
 	cap int,
-	body Combinator[T, S],
-	sep Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	body Combinator[T, P, S],
+	sep Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		c := SepEndBy(cap, body, sep)
 
 		// ignore error because SepEndBy return empty list anyway
@@ -251,12 +251,12 @@ func SepEndBy1[T any, S any, B any](
 	}
 }
 
-func ManyTill[T any, S any, B any](
+func ManyTill[T any, P any, S any, B any](
 	cap int,
-	c Combinator[T, S],
-	end Combinator[T, B],
-) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+	c Combinator[T, P, S],
+	end Combinator[T, P, B],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 		z := Try(end)
 

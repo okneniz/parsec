@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+// https://github.com/cierelabs/yaml_spirit/blob/master/doc/specs/json-ebnf.txt
+
 type JSON interface {
 	ToString() (string, error)
 }
@@ -107,26 +109,26 @@ type JSPair struct {
 }
 
 func TestJSON(t *testing.T) {
-	notZero := Range[byte]('1', '9')
-	digit := Range[byte]('0', '9')
-	quote := Eq[byte]('"')
-	any := Any[byte]()
-	colon := Eq[byte](':')
-	comma := Eq[byte](',')
-	whitespace := OneOf[byte](' ', '\n', '\r', '\t')
+	notZero := Range[byte,int]('1', '9')
+	digit := Range[byte,int]('0', '9')
+	quote := Eq[byte,int]('"')
+	any := Any[byte,int]()
+	colon := Eq[byte,int](':')
+	comma := Eq[byte,int](',')
+	whitespace := OneOf[byte,int](' ', '\n', '\r', '\t')
 
-	var value Combinator[byte, JSON]
+	var value Combinator[byte, int, JSON]
 
 	bool := Trace(t, "bool", Cast(Choice(
-		Try(SequenceOf[byte]('t', 'r', 'u', 'e')),
-		Try(SequenceOf[byte]('f', 'a', 'l', 's', 'e')),
+		Try(SequenceOf[byte,int]('t', 'r', 'u', 'e')),
+		Try(SequenceOf[byte,int]('f', 'a', 'l', 's', 'e')),
 	), func(x []byte) (JSON, error) {
 		lit := string(x)
 		return &JSBool{lit == "true"}, nil
 	}))
 
 	null := Trace(t, "null", Cast(
-		SequenceOf[byte]('n', 'u', 'l', 'l'),
+		SequenceOf[byte,int]('n', 'u', 'l', 'l'),
 		func(_ []byte) (JSON, error) {
 			return new(JSNull), nil
 		}),
@@ -145,7 +147,7 @@ func TestJSON(t *testing.T) {
 		return &JSNumber{v}, nil
 	}))
 
-	str := Trace(t, "string", func(buffer Buffer[byte]) (JSON, error) {
+	str := Trace(t, "string", func(buffer Buffer[byte,int]) (JSON, error) {
 		_, err := quote(buffer)
 		if err != nil {
 			return nil, err
@@ -161,7 +163,7 @@ func TestJSON(t *testing.T) {
 
 	keyComb := Try(Padded(whitespace, str))
 
-	pair := Trace(t, "pair", func(buffer Buffer[byte]) (*JSPair, error) {
+	pair := Trace(t, "pair", func(buffer Buffer[byte,int]) (*JSPair, error) {
 		key, err := keyComb(buffer)
 		if err != nil {
 			return nil, err
@@ -186,8 +188,8 @@ func TestJSON(t *testing.T) {
 	})
 
 	obj := Trace(t, "object", Between(
-		Eq[byte]('{'),
-		func(buffer Buffer[byte]) (JSON, error) {
+		Eq[byte,int]('{'),
+		func(buffer Buffer[byte,int]) (JSON, error) {
 			listOfPairs := SepBy(0, pair, comma)
 
 			list, err := listOfPairs(buffer)
@@ -202,12 +204,12 @@ func TestJSON(t *testing.T) {
 
 			return &JSObject{m}, nil
 		},
-		Eq[byte]('}'),
+		Eq[byte,int]('}'),
 	))
 
 	arr := Trace(t, "array", Between(
-		Eq[byte]('['),
-		func(buffer Buffer[byte]) (JSON, error) {
+		Eq[byte,int]('['),
+		func(buffer Buffer[byte,int]) (JSON, error) {
 			listOfValues := SepBy(0, value, comma)
 
 			list, err := listOfValues(buffer)
@@ -217,7 +219,7 @@ func TestJSON(t *testing.T) {
 
 			return &JSArray{list}, nil
 		},
-		Eq[byte](']'),
+		Eq[byte,int](']'),
 	))
 
 	value = Padded(

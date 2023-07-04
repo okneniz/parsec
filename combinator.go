@@ -1,16 +1,16 @@
 package parsec
 
-type Combinator[T any, S any] func(Buffer[T]) (S, error)
+type Combinator[T any, P any, S any] func(Buffer[T, P]) (S, error)
 
 type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T, S) B
-type Composer3[T, S, B, M any] func(T, S, B) M
+type Composer3[T, S, B, M any] func(T, S, B) M // TODO : remove it?
 
 func Anything[T any](x T) bool { return true }
 func Nothing[T any](x T) bool  { return false }
 
-func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
-	return func(buffer Buffer[T]) (T, error) {
+func Satisfy[T any, P any](greedy bool, f Condition[T]) Combinator[T, P, T] {
+	return func(buffer Buffer[T, P]) (T, error) {
 		token, err := buffer.Read(greedy)
 		if err != nil {
 			return *new(T), err
@@ -24,8 +24,8 @@ func Satisfy[T any](greedy bool, f Condition[T]) Combinator[T, T] {
 	}
 }
 
-func Any[T any]() Combinator[T, T] {
-	return func(buffer Buffer[T]) (T, error) {
+func Any[T any, P any]() Combinator[T, P, T] {
+	return func(buffer Buffer[T, P]) (T, error) {
 		token, err := buffer.Read(true)
 		if err != nil {
 			return *new(T), err
@@ -35,8 +35,8 @@ func Any[T any]() Combinator[T, T] {
 	}
 }
 
-func Try[T any, S any](c Combinator[T, S]) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		pos := buffer.Position()
 
 		result, err := c(buffer)
@@ -49,28 +49,28 @@ func Try[T any, S any](c Combinator[T, S]) Combinator[T, S] {
 	}
 }
 
-func Before[T any, S any, B any, Z any](
-	body Combinator[T, B],
-	before Combinator[T, S],
+func Before[T any, P any, S any, B any, Z any](
+	body Combinator[T, P, B], // TODO : change order of params to parsing order
+	before Combinator[T, P, S],
 	compose Composer[S, B, Z],
-) Combinator[T, Z] {
+) Combinator[T, P, Z] {
 	return And(before, body, compose)
 }
 
-func After[T any, S any, B any, Z any](
-	body Combinator[T, B],
-	after Combinator[T, S],
+func After[T any, P any, S any, B any, Z any](
+	body Combinator[T, P, B],
+	after Combinator[T, P, S],
 	compose Composer[B, S, Z],
-) Combinator[T, Z] {
+) Combinator[T, P, Z] {
 	return And(body, after, compose)
 }
 
-func Between[T any, S any, B any, M any](
-	pre Combinator[T, S],
-	c Combinator[T, B],
-	suf Combinator[T, M],
-) Combinator[T, B] {
-	return func(buffer Buffer[T]) (B, error) {
+func Between[T any, P any, S any, B any, M any](
+	pre Combinator[T, P, S],
+	c Combinator[T, P, B],
+	suf Combinator[T, P, M],
+) Combinator[T, P, B] {
+	return func(buffer Buffer[T, P]) (B, error) {
 		_, err := pre(buffer)
 		if err != nil {
 			return *new(B), err
@@ -90,11 +90,11 @@ func Between[T any, S any, B any, M any](
 	}
 }
 
-func Skip[T any, S any, B any](
-	skip Combinator[T, B],
-	next Combinator[T, S],
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Skip[T any, P any, S any, B any](
+	skip Combinator[T, P, B],
+	next Combinator[T, P, S],
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		_, err := skip(buffer)
 		if err != nil {
 			return *new(S), err
@@ -104,11 +104,11 @@ func Skip[T any, S any, B any](
 	}
 }
 
-func SkipAfter[T any, S any, B any](
-	skip Combinator[T, B],
-	body Combinator[T, S],
-) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func SkipAfter[T any, P any, S any, B any](
+	skip Combinator[T, P, B],
+	body Combinator[T, P, S],
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		result, err := body(buffer)
 		if err != nil {
 			return *new(S), err
@@ -123,16 +123,16 @@ func SkipAfter[T any, S any, B any](
 	}
 }
 
-func Padded[T any, S any, B any](
-	skip Combinator[T, B],
-	body Combinator[T, S],
-) Combinator[T, S] {
+func Padded[T any, P any, S any, B any](
+	skip Combinator[T, P, B],
+	body Combinator[T, P, S],
+) Combinator[T, P, S] {
 	x := Many(0, Try(skip))
 	return Skip(x, SkipAfter(x, body))
 }
 
-func EOF[T any]() Combinator[T, bool] {
-	return func(buffer Buffer[T]) (bool, error) {
+func EOF[T any, P any]() Combinator[T, P, bool] {
+	return func(buffer Buffer[T, P]) (bool, error) {
 		if buffer.IsEOF() {
 			return true, nil
 		}
@@ -141,11 +141,11 @@ func EOF[T any]() Combinator[T, bool] {
 	}
 }
 
-func Cast[T any, S any, B any](
-	c Combinator[T, S],
+func Cast[T any, P any, S any, B any](
+	c Combinator[T, P, S],
 	f func(S) (B, error),
-) Combinator[T, B] {
-	return func(buffer Buffer[T]) (B, error) {
+) Combinator[T, P, B] {
+	return func(buffer Buffer[T, P]) (B, error) {
 		result, err := c(buffer)
 		if err != nil {
 			return *new(B), err

@@ -5,7 +5,7 @@ import (
 )
 
 func TestMany(t *testing.T) {
-	comb := Many(0, Eq(byte('a')))
+	comb := Many(0, Eq[byte, int]('a'))
 
 	result, err := ParseBytes([]byte("aaa"), comb)
 	check(t, err)
@@ -24,10 +24,7 @@ func TestSome(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Some(
-			0,
-			Eq(byte('a')),
-		)
+		comb := Some(0, Eq[byte, int]('a'))
 
 		result, err := ParseBytes([]byte("aaa"), comb)
 		check(t, err)
@@ -45,7 +42,7 @@ func TestSome(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := Some(
 			0,
-			Satisfy[byte](true, func(x byte) bool { return false }),
+			Satisfy[byte,int](true, func(x byte) bool { return false }),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -55,7 +52,7 @@ func TestSome(t *testing.T) {
 }
 
 func TestOptional(t *testing.T) {
-	comb := Optional(Eq(byte('a')), 0)
+	comb := Optional(Eq[byte, int]('a'), 0)
 
 	result, err := ParseBytes([]byte("aaa"), comb)
 	check(t, err)
@@ -70,7 +67,7 @@ func TestCount(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Count(2, Eq(byte('a')))
+		comb := Count(2, Eq[byte, int]('a'))
 
 		result, err := ParseBytes([]byte("aabbcc"), comb)
 		check(t, err)
@@ -86,7 +83,7 @@ func TestCount(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Count(2, EOF[byte]())
+		comb := Count(2, EOF[byte,int]())
 
 		result, err := ParseBytes([]byte("aab"), comb)
 		check(t, err)

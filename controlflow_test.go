@@ -8,9 +8,9 @@ func TestConcat(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Concat(
 			3,
-			Count(1, Eq[byte](byte('a'))),
-			Count(1, Eq[byte](byte('b'))),
-			Count(1, NotEq[byte](byte('z'))),
+			Count(1, Eq[byte, int]('a')),
+			Count(1, Eq[byte, int]('b')),
+			Count(1, NotEq[byte, int]('z')),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -37,9 +37,9 @@ func TestConcat(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := Concat(
 			3,
-			Count(1, Eq[byte](byte('a'))),
-			Count(1, Eq[byte](byte('b'))),
-			Count(1, Satisfy(true, Nothing[byte])),
+			Count(1, Eq[byte, int]('a')),
+			Count(1, Eq[byte, int]('b')),
+			Count(1, Satisfy[byte,int](true, Nothing[byte])),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -54,9 +54,9 @@ func TestConcat(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := Concat(
 			0,
-			Count(1, Satisfy(true, Nothing[byte])),
-			Count(1, Satisfy(true, Nothing[byte])),
-			Count(3, Satisfy(true, Nothing[byte])),
+			Count(1, Satisfy[byte,int](true, Nothing[byte])),
+			Count(1, Satisfy[byte,int](true, Nothing[byte])),
+			Count(3, Satisfy[byte,int](true, Nothing[byte])),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -73,9 +73,9 @@ func TestSequence(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Sequence(
 			3,
-			Eq[byte](byte('a')),
-			Eq[byte](byte('b')),
-			NotEq[byte](byte('z')),
+			Eq[byte,int]('a'),
+			Eq[byte, int]('b'),
+			NotEq[byte, int]('z'),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -102,9 +102,9 @@ func TestSequence(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := Sequence(
 			3,
-			Eq[byte](byte('a')),
-			Eq[byte](byte('b')),
-			Satisfy(true, Nothing[byte]),
+			Eq[byte, int](byte('a')),
+			Eq[byte, int](byte('b')),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -120,9 +120,9 @@ func TestSequence(t *testing.T) {
 func TestChoice(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Choice(
-			Try(Eq(byte('a'))),
-			Try(Eq(byte('b'))),
-			Try(Eq(byte('c'))),
+			Try(Eq[byte,int]('a')),
+			Try(Eq[byte,int]('b')),
+			Try(Eq[byte,int]('c')),
 		)
 
 		result, err := ParseBytes([]byte("a"), comb)
@@ -142,10 +142,10 @@ func TestChoice(t *testing.T) {
 		comb := Many(
 			4,
 			Choice(
-				Try(Eq(byte('a'))),
-				Try(Eq(byte('b'))),
-				Try(Eq(byte('c'))),
-				Try(NotEq(byte('z'))),
+				Try(Eq[byte,int]('a')),
+				Try(Eq[byte,int]('b')),
+				Try(Eq[byte,int]('c')),
+				Try(NotEq[byte,int]('z')),
 			),
 		)
 
@@ -163,8 +163,8 @@ func TestChoice(t *testing.T) {
 		comb := Many(
 			0,
 			Choice(
-				Satisfy[byte](true, Nothing[byte]),
-				Satisfy[byte](true, Nothing[byte]),
+				Satisfy[byte, int](true, Nothing[byte]),
+				Satisfy[byte, int](true, Nothing[byte]),
 			),
 		)
 

@@ -9,10 +9,10 @@ func TestChainl(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainl(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -20,7 +20,7 @@ func TestChainl(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -42,11 +42,11 @@ func TestChainl(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 		c := 0
 
 		comb := Chainl(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				c++
 				if c > 1 {
 					return "-", fmt.Errorf("test error")
@@ -59,7 +59,7 @@ func TestChainl(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -85,10 +85,10 @@ func TestChainl(t *testing.T) {
 	})
 
 	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainl(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -96,7 +96,7 @@ func TestChainl(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string { return "" }, fmt.Errorf("test error")
 			},
 			"default",
@@ -120,10 +120,10 @@ func TestChainl1(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainl1(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -131,7 +131,7 @@ func TestChainl1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -152,11 +152,11 @@ func TestChainl1(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 		c := 0
 
 		comb := Chainl1(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				c++
 				if c > 1 {
 					return "-", fmt.Errorf("test error")
@@ -169,7 +169,7 @@ func TestChainl1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -194,10 +194,10 @@ func TestChainl1(t *testing.T) {
 	})
 
 	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainl1(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "--", err
@@ -205,7 +205,7 @@ func TestChainl1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string { return "++" }, fmt.Errorf("test error")
 			},
 		)
@@ -228,10 +228,10 @@ func TestChainr(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainr(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -239,7 +239,7 @@ func TestChainr(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -261,11 +261,11 @@ func TestChainr(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 		c := 0
 
 		comb := Chainr(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				c++
 				if c > 1 {
 					return "-", fmt.Errorf("test error")
@@ -278,7 +278,7 @@ func TestChainr(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -304,10 +304,10 @@ func TestChainr(t *testing.T) {
 	})
 
 	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainr(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -315,7 +315,7 @@ func TestChainr(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string { return "" }, fmt.Errorf("test error")
 			},
 			"default",
@@ -339,10 +339,10 @@ func TestChainr1(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainr1(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -350,7 +350,7 @@ func TestChainr1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -371,11 +371,11 @@ func TestChainr1(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 		c := 0
 
 		comb := Chainr1(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				c++
 				if c > 1 {
 					return "-", fmt.Errorf("test error")
@@ -388,7 +388,7 @@ func TestChainr1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -413,10 +413,10 @@ func TestChainr1(t *testing.T) {
 	})
 
 	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy(true, Anything[byte])
+		next := Satisfy[byte, int](true, Anything[byte])
 
 		comb := Chainr1(
-			func(buffer Buffer[byte]) (string, error) {
+			func(buffer Buffer[byte,int]) (string, error) {
 				x, err := next(buffer)
 				if err != nil {
 					return "", err
@@ -424,7 +424,7 @@ func TestChainr1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer Buffer[byte]) (func(string, string) string, error) {
+			func(buffer Buffer[byte,int]) (func(string, string) string, error) {
 				return func(x, y string) string {
 					return ""
 				}, fmt.Errorf("test error")
@@ -451,8 +451,8 @@ func TestSepBy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepBy(
 			0,
-			NotEq(byte(',')),
-			Eq(byte(',')),
+			NotEq[byte, int](','),
+			Eq[byte, int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -487,8 +487,8 @@ func TestSepBy(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := SepBy(
 			0,
-			Satisfy(true, Nothing[byte]),
-			Eq(byte(',')),
+			Satisfy[byte, int](true, Nothing[byte]),
+			Eq[byte, int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -503,8 +503,8 @@ func TestSepBy(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepBy(
 			0,
-			NotEq(byte(',')),
-			Satisfy(true, Nothing[byte]),
+			NotEq[byte,int](','),
+			Satisfy[byte, int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -523,8 +523,8 @@ func TestSepBy1(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepBy1(
 			0,
-			NotEq(byte(',')),
-			Eq(byte(',')),
+			NotEq[byte,int](','),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -559,8 +559,8 @@ func TestSepBy1(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := SepBy1(
 			0,
-			Satisfy(true, Nothing[byte]),
-			Eq(byte(',')),
+			Satisfy[byte,int](true, Nothing[byte]),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -575,8 +575,8 @@ func TestSepBy1(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepBy1(
 			0,
-			NotEq(byte(',')),
-			Satisfy(true, Nothing[byte]),
+			NotEq[byte,int](','),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -595,8 +595,8 @@ func TestEndBy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := EndBy(
 			0,
-			NotEq(byte(',')),
-			Eq(byte(',')),
+			NotEq[byte,int](','),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -639,8 +639,8 @@ func TestEndBy(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := EndBy(
 			0,
-			Satisfy(true, Nothing[byte]),
-			Eq(byte(',')),
+			Satisfy[byte,int](true, Nothing[byte]),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -655,8 +655,8 @@ func TestEndBy(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := EndBy(
 			0,
-			NotEq(byte(',')),
-			Satisfy(true, Nothing[byte]),
+			NotEq[byte,int](','),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -675,8 +675,8 @@ func TestEndBy1(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := EndBy1(
 			0,
-			NotEq(byte(',')),
-			Eq(byte(',')),
+			NotEq[byte,int](','),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -719,8 +719,8 @@ func TestEndBy1(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := EndBy1(
 			0,
-			Satisfy(true, Nothing[byte]),
-			Eq(byte(',')),
+			Satisfy[byte,int](true, Nothing[byte]),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -735,8 +735,8 @@ func TestEndBy1(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := EndBy1(
 			0,
-			NotEq(byte(',')),
-			Satisfy(true, Nothing[byte]),
+			NotEq[byte,int](','),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -755,8 +755,8 @@ func TestSepEndBy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepEndBy(
 			0,
-			NotEq(byte(',')),
-			Eq(byte(',')),
+			NotEq[byte,int](','),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -787,8 +787,8 @@ func TestSepEndBy(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := SepEndBy(
 			0,
-			Satisfy(true, Nothing[byte]),
-			Eq(byte(',')),
+			Satisfy[byte,int](true, Nothing[byte]),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -807,8 +807,8 @@ func TestSepEndBy(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepEndBy(
 			0,
-			NotEq(byte(',')),
-			Satisfy(true, Nothing[byte]),
+			NotEq[byte,int](','),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -831,8 +831,8 @@ func TestSepEndBy1(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := SepEndBy1(
 			0,
-			NotEq(byte(',')),
-			Eq(byte(',')),
+			NotEq[byte,int](','),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -863,8 +863,8 @@ func TestSepEndBy1(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := SepEndBy1(
 			0,
-			Satisfy(true, Nothing[byte]),
-			Eq(byte(',')),
+			Satisfy[byte,int](true, Nothing[byte]),
+			Eq[byte,int](','),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -879,8 +879,8 @@ func TestSepEndBy1(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := SepEndBy1(
 			0,
-			NotEq(byte(',')),
-			Satisfy(true, Nothing[byte]),
+			NotEq[byte,int](','),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("a,b,c"), comb)
@@ -899,8 +899,8 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Any[byte](),
-			Satisfy[byte](false, func(x byte) bool { return x == byte('d') }),
+			Any[byte,int](),
+			Satisfy[byte,int](false, func(x byte) bool { return x == byte('d') }),
 		)
 
 		result, err := ParseBytes([]byte("abcd"), comb)
@@ -919,8 +919,8 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Any[byte](),
-			Satisfy(true, Nothing[byte]),
+			Any[byte,int](),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("abcd"), comb)
@@ -940,8 +940,8 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := ManyTill(
 			0,
-			Any[byte](),
-			Any[byte](),
+			Any[byte,int](),
+			Any[byte,int](),
 		)
 
 		result, err := ParseBytes([]byte("abcd"), comb)

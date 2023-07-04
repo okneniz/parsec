@@ -15,7 +15,7 @@ func TestSatisfy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		c := byte('c')
 
-		comb := Satisfy[byte](true, func(x byte) bool { return x != c })
+		comb := Satisfy[byte,int](true, func(x byte) bool { return x != c })
 
 		result, err := ParseBytes([]byte("a"), comb)
 		check(t, err)
@@ -31,7 +31,7 @@ func TestSatisfy(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Satisfy[byte](true, func(x byte) bool { return false })
+		comb := Satisfy[byte,int](true, func(x byte) bool { return false })
 
 		result, err := ParseBytes([]byte{}, comb)
 		assertError(t, err)
@@ -44,7 +44,7 @@ func TestAny(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		source := rand.New(rand.NewSource(time.Now().UnixNano()))
-		comb := Any[byte]()
+		comb := Any[byte,int]()
 
 		for i := 0; i < 10000; i++ {
 			b := byte(source.Intn(math.MaxUint8 + 1))
@@ -56,7 +56,7 @@ func TestAny(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Any[byte]()
+		comb := Any[byte,int]()
 
 		result, err := ParseBytes([]byte{}, comb)
 		assertError(t, err)
@@ -69,28 +69,28 @@ func TestTry(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Try(
-			Satisfy(true, func(x byte) bool { return x <= byte('b') }),
+			Satisfy[byte,int](true, func(x byte) bool { return x <= byte('b') }),
 		)
 
 		buf := BytesBuffer([]byte("abcd"))
 		assertEq(t, buf.Position(), 0)
 
-		result, err := Parse[byte, byte](buf, comb)
+		result, err := Parse[byte, int, byte](buf, comb)
 		check(t, err)
 		assertEq(t, result, byte('a'))
 		assertEq(t, buf.Position(), 1)
 
-		result, err = Parse[byte, byte](buf, comb)
+		result, err = Parse[byte, int, byte](buf, comb)
 		check(t, err)
 		assertEq(t, result, byte('b'))
 		assertEq(t, buf.Position(), 2)
 
-		result, err = Parse[byte, byte](buf, comb)
+		result, err = Parse[byte, int, byte](buf, comb)
 		assertError(t, err)
 		assertEq(t, result, 0)
 		assertEq(t, buf.Position(), 2)
 
-		result, err = Parse[byte, byte](buf, comb)
+		result, err = Parse[byte, int, byte](buf, comb)
 		assertError(t, err)
 		assertEq(t, result, 0)
 		assertEq(t, buf.Position(), 2)
@@ -102,8 +102,8 @@ func TestBefore(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Before(
-			Eq(byte('a')),
-			Eq(byte('b')),
+			Eq[byte,int]('a'),
+			Eq[byte,int]('b'),
 			func(x, y byte) []byte { return []byte{x, y} },
 		)
 
@@ -126,8 +126,8 @@ func TestAfter(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := After(
-			Eq(byte('a')),
-			Eq(byte('b')),
+			Eq[byte,int]('a'),
+			Eq[byte,int]('b'),
 			func(x, y byte) []byte { return []byte{x, y} },
 		)
 
@@ -145,14 +145,14 @@ func TestBetween(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		notBrackets := Satisfy[byte](true, func(x byte) bool {
+		notBrackets := Satisfy[byte,int](true, func(x byte) bool {
 			return !(x == byte(')') || x == byte('('))
 		})
 
 		comb := Between(
-			Eq(byte('(')),
-			Some(0, Try(notBrackets)),
-			Eq(byte(')')),
+			Eq[byte,int]('('),
+			Some[byte,int](0, Try(notBrackets)),
+			Eq[byte,int](')'),
 		)
 
 		result, err := ParseBytes([]byte("(abc)"), comb)
@@ -206,8 +206,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Skip(
-			Optional(Eq(byte('a')), 0),
-			Eq(byte('b')),
+			Optional(Eq[byte,int]('a'), 0),
+			Eq[byte,int]('b'),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -220,24 +220,8 @@ func TestSkip(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		phrase := Sequence(
-			3,
-			Eq(byte('a')),
-			Eq(byte('b')),
-			Eq(byte('c')),
-		)
-
-		noice := Many(
-			0,
-			Try(
-				NoneOf(
-					byte('a'),
-					byte('b'),
-					byte('c'),
-				),
-			),
-		)
-
+		phrase := SequenceOf[byte,int]('a', 'b', 'c')
+		noice := Many(0, Try(NoneOf[byte,int]('a', 'b', 'c')))
 		comb := Skip(noice, phrase)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -259,8 +243,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := Skip(
-			NotEq(byte('a')),
-			Eq(byte('a')),
+			NotEq[byte,int]('a'),
+			Eq[byte,int]('a'),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -274,8 +258,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq(byte('b')),
-			Eq(byte('a')),
+			Eq[byte,int]('b'),
+			Eq[byte,int]('a'),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -293,8 +277,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq(byte('b')),
-			Satisfy[byte](true, Nothing[byte]),
+			Eq[byte,int]('b'),
+			Satisfy[byte,int](true, Nothing[byte]),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -304,8 +288,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := SkipAfter(
-			Satisfy[byte](true, Nothing[byte]),
-			Eq(byte('a')),
+			Satisfy[byte,int](true, Nothing[byte]),
+			Eq[byte,int]('a'),
 		)
 
 		result, err := ParseBytes([]byte("abc"), comb)
@@ -319,8 +303,8 @@ func TestPadded(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Padded(
-			Eq[byte]('.'),
-			Range[byte]('0', '9'),
+			Eq[byte,int]('.'),
+			Range[byte,int]('0', '9'),
 		)
 
 		result, err := ParseBytes([]byte("1"), comb)
@@ -345,13 +329,13 @@ func TestEOF(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		result, err := ParseBytes([]byte("abcd"), EOF[byte]())
+		result, err := ParseBytes([]byte("abcd"), EOF[byte,int]())
 		check(t, err)
 		assertEq(t, result, false)
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		result, err := ParseBytes([]byte(""), EOF[byte]())
+		result, err := ParseBytes([]byte(""), EOF[byte,int]())
 		check(t, err)
 		assertEq(t, result, true)
 	})
@@ -361,8 +345,8 @@ func TestCast(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Cast[byte, byte, int](
-			Satisfy[byte](true, Anything[byte]),
+		comb := Cast[byte, int, byte](
+			Satisfy[byte,int](true, Anything[byte]),
 			func(x byte) (int, error) { return int(x), nil },
 		)
 
@@ -380,8 +364,8 @@ func TestCast(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Cast[byte, byte, int](
-			Any[byte](),
+		comb := Cast[byte, int, byte](
+			Any[byte,int](),
 			func(x byte) (int, error) { return -1, fmt.Errorf("test error") },
 		)
 

@@ -1,9 +1,9 @@
 package parsec
 
-type Buffer[T any] interface {
+type Buffer[T any, S any] interface {
 	Read(bool) (T, error)
-	Seek(int)
-	Position() int
+	Seek(S)
+	Position() S
 	IsEOF() bool
 }
 

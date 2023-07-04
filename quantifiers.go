@@ -1,7 +1,7 @@
 package parsec
 
-func Optional[T any, S any](c Combinator[T, S], def S) Combinator[T, S] {
-	return func(buffer Buffer[T]) (S, error) {
+func Optional[T any, P any, S any](c Combinator[T, P, S], def S) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
 		result, err := c(buffer)
 		if err != nil {
 			return def, nil
@@ -11,8 +11,8 @@ func Optional[T any, S any](c Combinator[T, S], def S) Combinator[T, S] {
 	}
 }
 
-func Many[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+func Many[T any, P any, S any](cap int, c Combinator[T, P, S]) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
 
 		for !buffer.IsEOF() {
@@ -28,8 +28,8 @@ func Many[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
 	}
 }
 
-func Some[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+func Some[T any, P any, S any](cap int, c Combinator[T, P, S]) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		cc := Many(cap, c)
 
 		// ignore err for coverage - many return at least empty slice
@@ -42,8 +42,8 @@ func Some[T any, S any](cap int, c Combinator[T, S]) Combinator[T, []S] {
 	}
 }
 
-func Count[T any, S any](x int, next Combinator[T, S]) Combinator[T, []S] {
-	return func(buffer Buffer[T]) ([]S, error) {
+func Count[T any, P any, S any](x int, next Combinator[T, P, S]) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, x)
 
 		for i := 0; i < x; i++ {

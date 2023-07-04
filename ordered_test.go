@@ -5,7 +5,7 @@ import (
 )
 
 func TestRange(t *testing.T) {
-	comb := Range(byte('a'), byte('c'))
+	comb := Range[byte, int]('a', 'c')
 
 	result, err := ParseBytes([]byte("a"), comb)
 	check(t, err)
@@ -29,7 +29,7 @@ func TestRange(t *testing.T) {
 }
 
 func TestNotRange(t *testing.T) {
-	comb := NotRange(byte('a'), byte('c'))
+	comb := NotRange[byte, int]('a', 'c')
 
 	result, err := ParseBytes([]byte("a"), comb)
 	assertError(t, err)
