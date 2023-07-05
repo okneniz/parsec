@@ -5,6 +5,8 @@ import (
 	"unicode"
 )
 
+// TODO : remove Is?
+
 func IsControl() p.Combinator[rune, Position, rune] {
 	return p.Satisfy[rune, Position](true, unicode.IsControl)
 }
