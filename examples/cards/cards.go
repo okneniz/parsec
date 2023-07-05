@@ -9,7 +9,7 @@ import (
 
 func Visa() p.Combinator[rune, Position, string] {
 	return Cast(
-		Sequence(
+		Concat(
 			16,
 			Count(1, Eq('4')),
 			Count(12, IsDigit()),
@@ -21,8 +21,8 @@ func Visa() p.Combinator[rune, Position, string] {
 
 func Master() p.Combinator[rune, Position, string] {
 	return Cast(
-		Sequence(
-			15,
+		Concat(
+			16,
 			Choice(
 				Concat(
 					4,
@@ -70,7 +70,7 @@ func Master() p.Combinator[rune, Position, string] {
 
 func AmericanExpress() p.Combinator[rune, Position, string] {
 	return Cast(
-		Sequence(
+		Concat(
 			2,
 			Sequence(2, Eq('3'), OneOf('4', '7')),
 			Count(13, Range('0', '9')),
@@ -79,10 +79,6 @@ func AmericanExpress() p.Combinator[rune, Position, string] {
 	)
 }
 
-func toString(xs [][]rune) (string, error) {
-	s := ""
-	for _, x := range xs {
-		s += string(x)
-	}
-	return s, nil
+func toString(x []rune) (string, error) {
+	return string(x), nil
 }
