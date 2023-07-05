@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	notZero = Range('1', '9')
-	digit = IsDigit()
-	quote = Padded(whitespace, Eq('"'))
-	colon = Padded(whitespace, Eq(':'))
-	comma = Padded(whitespace, Eq(','))
+	notZero    = Range('1', '9')
+	digit      = IsDigit()
+	quote      = Padded(whitespace, Eq('"'))
+	colon      = Padded(whitespace, Eq(':'))
+	comma      = Padded(whitespace, Eq(','))
 	whitespace = IsSpace()
 )
 
