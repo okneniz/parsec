@@ -20,7 +20,7 @@ func Trace[T any, P any, S any](l Logged, m string, c Combinator[T, P, S]) Combi
 			return *new(S), err
 		}
 
-		l.Log("\tparsed:", result, fmt.Sprintf("%T", result))
+		l.Log("\tparsed:", fmt.Sprintf("%#v", result))
 		return result, err
 
 	}
