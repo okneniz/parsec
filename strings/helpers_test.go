@@ -1,11 +1,11 @@
 package strings
 
 import (
-	"testing"
 	. "git.sr.ht/~okneniz/parsec/testing"
+	"testing"
 )
 
-func TestParens(t *testing.T){
+func TestParens(t *testing.T) {
 	t.Parallel()
 
 	comb := Parens(Some(1, Try(IsDigit())))
@@ -59,7 +59,7 @@ func TestParens(t *testing.T){
 	})
 }
 
-func TestBraces(t *testing.T){
+func TestBraces(t *testing.T) {
 	t.Parallel()
 
 	comb := Braces(Some(1, Try(IsDigit())))
@@ -113,7 +113,7 @@ func TestBraces(t *testing.T){
 	})
 }
 
-func TestAngles(t *testing.T){
+func TestAngles(t *testing.T) {
 	t.Parallel()
 
 	comb := Angles(Some(1, Try(IsDigit())))
@@ -167,7 +167,7 @@ func TestAngles(t *testing.T){
 	})
 }
 
-func TestSquares(t *testing.T){
+func TestSquares(t *testing.T) {
 	t.Parallel()
 
 	comb := Squares(Some(1, Try(IsDigit())))
@@ -221,7 +221,7 @@ func TestSquares(t *testing.T){
 	})
 }
 
-func TestSemi(t *testing.T){
+func TestSemi(t *testing.T) {
 	t.Parallel()
 
 	comb := SepBy1(3, NotEq(';'), Semi())
@@ -245,7 +245,7 @@ func TestSemi(t *testing.T){
 	})
 }
 
-func TestComma(t *testing.T){
+func TestComma(t *testing.T) {
 	t.Parallel()
 
 	comb := SepBy1(3, NotEq(','), Comma())
@@ -269,7 +269,7 @@ func TestComma(t *testing.T){
 	})
 }
 
-func TestColon(t *testing.T){
+func TestColon(t *testing.T) {
 	t.Parallel()
 
 	comb := SepBy1(3, NotEq(':'), Colon())
@@ -293,7 +293,7 @@ func TestColon(t *testing.T){
 	})
 }
 
-func TestDot(t *testing.T){
+func TestDot(t *testing.T) {
 	t.Parallel()
 
 	comb := SepBy1(3, NotEq('.'), Dot())
