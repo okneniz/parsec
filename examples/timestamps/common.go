@@ -1,12 +1,12 @@
 package timestamp
 
 import (
-	"fmt"
 	"time"
+	// "fmt"
 
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/strings"
-	t "git.sr.ht/~okneniz/parsec/testing"
+	// t "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
@@ -66,24 +66,24 @@ func yearWithCentury() p.Combinator[rune, Position, int] {
 }
 
 func paddedDayNum() p.Combinator[rune, Position, int] {
-	pad := OneOf('0', ' ')
+	toInt := func(x uint) (int, error) {
+		return int(x), nil
+	}
 
-	return Cast(
-		Choice(
-			Count(2, IsDigit()),
-			Skip(Optional(pad, rune(0)), Some(1, IsDigit())),
+	return Choice(
+		Try(
+			Skip(
+				OneOf('0', ' '),
+				Cast(
+					UnsignedN[uint](1),
+					toInt,
+				),
+			),
 		),
-		func(x []rune) (int, error) {
-			result, err := t.DigitsToNum(x)
-			if err != nil {
-				return -1, err
-			}
-			if result <= 0 || result > 31 {
-				return -1, fmt.Errorf("invalid day num: %v (%v)", result, string(x))
-			}
-
-			return result, nil
-		},
+		Cast(
+			UnsignedN[uint](2),
+			toInt,
+		),
 	)
 }
 
