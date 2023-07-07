@@ -2,9 +2,10 @@ package timestamp
 
 import (
 	"fmt"
+	"time"
+
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/strings"
-	"time"
 )
 
 // RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"

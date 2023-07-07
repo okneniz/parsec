@@ -2,9 +2,10 @@ package timestamp
 
 import (
 	"fmt"
+	"time"
+
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/strings"
-	"time"
 )
 
 // ANSIC = "Mon Jan _2 15:04:05 2006"

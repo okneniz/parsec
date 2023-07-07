@@ -2,12 +2,13 @@ package bytes
 
 import (
 	"fmt"
-	p "git.sr.ht/~okneniz/parsec/common"
-	. "git.sr.ht/~okneniz/parsec/testing"
 	"math"
 	"math/rand"
 	"testing"
 	"time"
+
+	p "git.sr.ht/~okneniz/parsec/common"
+	. "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func TestSatisfy(t *testing.T) {

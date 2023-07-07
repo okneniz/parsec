@@ -3,11 +3,12 @@ package testing
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"math"
 	"math/rand"
 	"sort"
 	"testing"
+
+	"golang.org/x/exp/constraints"
 )
 
 func Check(t *testing.T, err error) {

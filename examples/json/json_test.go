@@ -2,9 +2,10 @@ package json
 
 import (
 	"fmt"
+	"testing"
+
 	. "git.sr.ht/~okneniz/parsec/strings"
 	. "git.sr.ht/~okneniz/parsec/testing"
-	"testing"
 )
 
 func TestJSON(t *testing.T) {

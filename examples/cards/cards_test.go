@@ -1,10 +1,11 @@
 package cards
 
 import (
-	. "git.sr.ht/~okneniz/parsec/strings"
-	. "git.sr.ht/~okneniz/parsec/testing"
 	"testing"
 	"time"
+
+	. "git.sr.ht/~okneniz/parsec/strings"
+	. "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func TestCards(t *testing.T) {

@@ -1,8 +1,9 @@
 package bytes
 
 import (
-	. "git.sr.ht/~okneniz/parsec/testing"
 	"testing"
+
+	. "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func TestMany(t *testing.T) {

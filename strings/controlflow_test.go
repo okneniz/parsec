@@ -1,9 +1,10 @@
 package strings
 
 import (
+	"testing"
+
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/testing"
-	"testing"
 )
 
 func TestConcat(t *testing.T) {

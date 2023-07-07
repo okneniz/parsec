@@ -1,8 +1,9 @@
 package strings
 
 import (
-	. "git.sr.ht/~okneniz/parsec/testing"
 	"testing"
+
+	. "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func TestBuffer(t *testing.T) {

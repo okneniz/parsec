@@ -2,10 +2,11 @@ package timestamp
 
 import (
 	"fmt"
+	"time"
+
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/strings"
 	t "git.sr.ht/~okneniz/parsec/testing"
-	"time"
 )
 
 func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
@@ -43,6 +44,7 @@ func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
 }
 
 func monthPrefix() p.Combinator[rune, Position, time.Month] {
+	// TODO : add helper like Map for this cases : one value map to another
 	monthDict := map[string]time.Month{
 		"Jan": time.January,
 		"Feb": time.February,
@@ -92,6 +94,8 @@ func yearWithCentury() p.Combinator[rune, Position, int] {
 		t.DigitsToNum,
 	)
 }
+
+// TODO : add helpher for numbers with zero allocations - just scan
 
 func paddedDayNum() p.Combinator[rune, Position, int] {
 	pad := OneOf('0', ' ')
@@ -157,6 +161,7 @@ func paddedSecondNum() p.Combinator[rune, Position, int] {
 	})
 }
 
+// TODO : add helper with available zones from file
 func zoneStr() p.Combinator[rune, Position, *time.Location] {
 	return Cast(
 		Count(3, Range('A', 'Z')),

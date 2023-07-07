@@ -1,8 +1,9 @@
 package strings
 
 import (
-	p "git.sr.ht/~okneniz/parsec/common"
 	"unicode"
+
+	p "git.sr.ht/~okneniz/parsec/common"
 )
 
 // TODO : remove Is?
