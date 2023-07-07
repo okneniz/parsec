@@ -20,31 +20,17 @@ func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
 		"Sun": time.Sunday,
 	}
 
-	return Cast(
-		Choice(
-			Try(SequenceOf('M', 'o', 'n')), // TODO : add String("Mon") helper (is SequenceOf can work with zero allocations with immutable string?)
-			Try(SequenceOf('T', 'u', 'e')),
-			Try(SequenceOf('W', 'e', 'd')),
-			Try(SequenceOf('T', 'h', 'u')),
-			Try(SequenceOf('F', 'r', 'i')),
-			Try(SequenceOf('S', 'a', 't')),
-			Try(SequenceOf('S', 'u', 'n')),
-		),
-		func(x []rune) (time.Weekday, error) {
-			s := string(x)
-
-			i, exists := dwDict[s]
-			if !exists {
-				return -1, fmt.Errorf("invalid day of week: %v", s)
-			}
-
-			return i, nil
+	dayName := Cast(
+		Count(3, IsLetter()),
+		func(x []rune) (string, error) {
+			return string(x), nil
 		},
 	)
+
+	return Map(dwDict, dayName)
 }
 
 func monthPrefix() p.Combinator[rune, Position, time.Month] {
-	// TODO : add helper like Map for this cases : one value map to another
 	monthDict := map[string]time.Month{
 		"Jan": time.January,
 		"Feb": time.February,
@@ -60,32 +46,14 @@ func monthPrefix() p.Combinator[rune, Position, time.Month] {
 		"Dec": time.December,
 	}
 
-	return Cast(
-		Choice(
-			Try(SequenceOf('J', 'a', 'n')),
-			Try(SequenceOf('F', 'e', 'b')),
-			Try(SequenceOf('M', 'a', 'r')),
-			Try(SequenceOf('A', 'p', 'r')),
-			Try(SequenceOf('M', 'a', 'y')),
-			Try(SequenceOf('J', 'u', 'n')),
-			Try(SequenceOf('J', 'u', 'l')),
-			Try(SequenceOf('A', 'u', 'g')),
-			Try(SequenceOf('S', 'e', 'p')),
-			Try(SequenceOf('O', 'c', 't')),
-			Try(SequenceOf('N', 'o', 'v')),
-			Try(SequenceOf('D', 'e', 'c')),
-		),
-		func(x []rune) (time.Month, error) {
-			s := string(x)
-
-			i, exists := monthDict[s]
-			if !exists {
-				return -1, fmt.Errorf("invalid month: %v", s)
-			}
-
-			return i, nil
+	monthName := Cast(
+		Count(3, IsLetter()),
+		func(x []rune) (string, error) {
+			return string(x), nil
 		},
 	)
+
+	return Map(monthDict, monthName)
 }
 
 func yearWithCentury() p.Combinator[rune, Position, int] {

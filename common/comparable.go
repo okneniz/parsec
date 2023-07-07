@@ -56,3 +56,22 @@ func SequenceOf[T comparable, P any](data ...T) Combinator[T, P, []T] {
 		return result, nil
 	}
 }
+
+func Map[T any, P any, K comparable, V any](
+	cases map[K]V,
+	c Combinator[T, P, K],
+) Combinator[T, P, V] {
+	return func(buffer Buffer[T, P]) (V, error) {
+		token, err := c(buffer)
+		if err != nil {
+			return *new(V), err
+		}
+
+		result, exists := cases[token]
+		if !exists {
+			return *new(V), NothingMatched
+		}
+
+		return result, nil
+	}
+}

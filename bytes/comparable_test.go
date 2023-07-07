@@ -89,3 +89,32 @@ func TestSequenceOf(t *testing.T) {
 	AssertError(t, err)
 	AssertSlice(t, result, nil)
 }
+
+func TestMap(t *testing.T) {
+	cases := map[byte]string{ 0: "foo", 1: "bar", 2: "baz" }
+	noice := Try(NoneOf(0, 1, 2))
+
+	comb := Some(
+		1,
+		Skip(
+			Many(0, noice),
+			Map(cases, Any()),
+		),
+	)
+
+	result, err := Parse([]byte{1}, comb)
+	Check(t, err)
+	AssertSlice(t, result, []string{"bar"})
+
+	result, err = Parse([]byte{10, 0, 4, 1, 6, 8, 2, 5, 5, 3}, comb)
+	Check(t, err)
+	AssertSlice(t, result, []string{"foo", "bar", "baz"})
+
+	result, err = Parse([]byte{10}, comb)
+	AssertError(t, err)
+	AssertSlice(t, result, nil)
+
+	result, err = Parse([]byte{}, comb)
+	AssertError(t, err)
+	AssertSlice(t, result, nil)
+}
