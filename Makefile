@@ -5,7 +5,8 @@ test:
 
 benchmark:
 	# go test -v -bench=. -benchmem -memprofile memprofile.out -cpuprofile profile.out -count=3 -run=^# ./hash-map/...
-	go test -v -bench=. -count=3 -run=^# ./...
+	go test -v -bench=. -benchmem -count=3 -run=^# ./...
+
 
 coverage:
 	go tool cover -func=coverage.out

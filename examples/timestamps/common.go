@@ -58,12 +58,12 @@ func monthPrefix() p.Combinator[rune, Position, time.Month] {
 
 func yearWithCentury() p.Combinator[rune, Position, int] {
 	return Cast(
-		Count(4, IsDigit()),
-		t.DigitsToNum,
+		UnsignedN[uint](4),
+		func(x uint) (int, error) {
+			return int(x), nil
+		},
 	)
 }
-
-// TODO : add helpher for numbers with zero allocations - just scan
 
 func paddedDayNum() p.Combinator[rune, Position, int] {
 	pad := OneOf('0', ' ')
@@ -88,45 +88,30 @@ func paddedDayNum() p.Combinator[rune, Position, int] {
 }
 
 func paddedHourNum() p.Combinator[rune, Position, int] {
-	return Cast(Count(2, IsDigit()), func(x []rune) (int, error) {
-		result, err := t.DigitsToNum(x)
-		if err != nil {
-			return -1, err
-		}
-		if result < 0 || result > 23 {
-			return -1, fmt.Errorf("invalid hour: %v", result)
-		}
-
-		return result, nil
-	})
+	return Cast(
+		UnsignedN[uint](2),
+		func(x uint) (int, error) {
+			return int(x), nil
+		},
+	)
 }
 
 func paddedMinuteNum() p.Combinator[rune, Position, int] {
-	return Cast(Count(2, IsDigit()), func(x []rune) (int, error) {
-		result, err := t.DigitsToNum(x)
-		if err != nil {
-			return -1, err
-		}
-		if result < 0 || result > 59 {
-			return -1, fmt.Errorf("invalid minute: %v", result)
-		}
-
-		return result, nil
-	})
+	return Cast(
+		UnsignedN[uint](2),
+		func(x uint) (int, error) {
+			return int(x), nil
+		},
+	)
 }
 
 func paddedSecondNum() p.Combinator[rune, Position, int] {
-	return Cast(Count(2, IsDigit()), func(x []rune) (int, error) {
-		result, err := t.DigitsToNum(x)
-		if err != nil {
-			return -1, err
-		}
-		if result < 0 || result > 59 {
-			return -1, fmt.Errorf("invalid second: %v", result)
-		}
-
-		return result, nil
-	})
+	return Cast(
+		UnsignedN[uint](2),
+		func(x uint) (int, error) {
+			return int(x), nil
+		},
+	)
 }
 
 // TODO : add helper with available zones from file
@@ -134,10 +119,6 @@ func zoneStr() p.Combinator[rune, Position, *time.Location] {
 	return Cast(
 		Count(3, Range('A', 'Z')),
 		func(x []rune) (*time.Location, error) {
-			if string(x) == "LMT" {
-				return time.Local, nil
-			}
-
 			return time.LoadLocation(string(x))
 		},
 	)
