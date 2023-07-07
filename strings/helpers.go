@@ -86,7 +86,7 @@ func UnsignedN[T constraints.Unsigned](n int) p.Combinator[rune, Position, T] {
 
 		result = T(token - zero)
 
-		for i := 0; i < n - 1; i++ {
+		for i := 0; i < n-1; i++ {
 			token, err = digit(buffer)
 			if err != nil {
 				return 0, err

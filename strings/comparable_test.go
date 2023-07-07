@@ -91,7 +91,7 @@ func TestSequenceOf(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	cases := map[rune]int{ 'a': 1, 'b': 2, 'c': 3 }
+	cases := map[rune]int{'a': 1, 'b': 2, 'c': 3}
 	noice := Try(NoneOf('a', 'b', 'c'))
 
 	comb := Some(
@@ -108,11 +108,11 @@ func TestMap(t *testing.T) {
 
 	result, err = ParseString("..a//b++c**d,,e--a", comb)
 	Check(t, err)
-	AssertSlice(t, result, []int{1,2,3,1})
+	AssertSlice(t, result, []int{1, 2, 3, 1})
 
 	result, err = ParseString("bb", comb)
 	Check(t, err)
-	AssertSlice(t, result, []int{2,2})
+	AssertSlice(t, result, []int{2, 2})
 
 	result, err = ParseString("", comb)
 	AssertError(t, err)

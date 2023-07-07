@@ -28,5 +28,5 @@ func Map[K comparable, V any](
 	cases map[K]V,
 	c p.Combinator[byte, int, K],
 ) p.Combinator[byte, int, V] {
-	return p.Map[byte, int, K,V](cases, c)
+	return p.Map[byte, int, K, V](cases, c)
 }

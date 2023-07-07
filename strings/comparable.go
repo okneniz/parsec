@@ -28,5 +28,5 @@ func Map[K comparable, V any](
 	cases map[K]V,
 	c p.Combinator[rune, Position, K],
 ) p.Combinator[rune, Position, V] {
-	return p.Map[rune, Position, K,V](cases, c)
+	return p.Map[rune, Position, K, V](cases, c)
 }

@@ -91,7 +91,7 @@ func TestSequenceOf(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	cases := map[byte]string{ 0: "foo", 1: "bar", 2: "baz" }
+	cases := map[byte]string{0: "foo", 1: "bar", 2: "baz"}
 	noice := Try(NoneOf(0, 1, 2))
 
 	comb := Some(

@@ -54,7 +54,6 @@ func TestNotRange(t *testing.T) {
 	AssertEq(t, result, 0)
 }
 
-
 func TestGt(t *testing.T) {
 	comb := Gt('c')
 

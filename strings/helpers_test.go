@@ -321,18 +321,18 @@ func TestDot(t *testing.T) {
 func TestUnsigned(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		for s, i := range map[string]uint{
-			"0": 0,
-			"1": 1,
-			"2": 2,
-			"3": 3,
-			"4": 4,
-			"5": 5,
-			"6": 6,
-			"7": 7,
-			"8": 8,
-			"9": 9,
-			"10": 10,
-			"500": 500,
+			"0":      0,
+			"1":      1,
+			"2":      2,
+			"3":      3,
+			"4":      4,
+			"5":      5,
+			"6":      6,
+			"7":      7,
+			"8":      8,
+			"9":      9,
+			"10":     10,
+			"500":    500,
 			"100500": 100500,
 		} {
 			result, err := ParseString(s, Unsigned[uint]())
@@ -345,18 +345,18 @@ func TestUnsigned(t *testing.T) {
 func TestUnsignedN(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		for s, i := range map[string]uint{
-			"0": 0,
-			"1": 1,
-			"2": 2,
-			"3": 3,
-			"4": 4,
-			"5": 5,
-			"6": 6,
-			"7": 7,
-			"8": 8,
-			"9": 9,
-			"10": 1,
-			"500": 5,
+			"0":      0,
+			"1":      1,
+			"2":      2,
+			"3":      3,
+			"4":      4,
+			"5":      5,
+			"6":      6,
+			"7":      7,
+			"8":      8,
+			"9":      9,
+			"10":     1,
+			"500":    5,
 			"100500": 1,
 		} {
 			result, err := ParseString(s, UnsignedN[uint](1))
@@ -386,10 +386,10 @@ func TestUnsignedN(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for s, i := range map[string]uint{
-			"10": 10,
-			"500": 50,
+			"10":     10,
+			"500":    50,
 			"100500": 10,
-			"10asd": 10,
+			"10asd":  10,
 		} {
 			result, err := ParseString(s, UnsignedN[uint](2))
 			Check(t, err)
@@ -399,10 +399,10 @@ func TestUnsignedN(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for s, i := range map[string]uint{
-			"10asdasd": 10,
-			"50OIUO": 50,
+			"10asdasd":  10,
+			"50OIUO":    50,
 			"10)(*(0))": 10,
-			"10asd": 10,
+			"10asd":     10,
 		} {
 			result, err := ParseString(s, UnsignedN[uint](2))
 			Check(t, err)
