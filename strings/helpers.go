@@ -45,7 +45,7 @@ func Dot() p.Combinator[rune, Position, rune] {
 	return Eq('.')
 }
 
-func Unsigned[T constraints.Unsigned]() p.Combinator[rune, Position, T] {
+func Unsigned[T constraints.Integer]() p.Combinator[rune, Position, T] {
 	digit := Try(Range('0', '9'))
 	zero := rune('0')
 
@@ -72,7 +72,7 @@ func Unsigned[T constraints.Unsigned]() p.Combinator[rune, Position, T] {
 	}
 }
 
-func UnsignedN[T constraints.Unsigned](n int) p.Combinator[rune, Position, T] {
+func UnsignedN[T constraints.Integer](n int) p.Combinator[rune, Position, T] {
 	digit := Try(Range('0', '9'))
 	zero := rune('0')
 

@@ -55,69 +55,29 @@ func monthPrefix() p.Combinator[rune, Position, time.Month] {
 }
 
 func yearWithCentury() p.Combinator[rune, Position, int] {
-	return Cast(
-		UnsignedN[uint](4),
-		func(x uint) (int, error) {
-			return int(x), nil
-		},
-	)
+	return UnsignedN[int](4)
 }
 
 func paddedDayNum() p.Combinator[rune, Position, int] {
-	toInt := func(x uint) (int, error) {
-		return int(x), nil
-	}
-
 	return Choice(
 		Try(
 			Skip(
 				OneOf('0', ' '),
-				Cast(
-					UnsignedN[uint](1),
-					toInt,
-				),
+				UnsignedN[int](1),
 			),
 		),
-		Cast(
-			UnsignedN[uint](2),
-			toInt,
-		),
+		UnsignedN[int](2),
 	)
 }
 
 func paddedHourNum() p.Combinator[rune, Position, int] {
-	return Cast(
-		UnsignedN[uint](2),
-		func(x uint) (int, error) {
-			return int(x), nil
-		},
-	)
+	return UnsignedN[int](2)
 }
 
 func paddedMinuteNum() p.Combinator[rune, Position, int] {
-	return Cast(
-		UnsignedN[uint](2),
-		func(x uint) (int, error) {
-			return int(x), nil
-		},
-	)
+	return UnsignedN[int](2)
 }
 
 func paddedSecondNum() p.Combinator[rune, Position, int] {
-	return Cast(
-		UnsignedN[uint](2),
-		func(x uint) (int, error) {
-			return int(x), nil
-		},
-	)
-}
-
-// TODO : add helper with available zones from file
-func zoneStr() p.Combinator[rune, Position, *time.Location] {
-	return Cast(
-		Count(3, Range('A', 'Z')),
-		func(x []rune) (*time.Location, error) {
-			return time.LoadLocation(string(x))
-		},
-	)
+	return UnsignedN[int](2)
 }
