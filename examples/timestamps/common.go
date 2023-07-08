@@ -59,15 +59,16 @@ func yearWithCentury() p.Combinator[rune, Position, int] {
 }
 
 func paddedDayNum() p.Combinator[rune, Position, int] {
-	return Choice(
-		Try(
-			Skip(
-				OneOf('0', ' '),
-				UnsignedN[int](1),
-			),
-		),
-		UnsignedN[int](2),
-	)
+	return UnsignedN[int](2)
+	// return Choice(
+	// 	Try(
+	// 		Skip(
+	// 			OneOf('0', ' '),
+	// 			UnsignedN[int](1),
+	// 		),
+	// 	),
+	// 	UnsignedN[int](2),
+	// )
 }
 
 func paddedHourNum() p.Combinator[rune, Position, int] {
