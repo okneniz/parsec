@@ -118,3 +118,99 @@ func TestMap(t *testing.T) {
 	AssertError(t, err)
 	AssertSlice(t, result, nil)
 }
+
+func TestString(t *testing.T) {
+	t.Parallel()
+
+	t.Run("case 1", func(t *testing.T) {
+		comb := String("foo")
+
+		result, err := ParseString("foo", comb)
+		Check(t, err)
+		AssertEq(t, result, "foo")
+
+		result, err = ParseString("foobar", comb)
+		Check(t, err)
+		AssertEq(t, result, "foo")
+
+		result, err = ParseString("bar", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+
+		result, err = ParseString("baz", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+
+		result, err = ParseString(" foo", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+
+		result, err = ParseString(" foobar", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+
+		result, err = ParseString("", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+	})
+}
+
+func TestOneOfStrings(t *testing.T) {
+	t.Parallel()
+
+	t.Run("case 1", func(t *testing.T) {
+		comb := OneOfStrings("foo", "bar")
+
+		result, err := ParseString("foo", comb)
+		Check(t, err)
+		AssertEq(t, result, "foo")
+
+		result, err = ParseString("foobar", comb)
+		Check(t, err)
+		AssertEq(t, result, "foo")
+
+		result, err = ParseString("barbaz", comb)
+		Check(t, err)
+		AssertEq(t, result, "bar")
+
+		result, err = ParseString("baz", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+
+		result, err = ParseString("", comb)
+		AssertError(t, err)
+		AssertEq(t, result, "")
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		noice := Many(0, Try(NoneOf('f', 'o', 'b', 'a', 'r')))
+
+		comb := Many(
+			0,
+			Skip(
+				noice,
+				OneOfStrings("foo", "bar"),
+			),
+		)
+
+		result, err := ParseString("foo", comb)
+		Check(t, err)
+		AssertSlice(t, result, []string{"foo"})
+
+		result, err = ParseString("barfoo", comb)
+		Check(t, err)
+		AssertSlice(t, result, []string{"bar", "foo"})
+
+		result, err = ParseString("bar12334foo123", comb)
+		Check(t, err)
+		AssertSlice(t, result, []string{"bar", "foo"})
+
+		result, err = ParseString("bar12334foo123baz", comb)
+		Check(t, err)
+		AssertSlice(t, result, []string{"bar", "foo"})
+
+		result, err = ParseString("12311231820398", comb)
+		Check(t, err)
+		AssertSlice(t, result, nil)
+	})
+}

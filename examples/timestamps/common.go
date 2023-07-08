@@ -2,11 +2,9 @@ package timestamp
 
 import (
 	"time"
-	// "fmt"
 
 	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/strings"
-	// t "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {

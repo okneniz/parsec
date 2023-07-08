@@ -18,8 +18,8 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 	separator := Colon()
 	minute := paddedMinuteNum()
 	second := paddedSecondNum()
-	zone := zoneStr()
 	year := yearWithCentury()
+	zone, _ := TimeZoneByNames("UTC", "EST", "GMT")
 
 	return func(buffer p.Buffer[rune, Position]) (*time.Time, error) {
 		dw, err := dayOfWeek(buffer)

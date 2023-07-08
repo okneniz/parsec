@@ -108,12 +108,11 @@ func randomDate(r *rand.Rand) *time.Time {
 
 var (
 	allowZones = []string{
-		"UTC",
-		"MST",
+		"UTC", "EST", "GMT",
 	}
 
 	allowLayouts = []string{
-		// "Mon Jan _2 15:04:05 2006", TODO : only layouts with time zone to avoid losing data
+		// only layouts with time zone to avoid losing data
 		"Mon Jan _2 15:04:05 MST 2006",
 		"Mon, 02 Jan 2006 15:04:05 MST",
 	}
@@ -129,7 +128,7 @@ func randomLocation(r *rand.Rand) *time.Location {
 }
 
 func randomInt(r *rand.Rand, from, to int) int {
-	return from + r.Intn(to-from)
+	return from + r.Intn(to-from+1)
 }
 
 func randomLayout(r *rand.Rand) string {

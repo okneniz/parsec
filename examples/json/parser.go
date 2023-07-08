@@ -58,7 +58,7 @@ func Number() p.Combinator[rune, Position, JSON] {
 	)
 }
 
-func String() p.Combinator[rune, Position, JSON] {
+func String_() p.Combinator[rune, Position, JSON] {
 	return func(buffer p.Buffer[rune, Position]) (JSON, error) {
 		_, err := quote(buffer)
 		if err != nil {
@@ -77,7 +77,7 @@ func String() p.Combinator[rune, Position, JSON] {
 func Value(t testing.TB) p.Combinator[rune, Position, JSON] {
 	var value p.Combinator[rune, Position, JSON]
 
-	keyComb := Try(Padded(whitespace, String()))
+	keyComb := Try(Padded(whitespace, String_()))
 
 	pair := func(buffer p.Buffer[rune, Position]) (*JSPair, error) {
 		key, err := keyComb(buffer)
@@ -142,7 +142,7 @@ func Value(t testing.TB) p.Combinator[rune, Position, JSON] {
 	bool := Trace(t, "bool", Bool())
 	null := Trace(t, "null", Null())
 	num := Trace(t, "number", Number())
-	str := Trace(t, "string", String())
+	str := Trace(t, "string", String_())
 	obj := Trace(t, "object", object)
 	arr := Trace(t, "array", array)
 

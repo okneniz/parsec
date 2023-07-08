@@ -340,6 +340,19 @@ func TestUnsigned(t *testing.T) {
 			AssertEq(t, result, i)
 		}
 	})
+
+	t.Run("case 2", func(t *testing.T) {
+		for _, s := range []string{
+			"asdasd10",
+			" 50OIUO",
+			"(10)(*(0))",
+			"_10asd",
+		} {
+			result, err := ParseString(s, Unsigned[uint]())
+			AssertError(t, err)
+			AssertEq(t, result, 0)
+		}
+	})
 }
 
 func TestUnsignedN(t *testing.T) {
@@ -407,6 +420,19 @@ func TestUnsignedN(t *testing.T) {
 			result, err := ParseString(s, UnsignedN[uint](2))
 			Check(t, err)
 			AssertEq(t, result, i)
+		}
+	})
+
+	t.Run("case 5", func(t *testing.T) {
+		for _, s := range []string{
+			"asdasd10",
+			" 50OIUO",
+			"(10)(*(0))",
+			"_10asd",
+		} {
+			result, err := ParseString(s, UnsignedN[uint](2))
+			AssertError(t, err)
+			AssertEq(t, result, 0)
 		}
 	})
 }

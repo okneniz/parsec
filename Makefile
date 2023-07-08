@@ -11,3 +11,6 @@ benchmark:
 coverage:
 	go tool cover -func=coverage.out
 	go tool cover -html=coverage.out
+
+build:
+	go build ./...

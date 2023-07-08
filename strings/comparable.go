@@ -30,3 +30,30 @@ func Map[K comparable, V any](
 ) p.Combinator[rune, Position, V] {
 	return p.Map[rune, Position, K, V](cases, c)
 }
+
+func String(str string) p.Combinator[rune, Position, string] {
+	return func(buffer p.Buffer[rune, Position]) (string, error) {
+		for _, r := range str {
+			c, err := buffer.Read(true)
+			if err != nil {
+				return "", err
+			}
+
+			if r != c {
+				return "", p.NothingMatched
+			}
+		}
+
+		return str, nil
+	}
+}
+
+func OneOfStrings(strs ...string) p.Combinator[rune, Position, string] {
+	combs := make([]p.Combinator[rune, Position, string], len(strs))
+
+	for i, str := range strs {
+		combs[i] = Try(String(str))
+	}
+
+	return Choice(combs...)
+}
