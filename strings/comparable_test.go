@@ -1,7 +1,9 @@
 package strings
 
 import (
+	"math/rand"
 	"testing"
+	"time"
 
 	. "git.sr.ht/~okneniz/parsec/testing"
 )
@@ -119,6 +121,35 @@ func TestMap(t *testing.T) {
 	AssertSlice(t, result, nil)
 }
 
+func TestMapStrings(t *testing.T) {
+	cases := map[string]int{"a": 1, "b": 2, "c": 3}
+	noice := Try(NoneOf('a', 'b', 'c'))
+
+	comb := Some(
+		1,
+		Skip(
+			Many(0, noice),
+			MapStrings(cases),
+		),
+	)
+
+	result, err := ParseString("a", comb)
+	Check(t, err)
+	AssertSlice(t, result, []int{1})
+
+	result, err = ParseString("..a//b++c**d,,e--a", comb)
+	Check(t, err)
+	AssertSlice(t, result, []int{1, 2, 3, 1})
+
+	result, err = ParseString("bb", comb)
+	Check(t, err)
+	AssertSlice(t, result, []int{2, 2})
+
+	result, err = ParseString("", comb)
+	AssertError(t, err)
+	AssertSlice(t, result, nil)
+}
+
 func TestString(t *testing.T) {
 	t.Parallel()
 
@@ -212,5 +243,78 @@ func TestOneOfStrings(t *testing.T) {
 		result, err = ParseString("12311231820398", comb)
 		Check(t, err)
 		AssertSlice(t, result, nil)
+	})
+}
+
+func BenchmarkMap(b *testing.B) {
+	seed := time.Now().UnixNano()
+	source := rand.New(rand.NewSource(seed))
+	r := rand.New(source)
+
+	b.Log("seed: ", seed)
+
+	dict := map[string]time.Month{
+		"Jan": time.January,
+		"Feb": time.February,
+		"Mar": time.March,
+		"Apr": time.April,
+		"May": time.May,
+		"Jun": time.June,
+		"Jul": time.July,
+		"Aug": time.August,
+		"Sep": time.September,
+		"Oct": time.October,
+		"Nov": time.November,
+		"Dec": time.December,
+	}
+
+	gen := func(count int) []string {
+		examples := make([]string, 0, count)
+
+		for {
+			for key, _ := range dict {
+				examples = append(examples, key)
+				count--
+
+				if count == 0 {
+					break
+				}
+			}
+
+			if count == 0 {
+				break
+			}
+		}
+
+		r.Shuffle(len(examples), func(i, j int) { examples[i], examples[j] = examples[j], examples[i] })
+
+		return examples
+	}
+
+	b.Run("MapString", func(b *testing.B) {
+		examples := gen(b.N)
+		comb := MapStrings(dict)
+
+		b.ResetTimer()
+
+		for _, example := range examples {
+			ParseString(example, comb)
+		}
+	})
+
+	b.Run("Map", func(b *testing.B) {
+		examples := gen(b.N)
+		comb := Map(dict, Cast(
+			Count(3, Any()),
+			func(x []rune) (string, error) {
+				return string(x), nil
+			},
+		))
+
+		b.ResetTimer()
+
+		for _, example := range examples {
+			ParseString(example, comb)
+		}
 	})
 }

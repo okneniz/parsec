@@ -18,14 +18,7 @@ func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
 		"Sun": time.Sunday,
 	}
 
-	dayName := Cast(
-		Count(3, IsLetter()),
-		func(x []rune) (string, error) {
-			return string(x), nil
-		},
-	)
-
-	return Map(dwDict, dayName)
+	return MapStrings(dwDict)
 }
 
 func monthPrefix() p.Combinator[rune, Position, time.Month] {
@@ -44,14 +37,7 @@ func monthPrefix() p.Combinator[rune, Position, time.Month] {
 		"Dec": time.December,
 	}
 
-	monthName := Cast(
-		Count(3, IsLetter()),
-		func(x []rune) (string, error) {
-			return string(x), nil
-		},
-	)
-
-	return Map(monthDict, monthName)
+	return MapStrings(monthDict)
 }
 
 func yearWithCentury() p.Combinator[rune, Position, int] {
@@ -60,15 +46,6 @@ func yearWithCentury() p.Combinator[rune, Position, int] {
 
 func paddedDayNum() p.Combinator[rune, Position, int] {
 	return UnsignedN[int](2)
-	// return Choice(
-	// 	Try(
-	// 		Skip(
-	// 			OneOf('0', ' '),
-	// 			UnsignedN[int](1),
-	// 		),
-	// 	),
-	// 	UnsignedN[int](2),
-	// )
 }
 
 func paddedHourNum() p.Combinator[rune, Position, int] {
