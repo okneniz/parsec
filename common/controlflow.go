@@ -50,3 +50,84 @@ func Choice[T any, P any, S any](cs ...Combinator[T, P, S]) Combinator[T, P, S] 
 		return *new(S), NothingMatched
 	}
 }
+
+func Skip[T any, P any, S any, B any](
+	skip Combinator[T, P, B],
+	next Combinator[T, P, S],
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
+		_, err := skip(buffer)
+		if err != nil {
+			return *new(S), err
+		}
+
+		return next(buffer)
+	}
+}
+
+func SkipAfter[T any, P any, S any, B any](
+	skip Combinator[T, P, B],
+	body Combinator[T, P, S],
+) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
+		result, err := body(buffer)
+		if err != nil {
+			return *new(S), err // TODO : allocate without new (by var)?
+		}
+
+		_, err = skip(buffer)
+		if err != nil {
+			return *new(S), err
+		}
+
+		return result, nil
+	}
+}
+
+func Padded[T any, P any, S any, B any](
+	skip Combinator[T, P, S],
+	body Combinator[T, P, B],
+) Combinator[T, P, B] {
+	skip = Try(skip)
+
+	return func(buffer Buffer[T, P]) (B, error) {
+		for !buffer.IsEOF() {
+			_, err := skip(buffer)
+			if err != nil {
+				break
+			}
+		}
+
+		result, err := body(buffer)
+		if err != nil {
+			return *new(B), err
+		}
+
+		for !buffer.IsEOF() {
+			_, err := skip(buffer)
+			if err != nil {
+				break
+			}
+		}
+
+		return result, nil
+	}
+}
+
+func SkipMany[T any, P any, S any, B any](
+	skip Combinator[T, P, S],
+	body Combinator[T, P, B],
+) Combinator[T, P, B] {
+	skip = Try(skip)
+
+	return func(buffer Buffer[T, P]) (B, error) {
+		for !buffer.IsEOF() {
+			_, err := skip(buffer)
+			if err != nil {
+				break
+			}
+		}
+
+		return body(buffer)
+	}
+}

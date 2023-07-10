@@ -3,6 +3,7 @@ package bytes
 import (
 	"testing"
 
+	"git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/testing"
 )
 
@@ -92,12 +93,11 @@ func TestSequenceOf(t *testing.T) {
 
 func TestMap(t *testing.T) {
 	cases := map[byte]string{0: "foo", 1: "bar", 2: "baz"}
-	noice := Try(NoneOf(0, 1, 2))
 
 	comb := Some(
 		1,
-		Skip(
-			Many(0, noice),
+		common.SkipMany(
+			NoneOf(0, 1, 2),
 			Map(cases, Any()),
 		),
 	)

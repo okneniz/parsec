@@ -65,47 +65,6 @@ func Between[T any, P any, S any, B any, M any](
 	}
 }
 
-func Skip[T any, P any, S any, B any](
-	skip Combinator[T, P, B],
-	next Combinator[T, P, S],
-) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
-		_, err := skip(buffer)
-		if err != nil {
-			return *new(S), err
-		}
-
-		return next(buffer)
-	}
-}
-
-func SkipAfter[T any, P any, S any, B any](
-	skip Combinator[T, P, B],
-	body Combinator[T, P, S],
-) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
-		result, err := body(buffer)
-		if err != nil {
-			return *new(S), err
-		}
-
-		_, err = skip(buffer)
-		if err != nil {
-			return *new(S), err
-		}
-
-		return result, nil
-	}
-}
-
-func Padded[T any, P any, S any, B any](
-	skip Combinator[T, P, B],
-	body Combinator[T, P, S],
-) Combinator[T, P, S] {
-	x := Many(0, Try(skip))
-	return Skip(x, SkipAfter(x, body))
-}
-
 func EOF[T any, P any]() Combinator[T, P, bool] {
 	return func(buffer Buffer[T, P]) (bool, error) {
 		if buffer.IsEOF() {

@@ -179,8 +179,7 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		phrase := SequenceOf('a', 'b', 'c')
-		noice := Many(0, Try(NoneOf('a', 'b', 'c')))
-		comb := Skip(noice, phrase)
+		comb := p.SkipMany(NoneOf('a', 'b', 'c'), phrase)
 
 		result, err := Parse([]byte("abc"), comb)
 		Check(t, err)

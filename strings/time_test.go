@@ -1,10 +1,11 @@
 package strings
 
 import (
-	. "git.sr.ht/~okneniz/parsec/testing"
 	"testing"
 	"time"
 	_ "time/tzdata"
+
+	. "git.sr.ht/~okneniz/parsec/testing"
 )
 
 func TestTimeZone(t *testing.T) {

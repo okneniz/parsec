@@ -94,12 +94,11 @@ func TestSequenceOf(t *testing.T) {
 
 func TestMap(t *testing.T) {
 	cases := map[rune]int{'a': 1, 'b': 2, 'c': 3}
-	noice := Try(NoneOf('a', 'b', 'c'))
 
 	comb := Some(
 		1,
-		Skip(
-			Many(0, noice),
+		SkipMany(
+			NoneOf('a', 'b', 'c'),
 			Map(cases, Any()),
 		),
 	)
@@ -123,12 +122,11 @@ func TestMap(t *testing.T) {
 
 func TestMapStrings(t *testing.T) {
 	cases := map[string]int{"a": 1, "b": 2, "c": 3}
-	noice := Try(NoneOf('a', 'b', 'c'))
 
 	comb := Some(
 		1,
-		Skip(
-			Many(0, noice),
+		SkipMany(
+			NoneOf('a', 'b', 'c'),
 			MapStrings(cases),
 		),
 	)
@@ -214,12 +212,10 @@ func TestOneOfStrings(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		noice := Many(0, Try(NoneOf('f', 'o', 'b', 'a', 'r')))
-
 		comb := Many(
 			0,
-			Skip(
-				noice,
+			SkipMany(
+				NoneOf('f', 'o', 'b', 'a', 'r'),
 				OneOfStrings("foo", "bar"),
 			),
 		)
