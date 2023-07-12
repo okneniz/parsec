@@ -1,6 +1,8 @@
 package bytes
 
 import (
+	"os"
+
 	p "git.sr.ht/~okneniz/parsec/common"
 )
 
@@ -39,4 +41,13 @@ func Buffer(data []byte) *buffer {
 	b.data = data
 	b.position = 0
 	return b
+}
+
+func BufferFromFile(path string) (*buffer, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return Buffer(data), nil
 }
