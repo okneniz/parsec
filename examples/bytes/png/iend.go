@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 
 	p "git.sr.ht/~okneniz/parsec/common"
+	. "git.sr.ht/~okneniz/parsec/bytes"
 )
 
 type IEND struct {

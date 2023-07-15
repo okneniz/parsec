@@ -1,6 +1,9 @@
 package bytes
 
 import (
+	"encoding/binary"
+	"bytes"
+	"golang.org/x/exp/constraints"
 	p "git.sr.ht/~okneniz/parsec/common"
 )
 
@@ -57,4 +60,31 @@ func Cast[T any, S any](
 	f func(T) (S, error),
 ) p.Combinator[byte, int, S] {
 	return p.Cast(c, f)
+}
+
+type Number interface {
+	constraints.Integer | constraints.Float
+}
+
+func ReadAs[T Number](
+	size int,
+	order binary.ByteOrder,
+) p.Combinator[byte, int, T] {
+	return func(buffer p.Buffer[byte, int]) (T, error) {
+		var result T
+
+		input, err := Count(size, Any())(buffer)
+		if err != nil {
+			return result, err
+		}
+
+		buf := bytes.NewReader(input)
+
+		err = binary.Read(buf, order, &result)
+		if err != nil {
+			return result, err
+		}
+
+		return result, nil
+	}
 }

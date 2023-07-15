@@ -131,3 +131,36 @@ func SkipMany[T any, P any, S any, B any](
 		return body(buffer)
 	}
 }
+
+func SkipSequence[T, P, S any](combs ...Combinator[T, P, S]) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
+		var result S
+
+		for _, c := range combs {
+			_, err := c(buffer)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		return result, nil
+	}
+}
+
+func SkipSequenceOf[T comparable, P, S any](data ...T) Combinator[T, P, S] {
+	return func(buffer Buffer[T, P]) (S, error) {
+		var result S
+
+		for _, x := range data {
+			r, err := buffer.Read(true)
+			if err != nil {
+				return result, err
+			}
+			if x != r {
+				return result, NothingMatched
+			}
+		}
+
+		return result, nil
+	}
+}
