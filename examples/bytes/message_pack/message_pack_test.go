@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 
 	b "git.sr.ht/~okneniz/parsec/bytes"
@@ -28,12 +29,16 @@ func TestMain_MessagePack(t *testing.T) {
 			math.MaxUint32,
 			uint64(math.MaxUint64),
 			"test",
+			"test                           asd                  asd", // long string
 			nil,
+			-1,
+			0,
+			1,
 		}
 
 		for _, example := range examples {
 			expected := example
-			name := fmt.Sprintf("%#T", example)
+			name := fmt.Sprintf("%#T - %v", example, example)
 
 			t.Run(name, func(t *testing.T) {
 				data, err := mpack.Marshal(expected)
@@ -44,6 +49,8 @@ func TestMain_MessagePack(t *testing.T) {
 				actual, err := b.Parse(data, MessagePack())
 				if err != nil {
 					t.Errorf("input: %v", data)
+					t.Errorf("hex: %s", toHex(data))
+					t.Errorf("bin: %s", toBinary(data))
 					t.Fatal(err)
 				}
 
@@ -54,5 +61,34 @@ func TestMain_MessagePack(t *testing.T) {
 				}
 			})
 		}
+
+		// for i := 0; i > - 127; i-- {
+		// 	t.Log("input", i)
+		// 	data, err := mpack.Marshal(i)
+		// 	if err != nil {
+		// 		t.Fatal(err)
+		// 	}
+		// 	t.Log("output", data)
+		// }
 	})
+}
+
+func toHex(data []byte) string {
+	result := make([]string, len(data))
+
+	for i, x := range data {
+		result[i] = fmt.Sprintf("0x%x", x)
+	}
+
+	return "[" + strings.Join(result, " ") + "]"
+}
+
+func toBinary(data []byte) string {
+	result := make([]string, len(data))
+
+	for i, x := range data {
+		result[i] = fmt.Sprintf("%08b", x)
+	}
+
+	return "[" + strings.Join(result, " ") + "]"
 }

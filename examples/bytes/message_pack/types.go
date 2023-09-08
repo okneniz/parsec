@@ -2,7 +2,6 @@ package message_pack
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type Type interface {
@@ -164,27 +163,46 @@ func (x Binary) String() string {
 	return fmt.Sprintf("%#v", x)
 }
 
+// Extension type
+
+type Ext struct {
+	Name int8
+	Data []byte
+}
+
+func (x Ext) Type() string {
+	return fmt.Sprintf("ext[%d]", x.Name)
+}
+
+func (x Ext) String() string {
+	return fmt.Sprintf("%v", x.Data)
+}
+
 // Array represents a sequence of objects
 
-type Array[T any] []T
+type Array []Type
 
-func (x Array[T]) Type() string {
+func (x Array) Type() string {
 	return "array"
 }
 
-func (x Array[T]) String() string {
-	return fmt.Sprintf("%v", []T(x))
+func (x Array) String() string {
+	return fmt.Sprintf("%v", []Type(x))
 }
 
 // Map represents key-value pairs of objects
 
-type Map[K comparable, V any] map[K]V
+type Map []Pair
 
-func (x Map[K,V]) Type() string {
-	t := reflect.TypeOf(x)
-	return fmt.Sprintf("Map[%T,%T]", t.Key().Name(), t.Elem())
+type Pair struct {
+	Key Type
+	Value Type
 }
 
-func (x Map[K,V]) String() string {
-	return fmt.Sprintf("%#v", map[K]V(x))
+func (x Map) Type() string {
+	return "map"
+}
+
+func (x Map) String() string {
+	return fmt.Sprintf("%#v", []Pair(x))
 }

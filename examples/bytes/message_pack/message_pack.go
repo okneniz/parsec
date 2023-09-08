@@ -2,6 +2,8 @@ package message_pack
 
 import (
 	"encoding/binary"
+	"errors"
+	// "fmt"
 
 	b "git.sr.ht/~okneniz/parsec/bytes"
 	c "git.sr.ht/~okneniz/parsec/common"
@@ -10,22 +12,9 @@ import (
 // https://github.com/msgpack/msgpack/blob/master/spec.md
 
 func MessagePack() c.Combinator[byte, int, Type] {
-	primitive := c.Try(primitiveParser())
-
-	return c.Choice[byte, int, Type](
-		primitive,
-	)
-}
-
-func primitiveParser() c.Combinator[byte, int, Type] {
 	cases := map[byte]c.Combinator[byte, int, Type]{
-		0xc0: Const[Type](Nil{}),
 		0xc2: Const[Type](Boolean(false)),
 		0xc3: Const[Type](Boolean(true)),
-
-		0xc4: binaryParser[uint8](1),
-		0xc5: binaryParser[uint16](2),
-		0xc6: binaryParser[uint32](4),
 
 		0xca: b.Cast(
 			b.ReadAs[float32](4, binary.BigEndian),
@@ -65,6 +54,7 @@ func primitiveParser() c.Combinator[byte, int, Type] {
 			},
 		),
 
+
 		0xd0: b.Cast(
 			b.ReadAs[int8](1, binary.BigEndian),
 			func(f int8) (Type, error) {
@@ -90,13 +80,137 @@ func primitiveParser() c.Combinator[byte, int, Type] {
 			},
 		),
 
-		// // TODO : not big-endian?
-		0xd9: stringParser[uint8](1), // is a 8-bit unsigned integer which represents N
-		0xda: stringParser[uint16](2),
-		0xdb: stringParser[uint32](4),
+		0xd9: stringParser(
+			b.ReadAs[uint8](1, binary.BigEndian),
+		),
+		0xda: stringParser(
+			b.ReadAs[uint16](2, binary.BigEndian),
+		),
+		0xdb: stringParser(
+			b.ReadAs[uint32](4, binary.BigEndian),
+		),
 	}
 
-	return MapAs[byte, int, byte, Type](cases, b.Any())
+	// fixstring parser
+	for i := byte(0xa0); i <= byte(0xbf); i++ {
+		cases[i] = stringParser(
+			Const[int](int(i - 0xa0)),
+		)
+	}
+
+	// positive fixint
+	for i := byte(0x00); i <= byte(0x7f); i++ {
+		cases[i] = Const[Type](Signed8(i))
+	}
+
+	// negative fixint
+	for i := byte(0xe0); i <= byte(0xff); i++ {
+		cases[i] = Const[Type](Signed8(0xe0 - 0xff))
+		if i == 0xff { // avoid endless loop
+			break
+		}
+	}
+
+	// complex types
+
+	valuesParser := MapAs[byte, int, byte, Type](cases, b.Any())
+
+	cases[0xc0] = Const[Type](Nil{})
+
+	cases[0xc1] = func(buffer c.Buffer[byte, int]) (Type, error) {
+		return nil, errors.New("0xc1 - impossible data type")
+	}
+
+	cases[0xc4] = binaryParser[uint8](1)
+	cases[0xc5] = binaryParser[uint16](2)
+	cases[0xc6] = binaryParser[uint32](4)
+
+	// container types
+
+	// fixarray parser
+	for i := byte(0x90); i <= byte(0x9f); i++ {
+		cases[i] = arrayParser(
+			Const[int](int(i - 0x90)),
+			valuesParser,
+		)
+	}
+
+	// array 16
+	cases[0xdc] = arrayParser(
+		b.ReadAs[uint16](2, binary.BigEndian),
+		valuesParser,
+	)
+
+	// array 32
+	cases[0xdd] = arrayParser(
+		b.ReadAs[uint32](4, binary.BigEndian),
+		valuesParser,
+	)
+
+	// fixmap parser
+	for i := byte(0x80); i <= byte(0x8f); i++ {
+		cases[i] = mapParser(
+			Const[int](int(i - 0x80)),
+			valuesParser,
+			valuesParser,
+		)
+	}
+
+	// map 16 parser
+	cases[0xde] = mapParser(
+		b.ReadAs[uint16](2, binary.BigEndian),
+		valuesParser,
+		valuesParser,
+	)
+
+	// map 32 parser
+	cases[0xdf] = mapParser(
+		b.ReadAs[uint32](4, binary.BigEndian),
+		valuesParser,
+		valuesParser,
+	)
+
+	// fixext 1
+	cases[0xd4] = extParser(
+		Const[int](1),
+	)
+
+	// fixext 2
+	cases[0xd5] = extParser(
+		Const[int](2),
+	)
+
+	// fixext 4
+	cases[0xd6] = extParser(
+		Const[int](4),
+	)
+
+	// fixext 8
+	cases[0xd7] = extParser(
+		Const[int](8),
+	)
+
+	// fixext 16
+	cases[0xd8] = extParser(
+		Const[int](16),
+	)
+
+	// ext 8
+	cases[0xc7] = extParser(
+		b.ReadAs[int8](1, binary.BigEndian),
+	)
+
+	// ext 16
+	cases[0xc8] = extParser(
+		b.ReadAs[int16](2, binary.BigEndian),
+	)
+
+	// ext 32
+	cases[0xc9] = extParser(
+		b.ReadAs[int32](3, binary.BigEndian),
+	)
+
+	return valuesParser
 }
 
 func MapAs[T any, P any, K comparable, V any](
@@ -126,11 +240,11 @@ func Const[S any](value S) c.Combinator[byte, int, S] {
 	}
 }
 
-func stringParser[T b.Number](size int) c.Combinator[byte, int, Type] {
-	comb := b.ReadAs[T](size, binary.BigEndian)
-
+func stringParser[T b.Number](
+	parseSize c.Combinator[byte, int, T],
+) c.Combinator[byte, int, Type] {
 	return func(buffer c.Buffer[byte, int]) (Type, error) {
-		size, err := comb(buffer)
+		size, err := parseSize(buffer)
 		if err != nil {
 			return String(""), err
 		}
@@ -172,14 +286,90 @@ func binaryParser[T b.Number](size int) c.Combinator[byte, int, Type] {
 	}
 }
 
-func arrayParser[T any]() c.Combinator[byte, int, Array[T]] {
-	return func(buffer c.Buffer[byte, int]) (Array[T], error) {
-		return nil, nil
+func arrayParser[T b.Number](
+	parseSize c.Combinator[byte, int, T],
+	parseValue c.Combinator[byte, int, Type],
+) c.Combinator[byte, int, Type] {
+	return func(buffer c.Buffer[byte, int]) (Type, error) {
+		size, err := parseSize(buffer)
+		if err != nil {
+			return nil, err
+		}
+
+		data := make(Array, int(size))
+		for i := 0; i < int(size); i++ {
+			x, err := parseValue(buffer)
+			if err != nil {
+				return nil, err
+			}
+
+			data[i] = x
+		}
+
+		return data, nil
 	}
 }
 
-func mapParser[K comparable, V any]() c.Combinator[byte, int, Map[K, V]] {
-	return func(buffer c.Buffer[byte, int]) (Map[K, V], error) {
-		return nil, nil
+func mapParser[K Type, T b.Number](
+	parseSize c.Combinator[byte, int, T],
+	parseKey c.Combinator[byte, int, K],
+	parseValue c.Combinator[byte, int, Type],
+) c.Combinator[byte, int, Type] {
+	return func(buffer c.Buffer[byte, int]) (Type, error) {
+		size, err := parseSize(buffer)
+		if err != nil {
+			return nil, err
+		}
+
+		data := make(Map, int(size))
+
+		for i := 0; i < int(size); i++ {
+			key, err := parseKey(buffer)
+			if err != nil {
+				return nil, err
+			}
+
+			value, err := parseValue(buffer)
+			if err != nil {
+				return nil, err
+			}
+
+			data[i] = Pair {
+				Key: key,
+				Value: value,
+			}
+		}
+
+		return data, nil
+	}
+}
+
+func extParser[T b.Number](
+	parseSize c.Combinator[byte, int, T],
+) c.Combinator[byte, int, Type] {
+	nameParser := b.ReadAs[int8](1, binary.BigEndian)
+
+	return func(buffer c.Buffer[byte, int]) (Type, error) {
+		size, err := parseSize(buffer)
+		if err != nil {
+			return nil, err
+		}
+
+		name, err := nameParser(buffer)
+		if err != nil {
+			return nil, err
+		}
+
+		data := make([]byte, int(size))
+		for i := 0; i < int(size); i++ {
+			x, err := buffer.Read(true)
+			if err != nil {
+				return nil, err
+			}
+
+			data[i] = x
+		}
+
+		return Ext{Name: name, Data: data}, nil
 	}
 }
