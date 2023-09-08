@@ -30,3 +30,24 @@ func Map[K comparable, V any](
 ) p.Combinator[byte, int, V] {
 	return p.Map[byte, int, K, V](cases, c)
 }
+
+func MapAs[T any, P any, K comparable, V any](
+	cases map[K]p.Combinator[T, P, V],
+	comb p.Combinator[T, P, K],
+) p.Combinator[T, P, V] {
+	return func(buffer p.Buffer[T, P]) (V, error) {
+		var v V
+
+		key, err := comb(buffer)
+		if err != nil {
+			return v, err
+		}
+
+		parseValue, exists := cases[key]
+		if !exists {
+			return v, p.NothingMatched
+		}
+
+		return parseValue(buffer)
+	}
+}

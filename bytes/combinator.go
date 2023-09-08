@@ -88,3 +88,9 @@ func ReadAs[T Number](
 		return result, nil
 	}
 }
+
+func Const[S any](value S) p.Combinator[byte, int, S] {
+	return func(_ p.Buffer[byte, int]) (S, error) {
+		return value, nil
+	}
+}

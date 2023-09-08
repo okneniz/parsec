@@ -12,15 +12,15 @@ import (
 
 func MessagePack() c.Combinator[byte, int, Type] {
 	cases := map[byte]c.Combinator[byte, int, Type]{
-		0xc0: Const[Type](Nil{}),
+		0xc0: b.Const[Type](Nil{}),
 
 		0xc1: func(buffer c.Buffer[byte, int]) (Type, error) {
 			return nil, errors.New("0xc1 - impossible data type")
 		},
 
 		// bool
-		0xc2: Const[Type](Boolean(false)),
-		0xc3: Const[Type](Boolean(true)),
+		0xc2: b.Const[Type](Boolean(false)),
+		0xc3: b.Const[Type](Boolean(true)),
 
 		// bin
 		0xc4: binaryParser[uint8](1),
@@ -99,11 +99,11 @@ func MessagePack() c.Combinator[byte, int, Type] {
 		),
 
 		// fixext
-		0xd4: extParser(Const[uint8](1)),
-		0xd5: extParser(Const[uint8](2)),
-		0xd6: extParser(Const[uint8](4)),
-		0xd7: extParser(Const[uint8](8)),
-		0xd8: extParser(Const[uint8](16)),
+		0xd4: extParser(b.Const[uint8](1)),
+		0xd5: extParser(b.Const[uint8](2)),
+		0xd6: extParser(b.Const[uint8](4)),
+		0xd7: extParser(b.Const[uint8](8)),
+		0xd8: extParser(b.Const[uint8](16)),
 
 		// strings
 		0xd9: stringParser(b.ReadAs[uint8](1, binary.BigEndian)),
@@ -113,30 +113,30 @@ func MessagePack() c.Combinator[byte, int, Type] {
 
 	// positive fixint
 	for i := byte(0x00); i <= byte(0x7f); i++ {
-		cases[i] = Const[Type](Unsigned8(i))
+		cases[i] = b.Const[Type](Unsigned8(i))
 	}
 
 	// fixstring parser
 	for i := byte(0xa0); i <= byte(0xbf); i++ {
 		cases[i] = stringParser(
-			Const[int](int(i - 0xa0)),
+			b.Const[int](int(i - 0xa0)),
 		)
 	}
 
 	// negative fixint
 	for i, z := byte(0xe0), -32; i <= byte(0xff); i, z = i+1, z+1 {
-		cases[i] = Const[Type](Signed8(z))
+		cases[i] = b.Const[Type](Signed8(z))
 		if i == 0xff { // avoid endless loop
 			break
 		}
 	}
 
-	valuesParser := MapAs[byte, int, byte, Type](cases, b.Any())
+	valuesParser := b.MapAs[byte, int, byte, Type](cases, b.Any())
 
 	// fixarray parser
 	for i := byte(0x90); i <= byte(0x9f); i++ {
 		cases[i] = arrayParser(
-			Const[int](int(i-0x90)),
+			b.Const[int](int(i-0x90)),
 			valuesParser,
 		)
 	}
@@ -156,7 +156,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 	// fixmap parser
 	for i := byte(0x80); i <= byte(0x8f); i++ {
 		cases[i] = mapParser(
-			Const[int](int(i-0x80)),
+			b.Const[int](int(i-0x80)),
 			valuesParser,
 		)
 	}
@@ -174,33 +174,6 @@ func MessagePack() c.Combinator[byte, int, Type] {
 	)
 
 	return valuesParser
-}
-
-func MapAs[T any, P any, K comparable, V any](
-	cases map[K]c.Combinator[T, P, V],
-	comb c.Combinator[T, P, K],
-) c.Combinator[T, P, V] {
-	return func(buffer c.Buffer[T, P]) (V, error) {
-		var v V
-
-		key, err := comb(buffer)
-		if err != nil {
-			return v, err
-		}
-
-		parseValue, exists := cases[key]
-		if !exists {
-			return v, c.NothingMatched
-		}
-
-		return parseValue(buffer)
-	}
-}
-
-func Const[S any](value S) c.Combinator[byte, int, S] {
-	return func(_ c.Buffer[byte, int]) (S, error) {
-		return value, nil
-	}
 }
 
 func stringParser[T b.Number](
