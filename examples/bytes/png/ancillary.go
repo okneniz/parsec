@@ -1,9 +1,9 @@
 package png
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
-	"encoding/binary"
 
 	. "git.sr.ht/~okneniz/parsec/bytes"
 	p "git.sr.ht/~okneniz/parsec/common"
@@ -63,10 +63,10 @@ func AncillaryChunk(
 		}
 
 		return &Ancillary{
-			length: size,
+			length:    size,
 			chunkType: chunkType,
-			data: data,
-			crc: crc,
+			data:      data,
+			crc:       crc,
 		}, nil
 	}
 }

@@ -124,7 +124,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 	}
 
 	// negative fixint
-	for i, z := byte(0xe0), -32; i <= byte(0xff); i, z = i + 1, z + 1 {
+	for i, z := byte(0xe0), -32; i <= byte(0xff); i, z = i+1, z+1 {
 		cases[i] = Const[Type](Signed8(z))
 		if i == 0xff { // avoid endless loop
 			break
@@ -136,7 +136,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 	// fixarray parser
 	for i := byte(0x90); i <= byte(0x9f); i++ {
 		cases[i] = arrayParser(
-			Const[int](int(i - 0x90)),
+			Const[int](int(i-0x90)),
 			valuesParser,
 		)
 	}
@@ -156,7 +156,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 	// fixmap parser
 	for i := byte(0x80); i <= byte(0x8f); i++ {
 		cases[i] = mapParser(
-			Const[int](int(i - 0x80)),
+			Const[int](int(i-0x80)),
 			valuesParser,
 		)
 	}
@@ -296,8 +296,8 @@ func mapParser[T b.Number](
 				return nil, err
 			}
 
-			data[i] = Pair {
-				Key: key,
+			data[i] = Pair{
+				Key:   key,
 				Value: value,
 			}
 		}

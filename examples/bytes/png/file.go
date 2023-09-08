@@ -16,7 +16,6 @@ type Chunk interface {
 	String() string
 }
 
-
 func (f *File) String() string {
 	b := new(strings.Builder)
 

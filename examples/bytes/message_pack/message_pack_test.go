@@ -22,7 +22,7 @@ func init() {
 func TestMain_MessagePack(t *testing.T) {
 	t.Parallel()
 
-	t.Run("fixed", func(t *testing.T){
+	t.Run("fixed", func(t *testing.T) {
 		examples := []interface{}{
 			math.MaxFloat32,
 			math.MaxFloat64,
@@ -47,7 +47,7 @@ func TestMain_MessagePack(t *testing.T) {
 			-33,
 			0,
 			1,
-			[]interface{}{nil, true, false, 1,2,3,"test"},
+			[]interface{}{nil, true, false, 1, 2, 3, "test"},
 		}
 
 		for _, expected := range examples {
@@ -59,7 +59,7 @@ func TestMain_MessagePack(t *testing.T) {
 		}
 	})
 
-	t.Run("random", func(t *testing.T){
+	t.Run("random", func(t *testing.T) {
 		examplesCount := 10000
 
 		t.Run("string", func(t *testing.T) {
@@ -73,7 +73,7 @@ func TestMain_MessagePack(t *testing.T) {
 
 			t.Run("str 8", func(t *testing.T) {
 				for i := 0; i < examplesCount; i++ {
-					size := rnd[int](32, math.Pow(2, 8) - 1)
+					size := rnd[int](32, math.Pow(2, 8)-1)
 					expected := randStringRunes(size)
 					check[String](t, expected)
 				}
@@ -81,7 +81,7 @@ func TestMain_MessagePack(t *testing.T) {
 
 			t.Run("str 16", func(t *testing.T) {
 				for i := 0; i < examplesCount; i++ {
-					size := rnd[int](math.Pow(2, 8), math.Pow(2, 16) - 1)
+					size := rnd[int](math.Pow(2, 8), math.Pow(2, 16)-1)
 					expected := randStringRunes(size)
 					check[String](t, expected)
 				}
@@ -147,7 +147,7 @@ func TestMain_MessagePack(t *testing.T) {
 
 			t.Run("unsigned", func(t *testing.T) {
 				t.Run("positive fixint", func(t *testing.T) {
-					for i := 0; i < int(math.Pow(2, 7) - 1); i++ {
+					for i := 0; i < int(math.Pow(2, 7)-1); i++ {
 						check[Unsigned8](t, i)
 					}
 				})
@@ -244,7 +244,7 @@ func check[T any](t *testing.T, expected interface{}) {
 	}
 
 	if _, ok := actual.(T); !ok {
-			t.Logf("unexpected type %T %v", actual, actual)
+		t.Logf("unexpected type %T %v", actual, actual)
 	}
 }
 

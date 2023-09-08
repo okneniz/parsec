@@ -268,7 +268,7 @@ func BenchmarkMap(b *testing.B) {
 		examples := make([]string, 0, count)
 
 		for {
-			for key, _ := range dict {
+			for key := range dict {
 				examples = append(examples, key)
 				count--
 

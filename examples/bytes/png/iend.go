@@ -1,18 +1,18 @@
 package png
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
-	"encoding/binary"
 
-	p "git.sr.ht/~okneniz/parsec/common"
 	. "git.sr.ht/~okneniz/parsec/bytes"
+	p "git.sr.ht/~okneniz/parsec/common"
 )
 
 type IEND struct {
-	length    uint32
-	data      []byte
-	crc       uint32
+	length uint32
+	data   []byte
+	crc    uint32
 }
 
 func (c *IEND) Length() uint32 {
@@ -57,8 +57,8 @@ func IENDChunk(size uint32) p.Combinator[byte, int, *IEND] {
 
 		return &IEND{
 			length: size,
-			data: data,
-			crc: crc,
+			data:   data,
+			crc:    crc,
 		}, nil
 	}
 }

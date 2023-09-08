@@ -1,9 +1,9 @@
 package png
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
-	"encoding/binary"
 
 	. "git.sr.ht/~okneniz/parsec/bytes"
 	p "git.sr.ht/~okneniz/parsec/common"
@@ -41,7 +41,7 @@ func (c *PLTE) String() string {
 	for i, entry := range c.Entries {
 		b.WriteString("\t ")
 		b.WriteString(entry.String())
-		if len(c.Entries) != i + 1 {
+		if len(c.Entries) != i+1 {
 			b.WriteString(",")
 		}
 	}
@@ -50,9 +50,8 @@ func (c *PLTE) String() string {
 	return b.String()
 }
 
-
 type RGB struct {
-	Red	  uint8
+	Red   uint8
 	Green uint8
 	Blue  uint8
 }
@@ -72,9 +71,9 @@ func PLTEChunk(size uint32) p.Combinator[byte, int, *PLTE] {
 
 		buffer.Seek(pos)
 
-		entries := make([]*RGB, 0, uint32(size / 3))
+		entries := make([]*RGB, 0, uint32(size/3))
 
-		for i := uint32(0); i < size / 3; i++ {
+		for i := uint32(0); i < size/3; i++ {
 			red, err := ReadAs[uint8](1, binary.BigEndian)(buffer)
 			if err != nil {
 				return nil, err
@@ -91,9 +90,9 @@ func PLTEChunk(size uint32) p.Combinator[byte, int, *PLTE] {
 			}
 
 			entries = append(entries, &RGB{
-				Red: red,
+				Red:   red,
 				Green: green,
-				Blue: blue,
+				Blue:  blue,
 			})
 		}
 
@@ -107,9 +106,9 @@ func PLTEChunk(size uint32) p.Combinator[byte, int, *PLTE] {
 		}
 
 		return &PLTE{
-			length: size,
-			data: data,
-			crc: crc,
+			length:  size,
+			data:    data,
+			crc:     crc,
 			Entries: entries,
 		}, nil
 	}

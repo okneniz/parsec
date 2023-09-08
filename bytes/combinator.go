@@ -1,10 +1,10 @@
 package bytes
 
 import (
-	"encoding/binary"
 	"bytes"
-	"golang.org/x/exp/constraints"
+	"encoding/binary"
 	p "git.sr.ht/~okneniz/parsec/common"
+	"golang.org/x/exp/constraints"
 )
 
 func Satisfy(

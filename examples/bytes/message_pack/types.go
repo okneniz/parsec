@@ -195,7 +195,7 @@ func (x Array) String() string {
 type Map []Pair
 
 type Pair struct {
-	Key Type
+	Key   Type
 	Value Type
 }
 

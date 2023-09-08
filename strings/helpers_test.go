@@ -379,7 +379,7 @@ func TestUnsignedN(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		for s, _ := range map[string]uint{
+		for s := range map[string]uint{
 			"0": 0,
 			"1": 1,
 			"2": 2,

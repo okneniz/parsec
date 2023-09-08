@@ -1,9 +1,9 @@
 package png
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
-	"encoding/binary"
 
 	. "git.sr.ht/~okneniz/parsec/bytes"
 	p "git.sr.ht/~okneniz/parsec/common"
@@ -112,7 +112,7 @@ func IHDRChunk(size uint32) p.Combinator[byte, int, *IHDR] {
 			BitDepth:          bitDepth,
 			ColorType:         colorType,
 			CompressionMethod: compressionMethod,
-			FilterMethod: 	   filterMethod,
+			FilterMethod:      filterMethod,
 			InterfaceMethod:   interfaceMethod,
 		}
 

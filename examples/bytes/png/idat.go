@@ -1,18 +1,18 @@
 package png
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
-	"encoding/binary"
 
 	. "git.sr.ht/~okneniz/parsec/bytes"
 	p "git.sr.ht/~okneniz/parsec/common"
 )
 
 type IDAT struct {
-	length    uint32
-	data      []byte
-	crc       uint32
+	length uint32
+	data   []byte
+	crc    uint32
 }
 
 func (c *IDAT) Length() uint32 {
@@ -60,8 +60,8 @@ func IDATChunk(size uint32) p.Combinator[byte, int, *IDAT] {
 
 		return &IDAT{
 			length: size,
-			data: data,
-			crc: crc,
+			data:   data,
+			crc:    crc,
 		}, nil
 	}
 }
