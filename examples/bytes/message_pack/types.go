@@ -160,7 +160,7 @@ func (x Binary) Type() string {
 }
 
 func (x Binary) String() string {
-	return fmt.Sprintf("%#v", x)
+	return fmt.Sprintf("%v", []byte(x))
 }
 
 // Extension type

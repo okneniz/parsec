@@ -27,7 +27,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 		0xc5: binaryParser[uint16](2),
 		0xc6: binaryParser[uint32](4),
 
-		// ext 8
+		// ext
 		0xc7: extParser(b.ReadAs[int8](1, binary.BigEndian)),
 		0xc8: extParser(b.ReadAs[int16](2, binary.BigEndian)),
 		0xc9: extParser(b.ReadAs[int32](3, binary.BigEndian)),
