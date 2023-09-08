@@ -100,7 +100,7 @@ func (x Nil) Type() string {
 }
 
 func (x Nil) String() string {
-	return "nil"
+	return "<nil>"
 }
 
 // Boolean represents true or false
@@ -124,7 +124,7 @@ func (x Float32) Type() string {
 }
 
 func (x Float32) String() string {
-	return fmt.Sprintf("%f", x)
+	return fmt.Sprintf("%v", float32(x))
 }
 
 type Float64 float64
@@ -134,7 +134,7 @@ func (x Float64) Type() string {
 }
 
 func (x Float64) String() string {
-	return fmt.Sprintf("%f", x)
+	return fmt.Sprintf("%v", float64(x))
 }
 
 // Raw

@@ -3,15 +3,21 @@ package message_pack
 import (
 	"fmt"
 	"math"
-	"reflect"
+	// "reflect"
 	"strings"
 	"testing"
+	"math/rand"
+	"time"
 
 	b "git.sr.ht/~okneniz/parsec/bytes"
 	// c "git.sr.ht/~okneniz/parsec/common"
 
 	mpack "github.com/vmihailenco/msgpack/v5"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func TestMain_MessagePack(t *testing.T) {
 	t.Run("primitives", func(t *testing.T){
@@ -29,11 +35,23 @@ func TestMain_MessagePack(t *testing.T) {
 			math.MaxUint32,
 			uint64(math.MaxUint64),
 			"test",
-			"test                           asd                  asd", // long string
+			"test                           asd                  asd",
 			nil,
 			-1,
+			-2,
+			-30,
+			-31,
+			-32,
+			-33,
 			0,
 			1,
+			randStringRunes(1),
+			randStringRunes(10),
+			randStringRunes(255),
+			randStringRunes(256),
+			randStringRunes(65535),
+			randStringRunes(65536),
+			[]interface{}{nil, true, false, 1,2,3,"test"},
 		}
 
 		for _, example := range examples {
@@ -46,30 +64,23 @@ func TestMain_MessagePack(t *testing.T) {
 					t.Fatal(err)
 				}
 
+				t.Logf("input: %v", data)
+				t.Logf("hex: %s", toHex(data))
+				t.Logf("bin: %s", toBinary(data))
+
 				actual, err := b.Parse(data, MessagePack())
 				if err != nil {
-					t.Errorf("input: %v", data)
-					t.Errorf("hex: %s", toHex(data))
-					t.Errorf("bin: %s", toBinary(data))
+					t.Errorf("output: %v", actual)
 					t.Fatal(err)
 				}
 
-				if reflect.DeepEqual(expected, actual) {
+				if fmt.Sprintf("%v", expected) != actual.String() {
 					t.Errorf("expected: %v", expected)
-					t.Errorf("actual: %v", actual)
+					t.Errorf("actual: %s", actual.String())
 					t.Fatal()
 				}
 			})
 		}
-
-		// for i := 0; i > - 127; i-- {
-		// 	t.Log("input", i)
-		// 	data, err := mpack.Marshal(i)
-		// 	if err != nil {
-		// 		t.Fatal(err)
-		// 	}
-		// 	t.Log("output", data)
-		// }
 	})
 }
 
@@ -91,4 +102,14 @@ func toBinary(data []byte) string {
 	}
 
 	return "[" + strings.Join(result, " ") + "]"
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }

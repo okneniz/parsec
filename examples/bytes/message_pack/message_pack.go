@@ -3,7 +3,6 @@ package message_pack
 import (
 	"encoding/binary"
 	"errors"
-	// "fmt"
 
 	b "git.sr.ht/~okneniz/parsec/bytes"
 	c "git.sr.ht/~okneniz/parsec/common"
@@ -13,22 +12,41 @@ import (
 
 func MessagePack() c.Combinator[byte, int, Type] {
 	cases := map[byte]c.Combinator[byte, int, Type]{
+		0xc0: Const[Type](Nil{}),
+
+		0xc1: func(buffer c.Buffer[byte, int]) (Type, error) {
+			return nil, errors.New("0xc1 - impossible data type")
+		},
+
+		// bool
 		0xc2: Const[Type](Boolean(false)),
 		0xc3: Const[Type](Boolean(true)),
 
+		// bin
+		0xc4: binaryParser[uint8](1),
+		0xc5: binaryParser[uint16](2),
+		0xc6: binaryParser[uint32](4),
+
+		// ext 8
+		0xc7: extParser(b.ReadAs[int8](1, binary.BigEndian)),
+		0xc8: extParser(b.ReadAs[int16](2, binary.BigEndian)),
+		0xc9: extParser(b.ReadAs[int32](3, binary.BigEndian)),
+
+		// float
 		0xca: b.Cast(
-			b.ReadAs[float32](4, binary.BigEndian),
-			func(f float32) (Type, error) {
-				return Float32(f), nil
+			b.ReadAs[Float32](4, binary.BigEndian),
+			func(f Float32) (Type, error) {
+				return f, nil
 			},
 		),
 		0xcb: b.Cast(
-			b.ReadAs[float64](8, binary.BigEndian),
-			func(f float64) (Type, error) {
-				return Float64(f), nil
+			b.ReadAs[Float64](8, binary.BigEndian),
+			func(f Float64) (Type, error) {
+				return f, nil
 			},
 		),
 
+		// uint
 		0xcc: b.Cast(
 			b.ReadAs[uint8](1, binary.BigEndian),
 			func(f uint8) (Type, error) {
@@ -54,7 +72,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 			},
 		),
 
-
+		// int
 		0xd0: b.Cast(
 			b.ReadAs[int8](1, binary.BigEndian),
 			func(f int8) (Type, error) {
@@ -80,15 +98,22 @@ func MessagePack() c.Combinator[byte, int, Type] {
 			},
 		),
 
-		0xd9: stringParser(
-			b.ReadAs[uint8](1, binary.BigEndian),
-		),
-		0xda: stringParser(
-			b.ReadAs[uint16](2, binary.BigEndian),
-		),
-		0xdb: stringParser(
-			b.ReadAs[uint32](4, binary.BigEndian),
-		),
+		// fixext
+		0xd4: extParser(Const[uint8](1)),
+		0xd5: extParser(Const[uint8](2)),
+		0xd6: extParser(Const[uint8](4)),
+		0xd7: extParser(Const[uint8](8)),
+		0xd8: extParser(Const[uint8](16)),
+
+		// strings
+		0xd9: stringParser(b.ReadAs[uint8](1, binary.BigEndian)),
+		0xda: stringParser(b.ReadAs[uint16](2, binary.BigEndian)),
+		0xdb: stringParser(b.ReadAs[uint32](4, binary.BigEndian)),
+	}
+
+	// positive fixint
+	for i := byte(0x00); i <= byte(0x7f); i++ {
+		cases[i] = Const[Type](Unsigned8(i))
 	}
 
 	// fixstring parser
@@ -98,34 +123,15 @@ func MessagePack() c.Combinator[byte, int, Type] {
 		)
 	}
 
-	// positive fixint
-	for i := byte(0x00); i <= byte(0x7f); i++ {
-		cases[i] = Const[Type](Signed8(i))
-	}
-
 	// negative fixint
-	for i := byte(0xe0); i <= byte(0xff); i++ {
-		cases[i] = Const[Type](Signed8(0xe0 - 0xff))
+	for i, z := byte(0xe0), -32; i <= byte(0xff); i, z = i + 1, z + 1 {
+		cases[i] = Const[Type](Signed8(z))
 		if i == 0xff { // avoid endless loop
 			break
 		}
 	}
 
-	// complex types
-
 	valuesParser := MapAs[byte, int, byte, Type](cases, b.Any())
-
-	cases[0xc0] = Const[Type](Nil{})
-
-	cases[0xc1] = func(buffer c.Buffer[byte, int]) (Type, error) {
-		return nil, errors.New("0xc1 - impossible data type")
-	}
-
-	cases[0xc4] = binaryParser[uint8](1)
-	cases[0xc5] = binaryParser[uint16](2)
-	cases[0xc6] = binaryParser[uint32](4)
-
-	// container types
 
 	// fixarray parser
 	for i := byte(0x90); i <= byte(0x9f); i++ {
@@ -152,7 +158,6 @@ func MessagePack() c.Combinator[byte, int, Type] {
 		cases[i] = mapParser(
 			Const[int](int(i - 0x80)),
 			valuesParser,
-			valuesParser,
 		)
 	}
 
@@ -160,54 +165,12 @@ func MessagePack() c.Combinator[byte, int, Type] {
 	cases[0xde] = mapParser(
 		b.ReadAs[uint16](2, binary.BigEndian),
 		valuesParser,
-		valuesParser,
 	)
 
 	// map 32 parser
 	cases[0xdf] = mapParser(
 		b.ReadAs[uint32](4, binary.BigEndian),
 		valuesParser,
-		valuesParser,
-	)
-
-	// fixext 1
-	cases[0xd4] = extParser(
-		Const[int](1),
-	)
-
-	// fixext 2
-	cases[0xd5] = extParser(
-		Const[int](2),
-	)
-
-	// fixext 4
-	cases[0xd6] = extParser(
-		Const[int](4),
-	)
-
-	// fixext 8
-	cases[0xd7] = extParser(
-		Const[int](8),
-	)
-
-	// fixext 16
-	cases[0xd8] = extParser(
-		Const[int](16),
-	)
-
-	// ext 8
-	cases[0xc7] = extParser(
-		b.ReadAs[int8](1, binary.BigEndian),
-	)
-
-	// ext 16
-	cases[0xc8] = extParser(
-		b.ReadAs[int16](2, binary.BigEndian),
-	)
-
-	// ext 32
-	cases[0xc9] = extParser(
-		b.ReadAs[int32](3, binary.BigEndian),
 	)
 
 	return valuesParser
@@ -310,9 +273,8 @@ func arrayParser[T b.Number](
 	}
 }
 
-func mapParser[K Type, T b.Number](
+func mapParser[T b.Number](
 	parseSize c.Combinator[byte, int, T],
-	parseKey c.Combinator[byte, int, K],
 	parseValue c.Combinator[byte, int, Type],
 ) c.Combinator[byte, int, Type] {
 	return func(buffer c.Buffer[byte, int]) (Type, error) {
@@ -324,7 +286,7 @@ func mapParser[K Type, T b.Number](
 		data := make(Map, int(size))
 
 		for i := 0; i < int(size); i++ {
-			key, err := parseKey(buffer)
+			key, err := parseValue(buffer)
 			if err != nil {
 				return nil, err
 			}
