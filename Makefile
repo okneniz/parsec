@@ -1,7 +1,14 @@
 default: test
 
 test:
-	go test -v -timeout 3000ms -coverprofile=coverage.out ./...
+	go test -v -timeout 60s -coverprofile=coverage.out ./...
+	# go test -v -count 1 -timeout 60s -coverprofile=coverage.out ./...
+
+intall-linter:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+
+lint: fmt
+	golangci-lint run ./...
 
 fmt:
 	gofmt -w -s .

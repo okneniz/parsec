@@ -294,7 +294,7 @@ func BenchmarkMap(b *testing.B) {
 		b.ResetTimer()
 
 		for _, example := range examples {
-			ParseString(example, comb)
+			_, _ = ParseString(example, comb)
 		}
 	})
 
@@ -310,7 +310,7 @@ func BenchmarkMap(b *testing.B) {
 		b.ResetTimer()
 
 		for _, example := range examples {
-			ParseString(example, comb)
+			_, _ = ParseString(example, comb)
 		}
 	})
 }

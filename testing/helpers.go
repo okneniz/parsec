@@ -81,9 +81,7 @@ func AssertEqDump[T any](t *testing.T, actual, expected T) {
 
 func CopyOf[T any](data []T) []T {
 	result := make([]T, len(data))
-	for i, x := range data {
-		result[i] = x
-	}
+	copy(result, data)
 	return result
 }
 
