@@ -8,15 +8,16 @@ import (
 	c "git.sr.ht/~okneniz/parsec/common"
 )
 
-// https://github.com/msgpack/msgpack/blob/master/spec.md
+var (
+	ImposibleDataType = errors.New("0xc1 - impossible data type")
+)
 
+// https://github.com/msgpack/msgpack/blob/master/spec.md
 func MessagePack() c.Combinator[byte, int, Type] {
 	cases := map[byte]c.Combinator[byte, int, Type]{
 		0xc0: b.Const[Type](Nil{}),
 
-		0xc1: func(buffer c.Buffer[byte, int]) (Type, error) {
-			return nil, errors.New("0xc1 - impossible data type")
-		},
+		0xc1: b.Fail[Type](ImposibleDataType),
 
 		// bool
 		0xc2: b.Const[Type](Boolean(false)),

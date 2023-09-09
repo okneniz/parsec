@@ -90,7 +90,9 @@ func ReadAs[T Number](
 }
 
 func Const[S any](value S) p.Combinator[byte, int, S] {
-	return func(_ p.Buffer[byte, int]) (S, error) {
-		return value, nil
-	}
+	return p.Const[byte, int, S](value)
+}
+
+func Fail[S any](err error) p.Combinator[byte, int, S] {
+	return p.Fail[byte, int, S](err)
 }

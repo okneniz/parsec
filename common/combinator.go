@@ -93,3 +93,17 @@ func Cast[T any, P any, S any, B any](
 		return value, nil
 	}
 }
+
+func Const[T any, P any, S any](value S) Combinator[T, P, S] {
+	return func(_ Buffer[T, P]) (S, error) {
+		return value, nil
+	}
+}
+
+func Fail[T any, P any, S any](err error) Combinator[T, P, S] {
+	var x S
+
+	return func(_ Buffer[T, P]) (S, error) {
+		return x, err
+	}
+}
