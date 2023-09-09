@@ -1,5 +1,8 @@
 package common
 
+// Satisfy - succeeds for any item for which the supplied function f returns true.
+// Returns the item that is actually readed from input buffer.
+// if greedy buffer keep position after reading.
 func Satisfy[T any, P any](greedy bool, f Condition[T]) Combinator[T, P, T] {
 	return func(buffer Buffer[T, P]) (T, error) {
 		token, err := buffer.Read(greedy)
@@ -15,6 +18,7 @@ func Satisfy[T any, P any](greedy bool, f Condition[T]) Combinator[T, P, T] {
 	}
 }
 
+// Any - returns the readed item.
 func Any[T any, P any]() Combinator[T, P, T] {
 	return func(buffer Buffer[T, P]) (T, error) {
 		token, err := buffer.Read(true)
@@ -26,6 +30,7 @@ func Any[T any, P any]() Combinator[T, P, T] {
 	}
 }
 
+// Try - try to use c combinator, if it falls, it returns buffer to the previous position.
 func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
 	return func(buffer Buffer[T, P]) (S, error) {
 		pos := buffer.Position()
@@ -40,6 +45,7 @@ func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
 	}
 }
 
+// Between - parse sequence of input combinators, skip first and last results.
 func Between[T any, P any, S any, B any, M any](
 	pre Combinator[T, P, S],
 	c Combinator[T, P, B],
@@ -65,6 +71,7 @@ func Between[T any, P any, S any, B any, M any](
 	}
 }
 
+// EOF - checks that buffer reading has finished.
 func EOF[T any, P any]() Combinator[T, P, bool] {
 	return func(buffer Buffer[T, P]) (bool, error) {
 		if buffer.IsEOF() {
@@ -75,6 +82,8 @@ func EOF[T any, P any]() Combinator[T, P, bool] {
 	}
 }
 
+// Cast - parse data by c combinator and apply to f function.
+// Return result of f function.
 func Cast[T any, P any, S any, B any](
 	c Combinator[T, P, S],
 	f func(S) (B, error),
@@ -94,12 +103,14 @@ func Cast[T any, P any, S any, B any](
 	}
 }
 
+// Const - doesn't read anything, just return the input value.
 func Const[T any, P any, S any](value S) Combinator[T, P, S] {
 	return func(_ Buffer[T, P]) (S, error) {
 		return value, nil
 	}
 }
 
+// Fail - doesn't read anything, just return input error.
 func Fail[T any, P any, S any](err error) Combinator[T, P, S] {
 	var x S
 

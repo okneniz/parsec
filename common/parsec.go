@@ -1,10 +1,11 @@
 package common
 
+// Parse - read data from buffer by c combinator.
 func Parse[T any, P any, S any](
 	buffer Buffer[T, P],
-	parse Combinator[T, P, S],
+	c Combinator[T, P, S],
 ) (S, error) {
-	result, err := parse(buffer)
+	result, err := c(buffer)
 	if err != nil {
 		return *new(S), err
 	}

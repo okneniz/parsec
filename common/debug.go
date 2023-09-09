@@ -8,6 +8,8 @@ type Logged interface {
 	Log(args ...any)
 }
 
+// Trace - writes messages to the log about the state of the buffer before
+// and after using the combinator, the result of the cobinator and its error.
 func Trace[T any, P any, S any](l Logged, m string, c Combinator[T, P, S]) Combinator[T, P, S] {
 	return func(buffer Buffer[T, P]) (S, error) {
 		l.Log(m)

@@ -1,5 +1,7 @@
 package common
 
+// Concat - use cs combinators to parse slices step by step,
+// concatenate all result to one big slice and returns it.
 func Concat[T any, P any, S any](cap int, cs ...Combinator[T, P, []S]) Combinator[T, P, []S] {
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
@@ -17,6 +19,8 @@ func Concat[T any, P any, S any](cap int, cs ...Combinator[T, P, []S]) Combinato
 	}
 }
 
+// Sequence - reads input elements one by one using cs combinators.
+// If any of them fails, it returns an error.
 func Sequence[T any, P any, S any](cap int, cs ...Combinator[T, P, S]) Combinator[T, P, []S] {
 	return func(buffer Buffer[T, P]) ([]S, error) {
 		result := make([]S, 0, cap)
@@ -38,6 +42,8 @@ func Sequence[T any, P any, S any](cap int, cs ...Combinator[T, P, S]) Combinato
 	}
 }
 
+// Choice - searches for a combinator that works successfully on the input data.
+// if one is not found, it returns an NothingMatched error.
 func Choice[T any, P any, S any](cs ...Combinator[T, P, S]) Combinator[T, P, S] {
 	return func(buffer Buffer[T, P]) (S, error) {
 		for _, c := range cs {
@@ -51,6 +57,8 @@ func Choice[T any, P any, S any](cs ...Combinator[T, P, S]) Combinator[T, P, S] 
 	}
 }
 
+// Skip - ignores the result of the first combinator
+// and returns only the result of the second.
 func Skip[T any, P any, S any, B any](
 	skip Combinator[T, P, B],
 	next Combinator[T, P, S],
@@ -65,6 +73,9 @@ func Skip[T any, P any, S any, B any](
 	}
 }
 
+// SkipAfter - ignores the result of the first combinator
+// and returns only the result of the second.
+// Use body combinator at first.
 func SkipAfter[T any, P any, S any, B any](
 	skip Combinator[T, P, B],
 	body Combinator[T, P, S],
@@ -84,6 +95,8 @@ func SkipAfter[T any, P any, S any, B any](
 	}
 }
 
+// Padded - skip sequence of items parsed by first combinator
+// before and after body combinator.
 func Padded[T any, P any, S any, B any](
 	skip Combinator[T, P, S],
 	body Combinator[T, P, B],
@@ -114,6 +127,7 @@ func Padded[T any, P any, S any, B any](
 	}
 }
 
+// SkipMany - skip sequence of items parsed by first combinator before body combinator.
 func SkipMany[T any, P any, S any, B any](
 	skip Combinator[T, P, S],
 	body Combinator[T, P, B],
@@ -132,6 +146,7 @@ func SkipMany[T any, P any, S any, B any](
 	}
 }
 
+// SkipSequence - reads input elements one by one using `cs` combinators and ignore it.
 func SkipSequence[T, P, S any](combs ...Combinator[T, P, S]) Combinator[T, P, S] {
 	return func(buffer Buffer[T, P]) (S, error) {
 		var result S
@@ -147,6 +162,7 @@ func SkipSequence[T, P, S any](combs ...Combinator[T, P, S]) Combinator[T, P, S]
 	}
 }
 
+// SkipSequenceOf - reads input elements which must be equal input data and ignore it.
 func SkipSequenceOf[T comparable, P, S any](data ...T) Combinator[T, P, S] {
 	return func(buffer Buffer[T, P]) (S, error) {
 		var result S

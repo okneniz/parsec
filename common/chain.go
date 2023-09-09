@@ -1,5 +1,10 @@
 package common
 
+// Chainl - read zero or more occurrences of data readed by c combinator,
+// separated by op combinator.
+// Returns a value obtained by a left associative application of
+// all functions returned by op combinator to the values returned by c combinator.
+// If nothing read, the value def is returned.
 func Chainl[T any, P any, S any](
 	c Combinator[T, P, S],
 	op Combinator[T, P, func(S, S) S],
@@ -17,6 +22,11 @@ func Chainl[T any, P any, S any](
 	}
 }
 
+// Chainl1 - read one or more occurrences of data readed by c combinator,
+// separated by data readed by op combinator.
+// Returns a value obtained by a left associative application of
+// all functions returned by op combinator to the values returned by c combinator.
+// If nothing read, the value def is returned.
 func Chainl1[T any, P any, S any](
 	c Combinator[T, P, S],
 	op Combinator[T, P, func(S, S) S],
@@ -47,6 +57,11 @@ func Chainl1[T any, P any, S any](
 	}
 }
 
+// Chainr - read zero or more occurrences of data readed by c combinator,
+// separated by op combinator.
+// Returns a value obtained by a right associative application
+// of all functions returned by op to the values returned by c combinator.
+// If nothing read, the value def is returned.
 func Chainr[T any, P any, S any](
 	c Combinator[T, P, S],
 	op Combinator[T, P, func(S, S) S],
@@ -64,6 +79,11 @@ func Chainr[T any, P any, S any](
 	}
 }
 
+// Chainr - read one or more occurrences of data readed by c combinator,
+// separated by op combinator.
+// Returns a value obtained by a right associative application
+// of all functions returned by op to the values returned by c combinator.
+// If nothing read, the value def is returned.
 func Chainr1[T any, P any, S any](
 	c Combinator[T, P, S],
 	op Combinator[T, P, func(S, S) S],
@@ -112,6 +132,9 @@ func Chainr1[T any, P any, S any](
 	}
 }
 
+// Sep - read zero or more occurrences of data readed by c combinator,
+// separated by sep combinator.
+// Returns a slice of values returned by p.
 func SepBy[T any, P any, S any, B any](
 	cap int,
 	body Combinator[T, P, S],
@@ -147,6 +170,9 @@ func SepBy[T any, P any, S any, B any](
 	}
 }
 
+// Sep - read one or more occurrences of data readed by c combinator,
+// separated by sep combinator.
+// Returns a slice of values returned by p.
 func SepBy1[T any, P any, S any, B any](
 	cap int,
 	body Combinator[T, P, S],
@@ -165,6 +191,9 @@ func SepBy1[T any, P any, S any, B any](
 	}
 }
 
+// EndBy - read zero or more occurrences of data readed by c combinator,
+// separated and ended by data readed by sep combinator.
+// Returns a slice of values returned by p.
 func EndBy[T any, P any, S any, B any](
 	cap int,
 	body Combinator[T, P, S],
@@ -188,6 +217,9 @@ func EndBy[T any, P any, S any, B any](
 	}
 }
 
+// EndBy1 - read one or more occurrences of data readed by c combinator,
+// separated and ended by data readed by sep combinator.
+// Returns a slice of values returned by c combinator.
 func EndBy1[T any, P any, S any, B any](
 	cap int,
 	body Combinator[T, P, S],
@@ -206,6 +238,9 @@ func EndBy1[T any, P any, S any, B any](
 	}
 }
 
+// SepEndBy - read zero or more occurrences of data readed by body combinator,
+// separated and optionally ended by data readed by sep combinator.
+// Returns a slice of values returned by body combinator.
 func SepEndBy[T any, P any, S any, B any](
 	cap int,
 	body Combinator[T, P, S],
@@ -234,6 +269,9 @@ func SepEndBy[T any, P any, S any, B any](
 	}
 }
 
+// SepEndBy1 - read one or more occurrences of data readed by body combinator,
+// separated and optionally ended by data readed by sep combinator.
+// Returns a slice of values returned by body combinator.
 func SepEndBy1[T any, P any, S any, B any](
 	cap int,
 	body Combinator[T, P, S],
@@ -251,6 +289,8 @@ func SepEndBy1[T any, P any, S any, B any](
 	}
 }
 
+// ManyTill - accumulate data readed by c combinator until combinantor end succeeds.
+// Returns a slice of values returned by body combinator.
 func ManyTill[T any, P any, S any, B any](
 	cap int,
 	c Combinator[T, P, S],
