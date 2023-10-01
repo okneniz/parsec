@@ -24,3 +24,6 @@ coverage:
 
 build:
 	go build ./...
+
+pub:
+	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/okneniz/parsec

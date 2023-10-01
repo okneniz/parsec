@@ -4,7 +4,7 @@
   <p align="center">
     Golang parser combinator library inspired by <a href="https://hackage.haskell.org/package/parsec">haskell parsec</a>.
     <br/>
-    <a href="https://github.com/okneniz/parsec"><strong>Explore the docs »</strong></a>
+    <a href="https://pkg.go.dev/github.com/okneniz/parsec"><strong>Explore the docs »</strong></a>
     <br/>
     <a href="https://github.com/okneniz/parsec/issues">Report Bug</a>.
     <a href="https://github.com/okneniz/parsec/issues">Request Feature</a>
