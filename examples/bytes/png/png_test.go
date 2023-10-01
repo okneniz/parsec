@@ -3,8 +3,8 @@ package png
 import (
 	"testing"
 
-	b "git.sr.ht/~okneniz/parsec/bytes"
-	. "git.sr.ht/~okneniz/parsec/testing"
+	b "github.com/okneniz/parsec/bytes"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestPNG(t *testing.T) {

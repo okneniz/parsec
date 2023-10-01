@@ -1,7 +1,7 @@
 package strings
 
 import (
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // Eq - succeeds for any item which equal input t.

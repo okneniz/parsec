@@ -3,7 +3,7 @@ package strings
 import (
 	"time"
 
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // TimeZone - parse one of time zones from passed arguments.

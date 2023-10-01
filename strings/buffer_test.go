@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	. "git.sr.ht/~okneniz/parsec/testing"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestBuffer(t *testing.T) {

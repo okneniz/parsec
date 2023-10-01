@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	. "git.sr.ht/~okneniz/parsec/testing"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestEq(t *testing.T) {

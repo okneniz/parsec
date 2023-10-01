@@ -3,8 +3,8 @@ package strings
 import (
 	"testing"
 
-	p "git.sr.ht/~okneniz/parsec/common"
-	. "git.sr.ht/~okneniz/parsec/testing"
+	p "github.com/okneniz/parsec/common"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestConcat(t *testing.T) {

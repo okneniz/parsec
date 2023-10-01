@@ -1,7 +1,7 @@
 package strings
 
 import (
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // Range - succeeds for any item which include in input range.

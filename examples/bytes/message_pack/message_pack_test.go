@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	b "git.sr.ht/~okneniz/parsec/bytes"
+	b "github.com/okneniz/parsec/bytes"
 	"golang.org/x/exp/constraints"
 
 	mpack "github.com/vmihailenco/msgpack/v5"

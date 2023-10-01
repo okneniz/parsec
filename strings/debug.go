@@ -1,7 +1,7 @@
 package strings
 
 import (
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // Trace - writes messages to the log about the state of the buffer before

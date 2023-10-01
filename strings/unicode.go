@@ -3,7 +3,7 @@ package strings
 import (
 	"unicode"
 
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // TODO : remove Is prefix?

@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"errors"
 
-	b "git.sr.ht/~okneniz/parsec/bytes"
-	c "git.sr.ht/~okneniz/parsec/common"
+	b "github.com/okneniz/parsec/bytes"
+	c "github.com/okneniz/parsec/common"
 )
 
 var (

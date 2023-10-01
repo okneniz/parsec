@@ -3,8 +3,8 @@ package bytes
 import (
 	"testing"
 
-	"git.sr.ht/~okneniz/parsec/common"
-	. "git.sr.ht/~okneniz/parsec/testing"
+	"github.com/okneniz/parsec/common"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestEq(t *testing.T) {

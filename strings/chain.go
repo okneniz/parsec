@@ -1,7 +1,7 @@
 package strings
 
 import (
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // Chainl - read zero or more occurrences of data readed by c combinator,

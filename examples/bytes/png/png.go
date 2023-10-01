@@ -2,8 +2,8 @@ package png
 
 import (
 	"encoding/binary"
-	. "git.sr.ht/~okneniz/parsec/bytes"
-	p "git.sr.ht/~okneniz/parsec/common"
+	. "github.com/okneniz/parsec/bytes"
+	p "github.com/okneniz/parsec/common"
 )
 
 // https://www.w3.org/TR/png

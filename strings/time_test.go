@@ -5,7 +5,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
-	. "git.sr.ht/~okneniz/parsec/testing"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestTimeZone(t *testing.T) {

@@ -1,7 +1,7 @@
 package bytes
 
 import (
-	"git.sr.ht/~okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 // Parse - parse bytes from input slice by c combinator.

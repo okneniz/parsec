@@ -1,7 +1,7 @@
 package strings
 
 import (
-	"git.sr.ht/~okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 var (

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	. "git.sr.ht/~okneniz/parsec/strings"
-	. "git.sr.ht/~okneniz/parsec/testing"
+	. "github.com/okneniz/parsec/strings"
+	. "github.com/okneniz/parsec/testing"
 )
 
 func TestJSON(t *testing.T) {

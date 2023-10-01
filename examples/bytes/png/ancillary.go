@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	. "git.sr.ht/~okneniz/parsec/bytes"
-	p "git.sr.ht/~okneniz/parsec/common"
+	. "github.com/okneniz/parsec/bytes"
+	p "github.com/okneniz/parsec/common"
 )
 
 type Ancillary struct {

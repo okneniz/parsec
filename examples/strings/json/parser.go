@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	p "git.sr.ht/~okneniz/parsec/common"
-	. "git.sr.ht/~okneniz/parsec/strings"
-	. "git.sr.ht/~okneniz/parsec/testing"
+	p "github.com/okneniz/parsec/common"
+	. "github.com/okneniz/parsec/strings"
+	. "github.com/okneniz/parsec/testing"
 )
 
 var (

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	p "git.sr.ht/~okneniz/parsec/common"
-	. "git.sr.ht/~okneniz/parsec/strings"
+	p "github.com/okneniz/parsec/common"
+	. "github.com/okneniz/parsec/strings"
 )
 
 // ANSIC = "Mon Jan _2 15:04:05 2006"

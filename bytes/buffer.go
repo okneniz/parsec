@@ -3,7 +3,7 @@ package bytes
 import (
 	"os"
 
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 type buffer struct {

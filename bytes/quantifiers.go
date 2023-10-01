@@ -1,7 +1,7 @@
 package bytes
 
 import (
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 )
 
 // Optional - use c combinator to consume input byte from buffer.

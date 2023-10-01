@@ -3,7 +3,7 @@ package bytes
 import (
 	"bytes"
 	"encoding/binary"
-	p "git.sr.ht/~okneniz/parsec/common"
+	p "github.com/okneniz/parsec/common"
 	"golang.org/x/exp/constraints"
 )
 

@@ -3,8 +3,8 @@ package timestamp
 import (
 	"time"
 
-	p "git.sr.ht/~okneniz/parsec/common"
-	. "git.sr.ht/~okneniz/parsec/strings"
+	p "github.com/okneniz/parsec/common"
+	. "github.com/okneniz/parsec/strings"
 )
 
 func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
