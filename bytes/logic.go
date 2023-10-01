@@ -4,6 +4,8 @@ import (
 	p "git.sr.ht/~okneniz/parsec/common"
 )
 
+// Or - returns the result of the first combinator,
+// if it fails, uses the second combinator.
 func Or[T any](
 	x p.Combinator[byte, int, T],
 	y p.Combinator[byte, int, T],
@@ -11,6 +13,8 @@ func Or[T any](
 	return p.Or[byte, int, T](x, y)
 }
 
+// And - use x and y combinators to consume input bytes.
+// Apply them result to compose function and return result of it.
 func And[S any, B any, M any](
 	x p.Combinator[byte, int, S],
 	y p.Combinator[byte, int, B],
