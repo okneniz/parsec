@@ -10,9 +10,9 @@ type Condition[T any] func(T) bool
 type Composer[T any, S any, B any] func(T, S) B
 
 // Anything - return true anyway.
-// Usefull with Satisfy combinator.
+// Useful with Satisfy combinator.
 func Anything[T any](x T) bool { return true }
 
 // Nothing - return false anyway.
-// Usefull with Satisfy combinator.
+// Useful with Satisfy combinator.
 func Nothing[T any](x T) bool { return false }
