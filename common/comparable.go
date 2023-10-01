@@ -73,7 +73,8 @@ func SequenceOf[T comparable, P any](data ...T) Combinator[T, P, []T] {
 }
 
 // Map - Reads one element from the input buffer using the combinator,
-// then uses the resulting element to obtain a value from the map cases and returns it.
+// then uses the resulting element to obtain a value from the map cases and try to
+// match it in cases map passed by first argument.
 // If the value is not found then it returns NothingMatched error.
 func Map[T any, P any, K comparable, V any](
 	cases map[K]V,
@@ -91,5 +92,31 @@ func Map[T any, P any, K comparable, V any](
 		}
 
 		return result, nil
+	}
+}
+
+// MapAs - Read one element from the input buufer using the combinator,
+// then match the resulting item to obtain a value from map cases and try to match it
+// in cases map passed by first argument.
+// If the value it not found then it returns NothingMatched error.
+// Otherwise try to parse input data by combinator from cases.
+func MapAs[T any, P any, K comparable, V any](
+	cases map[K]Combinator[T, P, V],
+	comb Combinator[T, P, K],
+) Combinator[T, P, V] {
+	return func(buffer Buffer[T, P]) (V, error) {
+		var v V
+
+		key, err := comb(buffer)
+		if err != nil {
+			return v, err
+		}
+
+		parseValue, exists := cases[key]
+		if !exists {
+			return v, NothingMatched
+		}
+
+		return parseValue(buffer)
 	}
 }

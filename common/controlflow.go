@@ -95,6 +95,25 @@ func SkipAfter[T any, P any, S any, B any](
 	}
 }
 
+// SkipMany - skip sequence of items parsed by first combinator before body combinator.
+func SkipMany[T any, P any, S any, B any](
+	skip Combinator[T, P, S],
+	body Combinator[T, P, B],
+) Combinator[T, P, B] {
+	skip = Try(skip)
+
+	return func(buffer Buffer[T, P]) (B, error) {
+		for !buffer.IsEOF() {
+			_, err := skip(buffer)
+			if err != nil {
+				break
+			}
+		}
+
+		return body(buffer)
+	}
+}
+
 // Padded - skip sequence of items parsed by first combinator
 // before and after body combinator.
 func Padded[T any, P any, S any, B any](
@@ -124,25 +143,6 @@ func Padded[T any, P any, S any, B any](
 		}
 
 		return result, nil
-	}
-}
-
-// SkipMany - skip sequence of items parsed by first combinator before body combinator.
-func SkipMany[T any, P any, S any, B any](
-	skip Combinator[T, P, S],
-	body Combinator[T, P, B],
-) Combinator[T, P, B] {
-	skip = Try(skip)
-
-	return func(buffer Buffer[T, P]) (B, error) {
-		for !buffer.IsEOF() {
-			_, err := skip(buffer)
-			if err != nil {
-				break
-			}
-		}
-
-		return body(buffer)
 	}
 }
 

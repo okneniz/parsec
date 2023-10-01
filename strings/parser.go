@@ -4,6 +4,7 @@ import (
 	p "git.sr.ht/~okneniz/parsec/common"
 )
 
+// Parse - parse text by c combinator.
 func Parse[T any](
 	data []rune,
 	parse p.Combinator[rune, Position, T],
@@ -12,6 +13,7 @@ func Parse[T any](
 	return p.Parse[rune, Position, T](buf, parse)
 }
 
+// ParseString - parse text by c combinator.
 func ParseString[T any](
 	str string,
 	parse p.Combinator[rune, Position, T],

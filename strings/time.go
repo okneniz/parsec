@@ -6,6 +6,7 @@ import (
 	p "git.sr.ht/~okneniz/parsec/common"
 )
 
+// TimeZone - parse one of time zones from passed arguments.
 func TimeZone(
 	locations ...*time.Location,
 ) p.Combinator[rune, Position, *time.Location] {
@@ -24,6 +25,7 @@ func TimeZone(
 	return Map(m, OneOfStrings(names...))
 }
 
+// TimeZoneByNames - parse one of time zones from passed arguments.
 func TimeZoneByNames(
 	locationNames ...string,
 ) (p.Combinator[rune, Position, *time.Location], error) {

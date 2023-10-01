@@ -132,7 +132,7 @@ func MessagePack() c.Combinator[byte, int, Type] {
 		}
 	}
 
-	valuesParser := b.MapAs[byte, int, byte, Type](cases, b.Any())
+	valuesParser := c.MapAs[byte, int, byte, Type](cases, b.Any())
 
 	// fixarray parser
 	for i := byte(0x90); i <= byte(0x9f); i++ {

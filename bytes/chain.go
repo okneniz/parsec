@@ -120,6 +120,8 @@ func SepEndBy1[T any, S any](
 	return p.SepEndBy1[byte, int, T](cap, body, sep)
 }
 
+// ManyTill - accumulate data readed by c combinator until combinantor end succeeds.
+// Returns a slice of values returned by body combinator.
 func ManyTill[T any, S any](
 	cap int,
 	c p.Combinator[byte, int, T],

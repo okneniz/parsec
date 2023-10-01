@@ -24,6 +24,5 @@ func Trace[T any, P any, S any](l Logged, m string, c Combinator[T, P, S]) Combi
 
 		l.Log("\tparsed:", fmt.Sprintf("%#v", result))
 		return result, err
-
 	}
 }

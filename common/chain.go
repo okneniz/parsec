@@ -132,7 +132,7 @@ func Chainr1[T any, P any, S any](
 	}
 }
 
-// Sep - read zero or more occurrences of data readed by c combinator,
+// SepBy - read zero or more occurrences of data readed by c combinator,
 // separated by sep combinator.
 // Returns a slice of values returned by p.
 func SepBy[T any, P any, S any, B any](
@@ -170,7 +170,7 @@ func SepBy[T any, P any, S any, B any](
 	}
 }
 
-// Sep - read one or more occurrences of data readed by c combinator,
+// SepBy1 - read one or more occurrences of data readed by c combinator,
 // separated by sep combinator.
 // Returns a slice of values returned by p.
 func SepBy1[T any, P any, S any, B any](
