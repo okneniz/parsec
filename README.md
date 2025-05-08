@@ -76,7 +76,7 @@ Contributions are what make the open source community such an amazing place to b
 
 ## License
 
-Copyright (C) 2023 Andrey Zinenko
+Copyright (C) 2023 - 2025 Andrey Zinenko
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
