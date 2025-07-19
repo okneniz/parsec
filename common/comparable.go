@@ -95,7 +95,7 @@ func Map[T any, P any, K comparable, V any](
 	}
 }
 
-// MapAs - Read one element from the input buufer using the combinator,
+// MapAs - Read one element from the input buffer using the combinator,
 // then match the resulting item to obtain a value from map cases and try to match it
 // in cases map passed by first argument.
 // If the value it not found then it returns NothingMatched error.
