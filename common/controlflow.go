@@ -2,8 +2,11 @@ package common
 
 // Concat - use cs combinators to parse slices step by step,
 // concatenate all result to one big slice and returns it.
-func Concat[T any, P any, S any](cap int, cs ...Combinator[T, P, []S]) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, error) {
+func Concat[T any, P any, S any](
+	cap int,
+	cs ...Combinator[T, P, []S],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
 		for _, c := range cs {
@@ -21,21 +24,20 @@ func Concat[T any, P any, S any](cap int, cs ...Combinator[T, P, []S]) Combinato
 
 // Sequence - reads input elements one by one using cs combinators.
 // If any of them fails, it returns an error.
-func Sequence[T any, P any, S any](cap int, cs ...Combinator[T, P, S]) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, error) {
+func Sequence[T any, P any, S any](
+	cap int,
+	cs ...Combinator[T, P, S],
+) Combinator[T, P, []S] {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
 		for _, c := range cs {
 			t, err := c(buffer)
 			if err != nil {
-				break
+				return nil, err
 			}
 
 			result = append(result, t)
-		}
-
-		if len(result) != len(cs) {
-			return nil, NotEnoughElements
 		}
 
 		return result, nil
@@ -44,8 +46,15 @@ func Sequence[T any, P any, S any](cap int, cs ...Combinator[T, P, S]) Combinato
 
 // Choice - searches for a combinator that works successfully on the input data.
 // if one is not found, it returns an NothingMatched error.
-func Choice[T any, P any, S any](cs ...Combinator[T, P, S]) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+func Choice[T any, P any, S any](
+	errMesssage string,
+	cs ...Combinator[T, P, S],
+) Combinator[T, P, S] {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
+		pos := buffer.Position()
+
 		for _, c := range cs {
 			result, err := c(buffer)
 			if err == nil {
@@ -53,7 +62,7 @@ func Choice[T any, P any, S any](cs ...Combinator[T, P, S]) Combinator[T, P, S] 
 			}
 		}
 
-		return *new(S), NothingMatched
+		return null, NewParseError(pos, errMesssage)
 	}
 }
 
@@ -63,10 +72,12 @@ func Skip[T any, P any, S any, B any](
 	skip Combinator[T, P, B],
 	next Combinator[T, P, S],
 ) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		_, err := skip(buffer)
 		if err != nil {
-			return *new(S), err
+			return null, err
 		}
 
 		return next(buffer)
@@ -80,15 +91,17 @@ func SkipAfter[T any, P any, S any, B any](
 	skip Combinator[T, P, B],
 	body Combinator[T, P, S],
 ) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		result, err := body(buffer)
 		if err != nil {
-			return *new(S), err // TODO : allocate without new (by var)?
+			return null, err
 		}
 
 		_, err = skip(buffer)
 		if err != nil {
-			return *new(S), err
+			return null, err
 		}
 
 		return result, nil
@@ -96,13 +109,14 @@ func SkipAfter[T any, P any, S any, B any](
 }
 
 // SkipMany - skip sequence of items parsed by first combinator before body combinator.
+// Do it without any additional allocation like in `Many` combinator.
 func SkipMany[T any, P any, S any, B any](
 	skip Combinator[T, P, S],
 	body Combinator[T, P, B],
 ) Combinator[T, P, B] {
 	skip = Try(skip)
 
-	return func(buffer Buffer[T, P]) (B, error) {
+	return func(buffer Buffer[T, P]) (B, Error[P]) {
 		for !buffer.IsEOF() {
 			_, err := skip(buffer)
 			if err != nil {
@@ -122,7 +136,9 @@ func Padded[T any, P any, S any, B any](
 ) Combinator[T, P, B] {
 	skip = Try(skip)
 
-	return func(buffer Buffer[T, P]) (B, error) {
+	var null B
+
+	return func(buffer Buffer[T, P]) (B, Error[P]) {
 		for !buffer.IsEOF() {
 			_, err := skip(buffer)
 			if err != nil {
@@ -132,7 +148,7 @@ func Padded[T any, P any, S any, B any](
 
 		result, err := body(buffer)
 		if err != nil {
-			return *new(B), err
+			return null, err
 		}
 
 		for !buffer.IsEOF() {
@@ -148,35 +164,41 @@ func Padded[T any, P any, S any, B any](
 
 // SkipSequence - reads input elements one by one using `cs` combinators and ignore it.
 func SkipSequence[T, P, S any](combs ...Combinator[T, P, S]) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
-		var result S
+	var null S
 
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		for _, c := range combs {
 			_, err := c(buffer)
 			if err != nil {
-				return result, err
+				return null, err
 			}
 		}
 
-		return result, nil
+		return null, nil
 	}
 }
 
 // SkipSequenceOf - reads input elements which must be equal input data and ignore it.
-func SkipSequenceOf[T comparable, P, S any](data ...T) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
-		var result S
+// Do it without any additional allocation like in `Many` combinator.
+func SkipSequenceOf[T comparable, P, S any](
+	errMessage string,
+	data ...T,
+) Combinator[T, P, S] {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
+		pos := buffer.Position()
 
 		for _, x := range data {
 			r, err := buffer.Read(true)
 			if err != nil {
-				return result, err
+				return null, NewParseError(pos, err.Error())
 			}
 			if x != r {
-				return result, NothingMatched
+				return null, NewParseError(pos, errMessage)
 			}
 		}
 
-		return result, nil
+		return null, nil
 	}
 }

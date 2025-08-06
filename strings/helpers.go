@@ -1,64 +1,81 @@
 package strings
 
 import (
-	p "github.com/okneniz/parsec/common"
 	"golang.org/x/exp/constraints"
+
+	"github.com/okneniz/parsec/common"
 )
 
 // Parens - parse something between parens characters - '(' and ')'.
 func Parens[T any](
-	body p.Combinator[rune, Position, T],
-) p.Combinator[rune, Position, T] {
-	return Between(Eq('('), body, Eq(')'))
+	body common.Combinator[rune, Position, T],
+) common.Combinator[rune, Position, T] {
+	return Between(
+		Eq("expected '('", '('),
+		body,
+		Eq("expected ')'", ')'),
+	)
 }
 
 // Braces - parse something between braces characters - '{' and '}'.
 func Braces[T any](
-	body p.Combinator[rune, Position, T],
-) p.Combinator[rune, Position, T] {
-	return Between(Eq('{'), body, Eq('}'))
+	body common.Combinator[rune, Position, T],
+) common.Combinator[rune, Position, T] {
+	return Between(
+		Eq("expected '{'", '{'),
+		body,
+		Eq("expected '}'", '}'),
+	)
 }
 
 // Angles - parse something between angels characters - '<' and '>'.
 func Angles[T any](
-	body p.Combinator[rune, Position, T],
-) p.Combinator[rune, Position, T] {
-	return Between(Eq('<'), body, Eq('>'))
+	body common.Combinator[rune, Position, T],
+) common.Combinator[rune, Position, T] {
+	return Between(
+		Eq("expected '<'", '<'),
+		body,
+		Eq("expected '>'", '>'),
+	)
 }
 
 // Squares - parse something between squares characters - '[' and ']'.
 func Squares[T any](
-	body p.Combinator[rune, Position, T],
-) p.Combinator[rune, Position, T] {
-	return Between(Eq('['), body, Eq(']'))
+	body common.Combinator[rune, Position, T],
+) common.Combinator[rune, Position, T] {
+	return Between(
+		Eq("expected '['", '['),
+		body,
+		Eq("expected ']'", ']'),
+	)
 }
 
 // Semi - parse semi character.
-func Semi() p.Combinator[rune, Position, rune] {
-	return Eq(';')
+func Semi() common.Combinator[rune, Position, rune] {
+	return Eq("expected ';'", ';')
 }
 
 // Comma - parse comma character.
-func Comma() p.Combinator[rune, Position, rune] {
-	return Eq(',')
+func Comma() common.Combinator[rune, Position, rune] {
+	return Eq("expected ','", ',')
 }
 
 // Colon - parse colon character.
-func Colon() p.Combinator[rune, Position, rune] {
-	return Eq(':')
+func Colon() common.Combinator[rune, Position, rune] {
+	return Eq("expected ':'", ':')
 }
 
 // Dot - parse dot character.
-func Dot() p.Combinator[rune, Position, rune] {
-	return Eq('.')
+func Dot() common.Combinator[rune, Position, rune] {
+	return Eq("expected '.'", '.')
 }
 
 // Unsigned - parse unsigned integer.
-func Unsigned[T constraints.Integer]() p.Combinator[rune, Position, T] {
-	digit := Try(Range('0', '9'))
+func Unsigned[T constraints.Integer]() common.Combinator[rune, Position, T] {
+	digit := Try(Digit("digit"))
 	zero := rune('0')
 
-	return func(buffer p.Buffer[rune, Position]) (T, error) {
+	return func(buffer common.Buffer[rune, Position]) (T, common.Error[Position]) {
 		var result T
 
 		token, err := digit(buffer)
@@ -82,11 +99,11 @@ func Unsigned[T constraints.Integer]() p.Combinator[rune, Position, T] {
 }
 
 // UnsignedN - parse unsigned integer with N count of digits.
-func UnsignedN[T constraints.Integer](n int) p.Combinator[rune, Position, T] {
-	digit := Try(Range('0', '9'))
+func UnsignedN[T constraints.Integer](n int, errMessage string) common.Combinator[rune, Position, T] {
+	digit := Try(Digit("digit"))
 	zero := rune('0')
 
-	return func(buffer p.Buffer[rune, Position]) (T, error) {
+	return func(buffer common.Buffer[rune, Position]) (T, common.Error[Position]) {
 		var result T
 
 		token, err := digit(buffer)

@@ -3,7 +3,7 @@ package bytes
 import (
 	"os"
 
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 type buffer struct {
@@ -14,7 +14,7 @@ type buffer struct {
 // Read - read next item, if greedy buffer keep position after reading.
 func (s *buffer) Read(greedy bool) (byte, error) {
 	if s.position >= len(s.data) {
-		return 0, p.EndOfFile
+		return 0, common.ErrEndOfFile
 	}
 
 	b := s.data[s.position]

@@ -3,27 +3,39 @@ package common
 // Satisfy - succeeds for any item for which the supplied function f returns true.
 // Returns the item that is actually readed from input buffer.
 // if greedy buffer keep position after reading.
-func Satisfy[T any, P any](greedy bool, f Condition[T]) Combinator[T, P, T] {
-	return func(buffer Buffer[T, P]) (T, error) {
+func Satisfy[T any, P any](
+	errMessage string,
+	greedy bool,
+	f Condition[T],
+) Combinator[T, P, T] {
+	var null T
+
+	return func(buffer Buffer[T, P]) (T, Error[P]) {
+		pos := buffer.Position()
+
 		token, err := buffer.Read(greedy)
 		if err != nil {
-			return *new(T), err
+			return *new(T), NewParseError(pos, errMessage)
 		}
 
 		if f(token) {
 			return token, nil
 		}
 
-		return *new(T), NothingMatched
+		return null, NewParseError(pos, errMessage)
 	}
 }
 
 // Any - returns the readed item.
 func Any[T any, P any]() Combinator[T, P, T] {
-	return func(buffer Buffer[T, P]) (T, error) {
+	var null T
+
+	return func(buffer Buffer[T, P]) (T, Error[P]) {
+		pos := buffer.Position()
+
 		token, err := buffer.Read(true)
 		if err != nil {
-			return *new(T), err
+			return null, NewParseError(pos, err.Error())
 		}
 
 		return token, nil
@@ -32,13 +44,15 @@ func Any[T any, P any]() Combinator[T, P, T] {
 
 // Try - try to use c combinator, if it falls, it returns buffer to the previous position.
 func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		pos := buffer.Position()
 
 		result, err := c(buffer)
 		if err != nil {
 			buffer.Seek(pos)
-			return *new(S), err
+			return null, err
 		}
 
 		return result, nil
@@ -51,20 +65,22 @@ func Between[T any, P any, S any, B any, M any](
 	c Combinator[T, P, B],
 	suf Combinator[T, P, M],
 ) Combinator[T, P, B] {
-	return func(buffer Buffer[T, P]) (B, error) {
+	var null B
+
+	return func(buffer Buffer[T, P]) (B, Error[P]) {
 		_, err := pre(buffer)
 		if err != nil {
-			return *new(B), err
+			return null, err
 		}
 
 		body, err := c(buffer)
 		if err != nil {
-			return *new(B), err
+			return null, err
 		}
 
 		_, err = suf(buffer)
 		if err != nil {
-			return *new(B), err
+			return null, err
 		}
 
 		return body, nil
@@ -73,7 +89,7 @@ func Between[T any, P any, S any, B any, M any](
 
 // EOF - checks that buffer reading has finished.
 func EOF[T any, P any]() Combinator[T, P, bool] {
-	return func(buffer Buffer[T, P]) (bool, error) {
+	return func(buffer Buffer[T, P]) (bool, Error[P]) {
 		if buffer.IsEOF() {
 			return true, nil
 		}
@@ -86,17 +102,21 @@ func EOF[T any, P any]() Combinator[T, P, bool] {
 // Return result of f function.
 func Cast[T any, P any, S any, B any](
 	c Combinator[T, P, S],
-	f func(S) (B, error),
+	cast func(S) (B, error),
 ) Combinator[T, P, B] {
-	return func(buffer Buffer[T, P]) (B, error) {
+	var null B
+
+	return func(buffer Buffer[T, P]) (B, Error[P]) {
+		pos := buffer.Position()
+
 		result, err := c(buffer)
 		if err != nil {
-			return *new(B), err
+			return null, err
 		}
 
-		value, err := f(result)
-		if err != nil {
-			return *new(B), err
+		value, castError := cast(result)
+		if castError != nil {
+			return null, NewParseError(pos, castError.Error())
 		}
 
 		return value, nil
@@ -105,16 +125,16 @@ func Cast[T any, P any, S any, B any](
 
 // Const - doesn't read anything, just return the input value.
 func Const[T any, P any, S any](value S) Combinator[T, P, S] {
-	return func(_ Buffer[T, P]) (S, error) {
+	return func(_ Buffer[T, P]) (S, Error[P]) {
 		return value, nil
 	}
 }
 
 // Fail - doesn't read anything, just return input error.
-func Fail[T any, P any, S any](err error) Combinator[T, P, S] {
-	var x S
+func Fail[T any, P any, S any](errMessage string) Combinator[T, P, S] {
+	var null S
 
-	return func(_ Buffer[T, P]) (S, error) {
-		return x, err
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
+		return null, NewParseError(buffer.Position(), errMessage)
 	}
 }

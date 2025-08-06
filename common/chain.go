@@ -10,10 +10,10 @@ func Chainl[T any, P any, S any](
 	op Combinator[T, P, func(S, S) S],
 	def S,
 ) Combinator[T, P, S] {
-	f := Chainl1(c, op)
+	parse := Chainl1(c, op)
 
-	return func(buffer Buffer[T, P]) (S, error) {
-		result, err := f(buffer)
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
+		result, err := parse(buffer)
 		if err != nil {
 			return def, nil
 		}
@@ -31,10 +31,12 @@ func Chainl1[T any, P any, S any](
 	c Combinator[T, P, S],
 	op Combinator[T, P, func(S, S) S],
 ) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		x, err := c(buffer)
 		if err != nil {
-			return *new(S), err
+			return null, err
 		}
 
 		rest := x
@@ -69,7 +71,7 @@ func Chainr[T any, P any, S any](
 ) Combinator[T, P, S] {
 	f := Chainr1(c, op)
 
-	return func(buffer Buffer[T, P]) (S, error) {
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		result, err := f(buffer)
 		if err != nil {
 			return def, nil
@@ -88,10 +90,12 @@ func Chainr1[T any, P any, S any](
 	c Combinator[T, P, S],
 	op Combinator[T, P, func(S, S) S],
 ) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		x, err := c(buffer)
 		if err != nil {
-			return *new(S), err
+			return null, err
 		}
 
 		chain := make([]S, 0)
@@ -141,14 +145,14 @@ func SepBy[T any, P any, S any, B any](
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
 	c := Try(
-		And(
+		And( // TODO : use skip
 			sep,
 			body,
 			func(_ B, x S) S { return x },
 		),
 	)
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
 		token, err := body(buffer)
@@ -175,16 +179,19 @@ func SepBy[T any, P any, S any, B any](
 // Returns a slice of values returned by p.
 func SepBy1[T any, P any, S any, B any](
 	cap int,
+	errMessage string,
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
-	c := SepBy(cap, body, sep)
+	parse := SepBy(cap, body, sep)
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+		pos := buffer.Position()
+
 		// ignore error because SepBy return empty list anyway
-		result, _ := c(buffer)
+		result, _ := parse(buffer)
 		if len(result) == 0 {
-			return nil, NotEnoughElements
+			return nil, NewParseError(pos, errMessage)
 		}
 
 		return result, nil
@@ -201,7 +208,7 @@ func EndBy[T any, P any, S any, B any](
 ) Combinator[T, P, []S] {
 	c := Try(SkipAfter(sep, body))
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
 		for !buffer.IsEOF() {
@@ -222,16 +229,19 @@ func EndBy[T any, P any, S any, B any](
 // Returns a slice of values returned by c combinator.
 func EndBy1[T any, P any, S any, B any](
 	cap int,
+	errMessage string,
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
 	c := EndBy(cap, body, sep)
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+		pos := buffer.Position()
+
 		// ignore error because EndBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
-			return nil, NotEnoughElements
+			return nil, NewParseError(pos, errMessage)
 		}
 
 		return result, nil
@@ -248,7 +258,7 @@ func SepEndBy[T any, P any, S any, B any](
 ) Combinator[T, P, []S] {
 	s := Try(sep)
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
 		for !buffer.IsEOF() {
@@ -274,17 +284,21 @@ func SepEndBy[T any, P any, S any, B any](
 // Returns a slice of values returned by body combinator.
 func SepEndBy1[T any, P any, S any, B any](
 	cap int,
+	errMessage string,
 	body Combinator[T, P, S],
 	sep Combinator[T, P, B],
 ) Combinator[T, P, []S] {
 	c := SepEndBy(cap, body, sep)
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+		pos := buffer.Position()
+
 		// ignore error because SepEndBy return empty list anyway
 		result, _ := c(buffer)
 		if len(result) == 0 {
-			return nil, NotEnoughElements
+			return nil, NewParseError(pos, errMessage)
 		}
+
 		return result, nil
 	}
 }
@@ -298,7 +312,7 @@ func ManyTill[T any, P any, S any, B any](
 ) Combinator[T, P, []S] {
 	z := Try(end)
 
-	return func(buffer Buffer[T, P]) ([]S, error) {
+	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
 		for {

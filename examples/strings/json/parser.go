@@ -4,88 +4,106 @@ import (
 	"fmt"
 	"testing"
 
-	p "github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/strings"
-	. "github.com/okneniz/parsec/testing"
+	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/strings"
+	testHelpers "github.com/okneniz/parsec/testing"
 )
 
 var (
-	notZero    = Range('1', '9')
-	digit      = IsDigit()
-	quote      = Padded(whitespace, Eq('"'))
-	colon      = Padded(whitespace, Eq(':'))
-	comma      = Padded(whitespace, Eq(','))
-	whitespace = IsSpace()
+	notZero = strings.Range("expected digit between 1 and 9", '1', '9')
+	digit   = strings.Digit("expected digit")
+
+	whitespace = strings.Space("space")
 )
 
-func Bool() p.Combinator[rune, Position, JSON] {
-	return Cast(
-		Choice(
-			Try(SequenceOf('t', 'r', 'u', 'e')),
-			Try(SequenceOf('f', 'a', 'l', 's', 'e')),
-		),
-		func(x []rune) (JSON, error) {
-			lit := string(x)
-			return &JSBool{lit == "true"}, nil
+func Bool() common.Combinator[rune, strings.Position, JSON] {
+	return strings.MapStrings(
+		"expected bool value",
+		map[string]JSON{
+			"true":  JSBool{true},
+			"false": JSBool{false},
 		},
 	)
 }
 
-func Null() p.Combinator[rune, Position, JSON] {
-	return Cast(
-		SequenceOf('n', 'u', 'l', 'l'),
-		func(_ []rune) (JSON, error) {
-			return new(JSNull), nil
+func Null() common.Combinator[rune, strings.Position, JSON] {
+	return strings.Cast(
+		strings.String("null"),
+		func(_ string) (JSON, error) {
+			return JSNull{}, nil
 		},
 	)
 }
 
-func Number() p.Combinator[rune, Position, JSON] {
-	return Cast(
-		Concat(
+func Number_() common.Combinator[rune, strings.Position, JSON] {
+	return strings.Cast(
+		strings.Concat(
 			1,
-			Count(1, notZero),
-			Many(0, Try(digit)),
+			strings.Count(1, "not zero", notZero),
+			strings.Many(0, strings.Try(digit)),
 		),
 		func(x []rune) (JSON, error) {
-			v, err := DigitsToNum(x)
+			v, err := testHelpers.DigitsToNum(x)
 			if err != nil {
 				return nil, err
 			}
 
-			return &JSNumber{v}, nil
+			return JSNumber{v}, nil
 		},
 	)
 }
 
-func String_() p.Combinator[rune, Position, JSON] {
-	return func(buffer p.Buffer[rune, Position]) (JSON, error) {
-		_, err := quote(buffer)
+func String_() common.Combinator[rune, strings.Position, JSON] {
+	leftQuote := strings.Padded(
+		whitespace,
+		strings.Eq(`expecte double quote as start of string literal`, '"'),
+	)
+
+	rightQuote := strings.Padded(
+		whitespace,
+		strings.Eq(`expected double quote as end of string literal`, '"'),
+	)
+
+	parse := strings.ManyTill(0, strings.Any(), rightQuote)
+
+	return func(
+		buffer common.Buffer[rune, strings.Position],
+	) (JSON, common.Error[strings.Position]) {
+		_, err := leftQuote(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		s, err := ManyTill(0, Any(), quote)(buffer) // TODO : move upper
+		s, err := parse(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		return &JSString{string(s)}, nil
+		return JSString{string(s)}, nil
 	}
 }
 
-func Value(t testing.TB) p.Combinator[rune, Position, JSON] {
-	var value p.Combinator[rune, Position, JSON]
+func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
+	var value common.Combinator[rune, strings.Position, JSON]
 
-	keyComb := Try(Padded(whitespace, String_()))
+	keyComb := strings.Try(strings.Padded(whitespace, String_()))
 
-	pair := func(buffer p.Buffer[rune, Position]) (*JSPair, error) {
+	colon := strings.Padded(
+		whitespace,
+		strings.Eq("expected collon as separatar between object key and value", ':'),
+	)
+
+	pair := func(
+		buffer common.Buffer[rune, strings.Position],
+	) (*JSPair, common.Error[strings.Position]) {
+		pos := buffer.Position()
+
 		key, err := keyComb(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = Padded(whitespace, colon)(buffer)
+		_, err = strings.Padded(whitespace, colon)(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -95,20 +113,29 @@ func Value(t testing.TB) p.Combinator[rune, Position, JSON] {
 			return nil, err
 		}
 
-		ks, ok := key.(*JSString)
+		ks, ok := key.(JSString)
 		if !ok {
-			return nil, fmt.Errorf("receive %#v as string", key)
+			return nil, common.NewParseError(pos, fmt.Sprintf("receive %#v as string", key))
 		}
 
-		return &JSPair{*ks, val}, nil
+		return &JSPair{ks, val}, nil
 	}
 
-	listOfPairs := SepBy(0, pair, comma)
+	comma := strings.Padded(
+		whitespace,
+		strings.Eq("expected comma as separator between key-value pairs in object", ','),
+	)
 
-	object := Between(
-		Eq('{'),
-		func(buffer p.Buffer[rune, Position]) (JSON, error) {
+	listOfPairs := strings.SepBy(0, pair, comma)
 
+	leftBracket := strings.Eq(`left bracket as start of object"`, '{')
+	rightBracket := strings.Eq(`right bracket as end of object`, '}')
+
+	object := strings.Between(
+		leftBracket,
+		func(
+			buffer common.Buffer[rune, strings.Position],
+		) (JSON, common.Error[strings.Position]) {
 			list, err := listOfPairs(buffer)
 			if err != nil {
 				return nil, err
@@ -119,42 +146,47 @@ func Value(t testing.TB) p.Combinator[rune, Position, JSON] {
 				m[p.key.value] = p.value
 			}
 
-			return &JSObject{m}, nil
+			return JSObject{m}, nil
 		},
-		Eq('}'),
+		rightBracket,
 	)
 
-	array := Between(
-		Eq('['),
-		func(buffer p.Buffer[rune, Position]) (JSON, error) {
-			listOfValues := SepBy(0, value, comma)
+	leftSquare := strings.Eq(`expected left square as start of array`, '[')
+	rightSquare := strings.Eq(`expected right square as end of array`, ']')
+
+	array := strings.Between(
+		leftSquare,
+		func(
+			buffer common.Buffer[rune, strings.Position],
+		) (JSON, common.Error[strings.Position]) {
+			listOfValues := strings.SepBy(0, value, comma)
 
 			list, err := listOfValues(buffer)
 			if err != nil {
 				return nil, err
 			}
 
-			return &JSArray{list}, nil
+			return JSArray{list}, nil
 		},
-		Eq(']'),
+		rightSquare,
 	)
 
-	bool := Trace(t, "bool", Bool())
-	null := Trace(t, "null", Null())
-	num := Trace(t, "number", Number())
-	str := Trace(t, "string", String_())
-	obj := Trace(t, "object", object)
-	arr := Trace(t, "array", array)
+	bool := common.Trace(t, "bool", Bool())
+	null := common.Trace(t, "null", Null())
+	num := common.Trace(t, "number", Number_())
+	str := common.Trace(t, "string", String_())
+	obj := common.Trace(t, "object", object)
+	arr := common.Trace(t, "array", array)
 
-	value = Padded(
+	value = strings.Padded(
 		whitespace,
-		Choice(
-			Try(bool),
-			Try(null),
-			Try(num),
-			Try(str),
-			Try(obj),
-			Try(arr), // TODO : remove last try?
+		strings.Choice(
+			strings.Try(bool),
+			strings.Try(null),
+			strings.Try(num),
+			strings.Try(str),
+			strings.Try(obj),
+			strings.Try(arr),
 		),
 	)
 

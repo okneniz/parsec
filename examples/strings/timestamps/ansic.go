@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"time"
 
-	p "github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/strings"
+	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/strings"
 )
 
 // ANSIC = "Mon Jan _2 15:04:05 2006"
-func ansic() p.Combinator[rune, Position, *time.Time] {
+func ansic() common.Combinator[rune, strings.Position, *time.Time] {
 	dayOfWeek := dayOfWeekPrefix()
 	day := paddedDayNum()
 	hour := paddedHourNum()
-	separator := Colon()
+	separator := strings.Colon()
 	minute := paddedMinuteNum()
 	second := paddedSecondNum()
 	year := yearWithCentury()
-	space := IsSpace()
+	space := strings.Space("space")
 
-	return func(buffer p.Buffer[rune, Position]) (*time.Time, error) {
+	return func(
+		buffer common.Buffer[rune, strings.Position],
+	) (*time.Time, common.Error[strings.Position]) {
 		dw, err := dayOfWeek(buffer)
 		if err != nil {
 			return nil, err
@@ -27,7 +29,7 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		m, err := monthPrefix()(buffer)
@@ -37,7 +39,7 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		d, err := day(buffer)
@@ -47,7 +49,7 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		h, err := hour(buffer)
@@ -57,7 +59,7 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = separator(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected separator ':'")
+			return nil, err
 		}
 
 		min, err := minute(buffer)
@@ -67,7 +69,7 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = separator(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected separator ':'")
+			return nil, err
 		}
 
 		sec, err := second(buffer)
@@ -77,7 +79,7 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		y, err := year(buffer)
@@ -85,17 +87,20 @@ func ansic() p.Combinator[rune, Position, *time.Time] {
 			return nil, err
 		}
 
-		loc, err := time.LoadLocation("UTC")
-		if err != nil {
-			return nil, err
+		loc, sysErr := time.LoadLocation("UTC")
+		if sysErr != nil {
+			return nil, common.NewParseError(buffer.Position(), sysErr.Error())
 		}
 
 		result := time.Date(y, m, d, h, min, sec, 0, loc)
 		if result.Weekday() != dw {
-			return nil, fmt.Errorf(
-				"unexpected day of week: expected %s, actual %v",
-				dw,
-				result.Weekday(),
+			return nil, common.NewParseError(
+				buffer.Position(),
+				fmt.Sprintf(
+					"unexpected day of week: expected %s, actual %v",
+					dw,
+					result.Weekday(),
+				),
 			)
 		}
 

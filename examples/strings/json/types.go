@@ -15,7 +15,7 @@ type JSString struct {
 	value string
 }
 
-func (j *JSString) ToString() (string, error) {
+func (j JSString) ToString() (string, error) {
 	return fmt.Sprintf("\"%s\"", j.value), nil
 }
 
@@ -23,7 +23,7 @@ type JSNumber struct {
 	value int
 }
 
-func (j *JSNumber) ToString() (string, error) {
+func (j JSNumber) ToString() (string, error) {
 	return fmt.Sprintf("%d", j.value), nil
 }
 
@@ -31,7 +31,7 @@ type JSObject struct {
 	values map[string]JSON
 }
 
-func (j *JSObject) ToString() (string, error) {
+func (j JSObject) ToString() (string, error) {
 	b := new(strings.Builder)
 
 	b.WriteString("{")
@@ -65,7 +65,7 @@ type JSArray struct {
 	values []JSON
 }
 
-func (j *JSArray) ToString() (string, error) {
+func (j JSArray) ToString() (string, error) {
 	b := new(strings.Builder)
 
 	b.WriteString("[")
@@ -92,13 +92,13 @@ type JSBool struct {
 	value bool
 }
 
-func (j *JSBool) ToString() (string, error) {
+func (j JSBool) ToString() (string, error) {
 	return fmt.Sprintf("%t", j.value), nil
 }
 
 type JSNull struct{}
 
-func (j *JSNull) ToString() (string, error) {
+func (j JSNull) ToString() (string, error) {
 	return "null", nil
 }
 

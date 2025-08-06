@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/okneniz/parsec/strings"
+	"github.com/okneniz/parsec/strings"
 	. "github.com/okneniz/parsec/testing"
 )
 
@@ -14,123 +14,123 @@ func TestJSON(t *testing.T) {
 	t.Parallel()
 
 	t.Run("numbers", func(t *testing.T) {
-		result, err := ParseString("1", comb)
+		result, err := strings.ParseString("1", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNumber{1})
+		assertJSEq(t, result, JSNumber{1})
 
-		result, err = ParseString("777", comb)
+		result, err = strings.ParseString("777", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNumber{777})
+		assertJSEq(t, result, JSNumber{777})
 
-		result, err = ParseString("777 ", comb)
+		result, err = strings.ParseString("777 ", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNumber{777})
+		assertJSEq(t, result, JSNumber{777})
 
-		result, err = ParseString(" 777", comb)
+		result, err = strings.ParseString(" 777", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNumber{777})
+		assertJSEq(t, result, JSNumber{777})
 
-		result, err = ParseString(" 777 ", comb)
+		result, err = strings.ParseString(" 777 ", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNumber{777})
+		assertJSEq(t, result, JSNumber{777})
 	})
 
 	t.Run("null", func(t *testing.T) {
-		result, err := ParseString("null", comb)
+		result, err := strings.ParseString("null", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNull{})
+		assertJSEq(t, result, JSNull{})
 
-		result, err = ParseString("  null", comb)
+		result, err = strings.ParseString("  null", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNull{})
+		assertJSEq(t, result, JSNull{})
 
-		result, err = ParseString("null ", comb)
+		result, err = strings.ParseString("null ", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNull{})
+		assertJSEq(t, result, JSNull{})
 
-		result, err = ParseString("\n\r null ", comb)
+		result, err = strings.ParseString("\n\r null ", comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSNull{})
+		assertJSEq(t, result, JSNull{})
 	})
 
 	t.Run("strings", func(t *testing.T) {
-		result, err := ParseString(`"something"`, comb)
+		result, err := strings.ParseString(`"something"`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSString{"something"})
+		assertJSEq(t, result, JSString{"something"})
 
-		result, err = ParseString(`"another"`, comb)
+		result, err = strings.ParseString(`"another"`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSString{"another"})
+		assertJSEq(t, result, JSString{"another"})
 
-		result, err = ParseString(`""`, comb)
+		result, err = strings.ParseString(`""`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSString{""})
+		assertJSEq(t, result, JSString{""})
 
-		result, err = ParseString(`  "another"`, comb)
+		result, err = strings.ParseString(`  "another"`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSString{"another"})
+		assertJSEq(t, result, JSString{"another"})
 
-		result, err = ParseString(`"another"   `, comb)
+		result, err = strings.ParseString(`"another"   `, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSString{"another"})
+		assertJSEq(t, result, JSString{"another"})
 
-		result, err = ParseString(`    "another"  `, comb)
+		result, err = strings.ParseString(`    "another"  `, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSString{"another"})
+		assertJSEq(t, result, JSString{"another"})
 	})
 
 	t.Run("array", func(t *testing.T) {
-		result, err := ParseString(`[]`, comb)
+		result, err := strings.ParseString(`[]`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSArray{})
+		assertJSEq(t, result, JSArray{})
 
-		result, err = ParseString(`[1]`, comb)
+		result, err = strings.ParseString(`[1]`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSArray{
+		assertJSEq(t, result, JSArray{
 			[]JSON{
-				&JSNumber{1},
+				JSNumber{1},
 			},
 		})
 
-		result, err = ParseString(`[null]`, comb)
+		result, err = strings.ParseString(`[null]`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSArray{
+		assertJSEq(t, result, JSArray{
 			[]JSON{
-				&JSNull{},
+				JSNull{},
 			},
 		})
 
-		result, err = ParseString(`["test"]`, comb)
+		result, err = strings.ParseString(`["test"]`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSArray{
+		assertJSEq(t, result, JSArray{
 			[]JSON{
-				&JSString{"test"},
+				JSString{"test"},
 			},
 		})
 
-		result, err = ParseString(`["test",1,null]`, comb)
+		result, err = strings.ParseString(`["test",1,null]`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSArray{
+		assertJSEq(t, result, JSArray{
 			[]JSON{
-				&JSString{"test"},
-				&JSNumber{1},
-				&JSNull{},
+				JSString{"test"},
+				JSNumber{1},
+				JSNull{},
 			},
 		})
 
-		result, err = ParseString(`["test",1 , null, [ ],[ 2,  3,"4"]]`, comb)
+		result, err = strings.ParseString(`["test",1 , null, [ ],[ 2,  3,"4"]]`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSArray{
+		assertJSEq(t, result, JSArray{
 			[]JSON{
-				&JSString{"test"},
-				&JSNumber{1},
-				&JSNull{},
-				&JSArray{},
-				&JSArray{
+				JSString{"test"},
+				JSNumber{1},
+				JSNull{},
+				JSArray{},
+				JSArray{
 					[]JSON{
-						&JSNumber{2},
-						&JSNumber{3},
-						&JSString{"4"},
+						JSNumber{2},
+						JSNumber{3},
+						JSString{"4"},
 					},
 				},
 			},
@@ -138,28 +138,28 @@ func TestJSON(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
-		result, err := ParseString(`{}`, comb)
+		result, err := strings.ParseString(`{}`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSObject{})
+		assertJSEq(t, result, JSObject{})
 
-		result, err = ParseString(`{"foo":1}`, comb)
+		result, err = strings.ParseString(`{"foo":1}`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSObject{
+		assertJSEq(t, result, JSObject{
 			map[string]JSON{
-				"foo": &JSNumber{1},
+				"foo": JSNumber{1},
 			},
 		})
 
-		result, err = ParseString(`{ "foo" :{"bar": [ 1, null]}  }`, comb)
+		result, err = strings.ParseString(`{ "foo" :{"bar": [ 1, null]}  }`, comb)
 		Check(t, err)
-		assertJSEq(t, result, &JSObject{
+		assertJSEq(t, result, JSObject{
 			map[string]JSON{
-				"foo": &JSObject{
+				"foo": JSObject{
 					map[string]JSON{
-						"bar": &JSArray{
+						"bar": JSArray{
 							[]JSON{
-								&JSNumber{1},
-								&JSNull{},
+								JSNumber{1},
+								JSNull{},
 							},
 						},
 					},
@@ -185,25 +185,25 @@ func isJSEq(x, y JSON) bool {
 	}
 
 	switch xv := x.(type) {
-	case *JSString:
-		yv, ok := y.(*JSString)
+	case JSString:
+		yv, ok := y.(JSString)
 		if !ok {
 			return false
 		}
 
 		return xv.value == yv.value
-	case *JSNumber:
-		yv, ok := y.(*JSNumber)
+	case JSNumber:
+		yv, ok := y.(JSNumber)
 		if !ok {
 			return false
 		}
 
 		return xv.value == yv.value
-	case *JSNull:
-		_, ok := y.(*JSNull)
+	case JSNull:
+		_, ok := y.(JSNull)
 		return ok
-	case *JSArray:
-		yv, ok := y.(*JSArray)
+	case JSArray:
+		yv, ok := y.(JSArray)
 		if !ok {
 			return false
 		}
@@ -219,8 +219,8 @@ func isJSEq(x, y JSON) bool {
 		}
 
 		return true
-	case *JSObject:
-		yv, ok := y.(*JSObject)
+	case JSObject:
+		yv, ok := y.(JSObject)
 		if !ok {
 			return false
 		}

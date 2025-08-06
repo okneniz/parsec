@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/okneniz/parsec/bytes"
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/bytes"
+	"github.com/okneniz/parsec/common"
 )
 
 type IHDR struct {
@@ -52,53 +52,68 @@ func (c *IHDR) String() string {
 	return b.String()
 }
 
-func IHDRChunk(size uint32) p.Combinator[byte, int, *IHDR] {
-	return func(buffer p.Buffer[byte, int]) (*IHDR, error) {
+func IHDRChunk(size uint32) common.Combinator[byte, int, *IHDR] {
+	parseData := bytes.Count[byte](
+		int(size),
+		fmt.Sprintf("expected %d bytes of IHDR data", size),
+		bytes.Any(),
+	)
+
+	parseWidth := bytes.ReadAs[uint32](4, "expected 4 bytes of IHDR width", binary.BigEndian)
+	parseHeight := bytes.ReadAs[uint32](4, "expected 4 bytes of IHDR height", binary.BigEndian)
+	parseBitDepth := bytes.Satisfy("expected 1 byte of IHDR bit depth", true, common.Anything[byte])
+	parseColorType := bytes.Satisfy("expected 1 byte of color type", true, common.Anything[byte])
+	parseCompressionMethod := bytes.Satisfy("expected 1 byte of compression method", true, common.Anything[byte])
+	parseFilterMethod := bytes.Satisfy("expected 1 byte of filter method", true, common.Anything[byte])
+	parseInterfaceMethod := bytes.Satisfy("expected 1 byte of interface method", true, common.Anything[byte])
+	parseCRC := bytes.ReadAs[uint32](4, "expecte 4 bytes of CRC", binary.BigEndian)
+
+	return func(buffer common.Buffer[byte, int]) (*IHDR, common.Error[int]) {
 		pos := buffer.Position()
 
-		data, err := Count[byte](int(size), Any())(buffer)
+		data, err := parseData(buffer)
 		if err != nil {
 			return nil, err
 		}
 
 		buffer.Seek(pos)
 
-		width, err := ReadAs[uint32](4, binary.BigEndian)(buffer)
+		width, err := parseWidth(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		height, err := ReadAs[uint32](4, binary.BigEndian)(buffer)
+		height, err := parseHeight(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		bitDepth, err := buffer.Read(true)
+		bitDepth, err := parseBitDepth(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		colorType, err := buffer.Read(true)
+		colorType, err := parseColorType(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		compressionMethod, err := buffer.Read(true)
+		compressionMethod, err := parseCompressionMethod(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		filterMethod, err := buffer.Read(true)
+		filterMethod, err := parseFilterMethod(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		interfaceMethod, err := buffer.Read(true)
+		interfaceMethod, err := parseInterfaceMethod(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		crc, err := ReadAs[uint32](4, binary.BigEndian)(buffer)
+		crc, err := parseCRC(buffer)
 		if err != nil {
 			return nil, err
 		}

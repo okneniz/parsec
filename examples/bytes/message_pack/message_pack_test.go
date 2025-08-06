@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	b "github.com/okneniz/parsec/bytes"
+	"github.com/okneniz/parsec/bytes"
 	"golang.org/x/exp/constraints"
 
 	mpack "github.com/vmihailenco/msgpack/v5"
@@ -223,7 +223,7 @@ func check[T any](t *testing.T, expected interface{}) {
 		t.Fatal(err)
 	}
 
-	actual, err := b.Parse(data, MessagePack())
+	actual, err := bytes.Parse(data, MessagePack())
 	if err != nil {
 		t.Logf("input: %v", data)
 		t.Logf("hex: %s", toHex(data))

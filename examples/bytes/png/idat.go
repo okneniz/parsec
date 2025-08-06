@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/okneniz/parsec/bytes"
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/bytes"
+	"github.com/okneniz/parsec/common"
 )
 
 type IDAT struct {
@@ -35,25 +35,33 @@ func (c *IDAT) String() string {
 	b := new(strings.Builder)
 
 	b.WriteString(fmt.Sprintf("\t length: %v\n", c.length))
-	b.WriteString(fmt.Sprintf("\t data: %v\n", c.data))
+	// b.WriteString(fmt.Sprintf("\t data: %v\n", c.data))
 	b.WriteString(fmt.Sprintf("\t crc: %v\n", c.crc))
 
 	return b.String()
 }
 
-func IDATChunk(size uint32) p.Combinator[byte, int, *IDAT] {
-	return func(buffer p.Buffer[byte, int]) (*IDAT, error) {
+func IDATChunk(size uint32) common.Combinator[byte, int, *IDAT] {
+	parseData := bytes.Count[byte](
+		int(size),
+		fmt.Sprintf("expected %d bytes of IDAT chunk", size),
+		bytes.Any(),
+	)
+
+	parseCRC := bytes.ReadAs[uint32](4, "expected four bytes of CRC", binary.BigEndian)
+
+	return func(buffer common.Buffer[byte, int]) (*IDAT, common.Error[int]) {
 		var data []byte
-		var err error
+		var err common.Error[int]
 
 		if size > 0 {
-			data, err = Count[byte](int(size), Any())(buffer)
+			data, err = parseData(buffer)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		crc, err := ReadAs[uint32](4, binary.BigEndian)(buffer)
+		crc, err := parseCRC(buffer)
 		if err != nil {
 			return nil, err
 		}

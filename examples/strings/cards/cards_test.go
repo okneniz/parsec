@@ -19,7 +19,7 @@ func TestCards(t *testing.T) {
 		Try(americanExpress),
 	)
 
-	noice := Many(10, Try(NotRange('0', '9')))
+	noice := Many(10, Try(NotRange("expected char no between '0' and '9'", '0', '9')))
 	comb := Skip(noice, SepEndBy(4, cards, noice))
 
 	cardNums := []string{

@@ -8,7 +8,7 @@ import (
 )
 
 func TestEq(t *testing.T) {
-	comb := Eq('c')
+	comb := Eq("expected 'c'", 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	AssertError(t, err)
@@ -24,7 +24,7 @@ func TestEq(t *testing.T) {
 }
 
 func TestNotEq(t *testing.T) {
-	comb := NotEq('c')
+	comb := NotEq("expecte not 'c'", 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	Check(t, err)
@@ -44,7 +44,7 @@ func TestNotEq(t *testing.T) {
 }
 
 func TestOneOf(t *testing.T) {
-	comb := OneOf('a', 'b', 'c')
+	comb := OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	Check(t, err)
@@ -64,7 +64,7 @@ func TestOneOf(t *testing.T) {
 }
 
 func TestSequenceOf(t *testing.T) {
-	comb := SequenceOf('f', 'o', 'o')
+	comb := SequenceOf("expected foo", 'f', 'o', 'o')
 
 	result, err := Parse([]byte("foo"), comb)
 	Check(t, err)
@@ -96,9 +96,10 @@ func TestMap(t *testing.T) {
 
 	comb := Some(
 		1,
+		"exepcted at least one case",
 		common.SkipMany(
-			NoneOf(0, 1, 2),
-			Map(cases, Any()),
+			NoneOf("expected not 0, 1 or 2", 0, 1, 2),
+			Map("expected one of cases", cases, Any()),
 		),
 	)
 

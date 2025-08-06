@@ -8,8 +8,8 @@ import (
 
 func TestOr(t *testing.T) {
 	comb := Or(
-		Try(Eq('a')),
-		Eq('b'),
+		Try(Eq("expected 'a'", 'a')),
+		Eq("expected 'b'", 'b'),
 	)
 
 	result, err := Parse([]byte("a"), comb)
@@ -27,8 +27,8 @@ func TestOr(t *testing.T) {
 
 func TestAnd(t *testing.T) {
 	comb := And(
-		Eq('a'),
-		Eq('b'),
+		Eq("expected 'a'", 'a'),
+		Eq("expected 'b'", 'b'),
 		func(x, y byte) []byte { return []byte{x, y} },
 	)
 

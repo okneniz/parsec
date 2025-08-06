@@ -1,7 +1,7 @@
 package common
 
 // Combinator - type of parse combinator.
-type Combinator[T any, P any, S any] func(Buffer[T, P]) (S, error)
+type Combinator[T any, P any, S any] func(Buffer[T, P]) (S, Error[P])
 
 // Condition - condition function or predicate.
 type Condition[T any] func(T) bool

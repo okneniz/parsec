@@ -4,24 +4,26 @@ import (
 	"fmt"
 	"time"
 
-	p "github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/strings"
+	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/strings"
 )
 
 // UnixDate = "Mon Jan _2 15:04:05 MST 2006"
-func unixDate() p.Combinator[rune, Position, *time.Time] {
+func unixDate() common.Combinator[rune, strings.Position, *time.Time] {
 	dayOfWeek := dayOfWeekPrefix()
-	space := IsSpace()
+	space := strings.Space("space")
 	month := monthPrefix()
 	day := paddedDayNum()
 	hour := paddedHourNum()
-	separator := Colon()
+	separator := strings.Colon()
 	minute := paddedMinuteNum()
 	second := paddedSecondNum()
 	year := yearWithCentury()
-	zone, _ := TimeZoneByNames("UTC", "EST", "GMT")
+	zone, _ := strings.TimeZoneByNames("UTC", "EST", "GMT")
 
-	return func(buffer p.Buffer[rune, Position]) (*time.Time, error) {
+	return func(
+		buffer common.Buffer[rune, strings.Position],
+	) (*time.Time, common.Error[strings.Position]) {
 		dw, err := dayOfWeek(buffer)
 		if err != nil {
 			return nil, err
@@ -29,7 +31,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		m, err := month(buffer)
@@ -39,7 +41,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		d, err := day(buffer)
@@ -49,7 +51,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		h, err := hour(buffer)
@@ -59,7 +61,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = separator(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected separator ':'")
+			return nil, err
 		}
 
 		min, err := minute(buffer)
@@ -69,7 +71,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = separator(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected separator ':'")
+			return nil, err
 		}
 
 		sec, err := second(buffer)
@@ -79,7 +81,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		loc, err := zone(buffer)
@@ -89,7 +91,7 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		y, err := year(buffer)
@@ -99,10 +101,13 @@ func unixDate() p.Combinator[rune, Position, *time.Time] {
 
 		result := time.Date(y, m, d, h, min, sec, 0, loc)
 		if result.Weekday() != dw {
-			return nil, fmt.Errorf(
-				"unexpected day of week: expected %s, actual %v",
-				dw,
-				result.Weekday(),
+			return nil, common.NewParseError(
+				buffer.Position(),
+				fmt.Sprintf(
+					"unexpected day of week: expected %s, actual %v",
+					dw,
+					result.Weekday(),
+				),
 			)
 		}
 

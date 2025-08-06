@@ -1,22 +1,22 @@
 package strings
 
 import (
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 // Parse - parse text by c combinator.
 func Parse[T any](
 	data []rune,
-	parse p.Combinator[rune, Position, T],
-) (T, error) {
+	parse common.Combinator[rune, Position, T],
+) (T, common.Error[Position]) {
 	buf := Buffer(data)
-	return p.Parse[rune, Position, T](buf, parse)
+	return common.Parse[rune, Position, T](buf, parse)
 }
 
 // ParseString - parse text by c combinator.
 func ParseString[T any](
 	str string,
-	parse p.Combinator[rune, Position, T],
-) (T, error) {
+	parse common.Combinator[rune, Position, T],
+) (T, common.Error[Position]) {
 	return Parse([]rune(str), parse)
 }

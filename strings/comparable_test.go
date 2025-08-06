@@ -9,7 +9,7 @@ import (
 )
 
 func TestEq(t *testing.T) {
-	comb := Eq('c')
+	comb := Eq("expected 'c'", 'c')
 
 	result, err := ParseString("a", comb)
 	AssertError(t, err)
@@ -25,7 +25,7 @@ func TestEq(t *testing.T) {
 }
 
 func TestNotEq(t *testing.T) {
-	comb := NotEq('c')
+	comb := NotEq("expected not 'c'", 'c')
 
 	result, err := ParseString("a", comb)
 	Check(t, err)
@@ -45,7 +45,7 @@ func TestNotEq(t *testing.T) {
 }
 
 func TestOneOf(t *testing.T) {
-	comb := OneOf('a', 'b', 'c')
+	comb := OneOf("expected not 'a', 'b' or 'c'", 'a', 'b', 'c')
 
 	result, err := ParseString("a", comb)
 	Check(t, err)
@@ -65,31 +65,31 @@ func TestOneOf(t *testing.T) {
 }
 
 func TestSequenceOf(t *testing.T) {
-	comb := SequenceOf('f', 'o', 'o')
+	comb := String("foo")
 
 	result, err := ParseString("foo", comb)
 	Check(t, err)
-	AssertSlice(t, result, []rune{'f', 'o', 'o'})
+	AssertEq(t, result, "foo")
 
 	result, err = ParseString("foobar", comb)
 	Check(t, err)
-	AssertSlice(t, result, []rune{'f', 'o', 'o'})
+	AssertEq(t, result, "foo")
 
 	result, err = ParseString("fo", comb)
 	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	AssertEq(t, result, "")
 
 	result, err = ParseString(" foobar", comb)
 	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	AssertEq(t, result, "")
 
 	result, err = ParseString(" ", comb)
 	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	AssertEq(t, result, "")
 
 	result, err = ParseString("", comb)
 	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	AssertEq(t, result, "")
 }
 
 func TestMap(t *testing.T) {
@@ -97,9 +97,17 @@ func TestMap(t *testing.T) {
 
 	comb := Some(
 		1,
+		"sequence of keys from map",
 		SkipMany(
-			NoneOf('a', 'b', 'c'),
-			Map(cases, Any()),
+			NoneOf(
+				"expected not 'a', 'b' or 'c'",
+				'a', 'b', 'c',
+			),
+			Map(
+				"expected 'a', 'b' or 'c'",
+				cases,
+				Any(),
+			),
 		),
 	)
 
@@ -125,9 +133,13 @@ func TestMapStrings(t *testing.T) {
 
 	comb := Some(
 		1,
+		"sequence of keys",
 		SkipMany(
-			NoneOf('a', 'b', 'c'),
-			MapStrings(cases),
+			NoneOf(
+				"none of 'a', 'b' or 'c'",
+				'a', 'b', 'c',
+			),
+			MapStrings("expect 'a', 'b' or 'c'", cases),
 		),
 	)
 
@@ -184,64 +196,6 @@ func TestString(t *testing.T) {
 	})
 }
 
-func TestOneOfStrings(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		comb := OneOfStrings("foo", "bar")
-
-		result, err := ParseString("foo", comb)
-		Check(t, err)
-		AssertEq(t, result, "foo")
-
-		result, err = ParseString("foobar", comb)
-		Check(t, err)
-		AssertEq(t, result, "foo")
-
-		result, err = ParseString("barbaz", comb)
-		Check(t, err)
-		AssertEq(t, result, "bar")
-
-		result, err = ParseString("baz", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-
-		result, err = ParseString("", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := Many(
-			0,
-			SkipMany(
-				NoneOf('f', 'o', 'b', 'a', 'r'),
-				OneOfStrings("foo", "bar"),
-			),
-		)
-
-		result, err := ParseString("foo", comb)
-		Check(t, err)
-		AssertSlice(t, result, []string{"foo"})
-
-		result, err = ParseString("barfoo", comb)
-		Check(t, err)
-		AssertSlice(t, result, []string{"bar", "foo"})
-
-		result, err = ParseString("bar12334foo123", comb)
-		Check(t, err)
-		AssertSlice(t, result, []string{"bar", "foo"})
-
-		result, err = ParseString("bar12334foo123baz", comb)
-		Check(t, err)
-		AssertSlice(t, result, []string{"bar", "foo"})
-
-		result, err = ParseString("12311231820398", comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-}
-
 func BenchmarkMap(b *testing.B) {
 	seed := time.Now().UnixNano()
 	source := rand.New(rand.NewSource(seed))
@@ -289,7 +243,7 @@ func BenchmarkMap(b *testing.B) {
 
 	b.Run("MapString", func(b *testing.B) {
 		examples := gen(b.N)
-		comb := MapStrings(dict)
+		comb := MapStrings("map string", dict)
 
 		b.ResetTimer()
 
@@ -300,12 +254,17 @@ func BenchmarkMap(b *testing.B) {
 
 	b.Run("Map", func(b *testing.B) {
 		examples := gen(b.N)
-		comb := Map(dict, Cast(
-			Count(3, Any()),
-			func(x []rune) (string, error) {
-				return string(x), nil
-			},
-		))
+
+		comb := Map(
+			"expected one month",
+			dict,
+			Cast(
+				Count(3, "3 chars", Any()),
+				func(x []rune) (string, error) {
+					return string(x), nil
+				},
+			),
+		)
 
 		b.ResetTimer()
 

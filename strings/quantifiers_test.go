@@ -7,7 +7,7 @@ import (
 )
 
 func TestMany(t *testing.T) {
-	comb := Many(0, Eq('a'))
+	comb := Many(0, Eq("expected 'a'", 'a'))
 
 	result, err := ParseString("aaa", comb)
 	Check(t, err)
@@ -26,7 +26,11 @@ func TestSome(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Some(0, Eq('a'))
+		comb := Some(
+			0,
+			"expected at least one 'a'",
+			Eq("expected 'a'", 'a'),
+		)
 
 		result, err := ParseString("aaa", comb)
 		Check(t, err)
@@ -44,7 +48,8 @@ func TestSome(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := Some(
 			0,
-			Satisfy(true, func(x rune) bool { return false }),
+			"expected at least one char",
+			Satisfy("expected any char", true, func(x rune) bool { return false }),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -54,7 +59,7 @@ func TestSome(t *testing.T) {
 }
 
 func TestOptional(t *testing.T) {
-	comb := Optional(Eq('a'), 0)
+	comb := Optional(Eq("expected 'a'", 'a'), 0)
 
 	result, err := ParseString("aaa", comb)
 	Check(t, err)
@@ -69,7 +74,11 @@ func TestCount(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Count(2, Eq('a'))
+		comb := Count(
+			2,
+			"expected two 'a'",
+			Eq("expected 'a'", 'a'),
+		)
 
 		result, err := ParseString("aabbcc", comb)
 		Check(t, err)
@@ -85,7 +94,7 @@ func TestCount(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Count(2, EOF())
+		comb := Count(2, "expected", EOF())
 
 		result, err := ParseString("aab", comb)
 		Check(t, err)

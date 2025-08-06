@@ -3,7 +3,7 @@ package common
 // Or - returns the result of the first combinator,
 // if it fails, uses the second combinator.
 func Or[T any, P any, S any](x, y Combinator[T, P, S]) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		result, err := x(buffer)
 		if err != nil {
 			return y(buffer)
@@ -20,7 +20,7 @@ func And[T any, P any, S any, B any, M any](
 	y Combinator[T, P, B],
 	compose Composer[S, B, M],
 ) Combinator[T, P, M] {
-	return func(buffer Buffer[T, P]) (M, error) {
+	return func(buffer Buffer[T, P]) (M, Error[P]) {
 		first, err := x(buffer)
 		if err != nil {
 			return *new(M), err

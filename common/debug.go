@@ -10,8 +10,14 @@ type Logged interface {
 
 // Trace - writes messages to the log about the state of the buffer before
 // and after using the combinator, the result of the cobinator and its error.
-func Trace[T any, P any, S any](l Logged, m string, c Combinator[T, P, S]) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, error) {
+func Trace[T any, P any, S any](
+	l Logged,
+	m string,
+	c Combinator[T, P, S],
+) Combinator[T, P, S] {
+	var null S
+
+	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		l.Log(m)
 		l.Log("\tposition before:", buffer.Position())
 
@@ -19,7 +25,7 @@ func Trace[T any, P any, S any](l Logged, m string, c Combinator[T, P, S]) Combi
 		l.Log("\tposition after:", buffer.Position())
 		if err != nil {
 			l.Log("\tnot parsed:", m, result, err)
-			return *new(S), err
+			return null, err
 		}
 
 		l.Log("\tparsed:", fmt.Sprintf("%#v", result))

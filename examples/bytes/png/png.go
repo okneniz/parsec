@@ -2,22 +2,32 @@ package png
 
 import (
 	"encoding/binary"
-	. "github.com/okneniz/parsec/bytes"
-	p "github.com/okneniz/parsec/common"
+
+	"github.com/okneniz/parsec/bytes"
+	"github.com/okneniz/parsec/common"
 )
 
 // https://www.w3.org/TR/png
 
-func PNG() p.Combinator[byte, int, *File] {
-	head := p.SkipSequenceOf[byte, int, byte](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+func PNG() common.Combinator[byte, int, *File] {
+	parseHeader := common.SkipSequenceOf[byte, int, byte](
+		"expected PNG header",
+		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+	)
 
-	return func(buffer p.Buffer[byte, int]) (*File, error) {
-		_, err := head(buffer)
+	parseChunks := bytes.Some(
+		1,
+		"expected PNG chunks",
+		bytes.Try(parseChunk()),
+	)
+
+	return func(buffer common.Buffer[byte, int]) (*File, common.Error[int]) {
+		_, err := parseHeader(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		chunks, err := Some(1, Try(chunk()))(buffer)
+		chunks, err := parseChunks(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -26,11 +36,20 @@ func PNG() p.Combinator[byte, int, *File] {
 	}
 }
 
-func chunk() p.Combinator[byte, int, Chunk] {
-	lenghtOfChunk := ReadAs[uint32](4, binary.BigEndian)
-	typeOfChunk := Count(4, Any())
+func parseChunk() common.Combinator[byte, int, Chunk] {
+	lenghtOfChunk := bytes.ReadAs[uint32](
+		4,
+		"expected 4 bytes (uint32) of chunk length",
+		binary.BigEndian,
+	)
 
-	return func(buffer p.Buffer[byte, int]) (Chunk, error) {
+	typeOfChunk := bytes.Count(
+		4,
+		"expecte 4 bytes of chunk type",
+		bytes.Any(),
+	)
+
+	return func(buffer common.Buffer[byte, int]) (Chunk, common.Error[int]) {
 		length, err := lenghtOfChunk(buffer)
 		if err != nil {
 			return nil, err

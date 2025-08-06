@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 	. "github.com/okneniz/parsec/testing"
 )
 
@@ -11,9 +11,9 @@ func TestConcat(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Concat(
 			3,
-			Count(1, Eq('a')),
-			Count(1, Eq('b')),
-			Count(1, NotEq('z')),
+			Count(1, "expected one 'a'", Eq("expected 'a'", 'a')),
+			Count(1, "expected one 'b'", Eq("expected 'b'", 'b')),
+			Count(1, "expected one 'z'", NotEq("expected 'z'", 'z')),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -40,9 +40,9 @@ func TestConcat(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := Concat(
 			3,
-			Count(1, Eq('a')),
-			Count(1, Eq('b')),
-			Count(1, Satisfy(true, p.Nothing[rune])),
+			Count(1, "expected one 'a'", Eq("expected 'a'", 'a')),
+			Count(1, "expected one 'b'", Eq("expected 'b'", 'b')),
+			Count(1, "expected one char", Satisfy("expected any char", true, common.Nothing[rune])),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -57,9 +57,9 @@ func TestConcat(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := Concat(
 			0,
-			Count(1, Satisfy(true, p.Nothing[rune])),
-			Count(1, Satisfy(true, p.Nothing[rune])),
-			Count(3, Satisfy(true, p.Nothing[rune])),
+			Count(1, "expected one char", Satisfy("expected any char", true, common.Nothing[rune])),
+			Count(1, "expected one char", Satisfy("expected any char", true, common.Nothing[rune])),
+			Count(3, "expected three char", Satisfy("expected any char", true, common.Nothing[rune])),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -76,9 +76,9 @@ func TestSequence(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Sequence(
 			3,
-			Eq('a'),
-			Eq('b'),
-			NotEq('z'),
+			Eq("expected 'a'", 'a'),
+			Eq("expected 'b'", 'b'),
+			NotEq("expected char not equal 'z'", 'z'),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -105,9 +105,9 @@ func TestSequence(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := Sequence(
 			3,
-			Eq(rune('a')),
-			Eq(rune('b')),
-			Satisfy(true, p.Nothing[rune]),
+			Eq("expected 'a'", 'a'),
+			Eq("expected 'b'", 'b'),
+			Satisfy("expected any char", true, common.Nothing[rune]),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -123,9 +123,9 @@ func TestSequence(t *testing.T) {
 func TestChoice(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := Choice(
-			Try(Eq('a')),
-			Try(Eq('b')),
-			Try(Eq('c')),
+			Try(Eq("expected 'a'", 'a')),
+			Try(Eq("expected 'b'", 'b')),
+			Try(Eq("expected 'c'", 'c')),
 		)
 
 		result, err := ParseString("a", comb)
@@ -145,10 +145,10 @@ func TestChoice(t *testing.T) {
 		comb := Many(
 			4,
 			Choice(
-				Try(Eq('a')),
-				Try(Eq('b')),
-				Try(Eq('c')),
-				Try(NotEq('z')),
+				Try(Eq("expected 'a'", 'a')),
+				Try(Eq("expected 'b'", 'b')),
+				Try(Eq("expected 'v'", 'c')),
+				Try(NotEq("expected 'z'", 'z')),
 			),
 		)
 
@@ -161,8 +161,8 @@ func TestChoice(t *testing.T) {
 		comb := Many(
 			0,
 			Choice(
-				Satisfy(true, p.Nothing[rune]),
-				Satisfy(true, p.Nothing[rune]),
+				Satisfy("expected any char", true, common.Nothing[rune]),
+				Satisfy("expected any char", true, common.Nothing[rune]),
 			),
 		)
 
@@ -177,8 +177,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Skip(
-			Optional(Eq('a'), 0),
-			Eq('b'),
+			Optional(Eq("expected 'a'", 'a'), 0),
+			Eq("expected 'b'", 'b'),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -191,8 +191,8 @@ func TestSkip(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		phrase := SequenceOf('a', 'b', 'c')
-		noice := Many(0, Try(NoneOf('a', 'b', 'c')))
+		phrase := SequenceOf("expected 'abc'", 'a', 'b', 'c')
+		noice := Many(0, Try(NoneOf("expected not 'a', 'b' or 'c'", 'a', 'b', 'c')))
 		comb := Skip(noice, phrase)
 
 		result, err := ParseString("abc", comb)
@@ -214,8 +214,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := Skip(
-			NotEq('a'),
-			Eq('a'),
+			NotEq("expected 'a'", 'a'),
+			Eq("expected 'a'", 'a'),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -229,8 +229,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq('b'),
-			Eq('a'),
+			Eq("expected 'b'", 'b'),
+			Eq("expected 'a'", 'a'),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -248,8 +248,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq('b'),
-			Satisfy(true, p.Nothing[rune]),
+			Eq("expected 'b'", 'b'),
+			Satisfy("expected char", true, common.Nothing[rune]),
 		)
 
 		result, err := ParseString("abc", comb)
@@ -259,8 +259,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := SkipAfter(
-			Satisfy(true, p.Nothing[rune]),
-			Eq('a'),
+			Satisfy("expected any char", true, common.Nothing[rune]),
+			Eq("expected 'a'", 'a'),
 		)
 
 		result, err := ParseString("abc", comb)

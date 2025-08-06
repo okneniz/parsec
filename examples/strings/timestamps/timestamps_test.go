@@ -1,12 +1,11 @@
 package timestamp
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
-	. "github.com/okneniz/parsec/strings"
+	"github.com/okneniz/parsec/strings"
 	. "github.com/okneniz/parsec/testing"
 )
 
@@ -24,15 +23,19 @@ func TestTimestamps(t *testing.T) {
 	t.Log("input:")
 	t.Logf("%#v", input)
 
-	oneOfDate := Choice(
-		Try(ansic()),
-		Try(unixDate()),
-		Try(rfc1123()),
+	oneOfDate := strings.Choice(
+		strings.Try(ansic()),
+		strings.Try(unixDate()),
+		strings.Try(rfc1123()),
 	)
 
-	comb := SepBy(len(dates), oneOfDate, Eq('\n'))
+	comb := strings.SepBy(
+		len(dates),
+		oneOfDate,
+		strings.Eq("expected end of line", '\n'),
+	)
 
-	result, err := ParseString(input, comb)
+	result, err := strings.ParseString(input, comb)
 	Check(t, err)
 	AssertEqDump(t, result, dates)
 }
@@ -73,7 +76,7 @@ func BenchmarkParsecUnixDate(b *testing.B) {
 
 	b.ResetTimer()
 	for _, input := range dates {
-		ParseString(input, comb)
+		strings.ParseString(input, comb)
 	}
 }
 
@@ -101,31 +104,18 @@ func randomDate(r *rand.Rand) *time.Time {
 	hour := randomInt(r, 0, 23)
 	min := randomInt(r, 0, 59)
 	sec := randomInt(r, 0, 59)
-	loc := randomLocation(r)
+	loc := time.UTC
 	d := time.Date(year, month, day, hour, min, sec, 0, loc)
 	return &d
 }
 
 var (
-	allowZones = []string{
-		"UTC", "EST", "GMT",
-	}
-
 	allowLayouts = []string{
-		// only layouts with time zone to avoid losing data
-		"Mon Jan _2 15:04:05 MST 2006",
-		"Mon, 02 Jan 2006 15:04:05 MST",
+		time.ANSIC,
+		time.UnixDate,
+		time.RFC1123,
 	}
 )
-
-func randomLocation(r *rand.Rand) *time.Location {
-	x := randomInt(r, 0, len(allowZones)-1)
-	loc, err := time.LoadLocation(allowZones[x])
-	if err != nil {
-		panic(fmt.Sprintf("generate random location error: %s (x=%v,name=%v)", err, x, allowZones[x]))
-	}
-	return loc
-}
 
 func randomInt(r *rand.Rand, from, to int) int {
 	return from + r.Intn(to-from+1)

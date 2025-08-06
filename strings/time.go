@@ -1,15 +1,20 @@
 package strings
 
 import (
+	"fmt"
+	"sort"
+	"strings"
 	"time"
 
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 // TimeZone - parse one of time zones from passed arguments.
 func TimeZone(
 	locations ...*time.Location,
-) p.Combinator[rune, Position, *time.Location] {
+) common.Combinator[rune, Position, *time.Location] {
+	// TODO : fallback for len=1
+
 	m := make(map[string]*time.Location, len(locations))
 	names := make([]string, len(locations))
 
@@ -22,13 +27,25 @@ func TimeZone(
 		names[i] = zoneName
 	}
 
-	return Map(m, OneOfStrings(names...))
+	sort.SliceStable(
+		names,
+		func(i, j int) bool { return names[i] < names[j] },
+	)
+
+	errMessage := fmt.Sprintf(
+		"expected one of time zones: %s",
+		strings.Join(names, ","),
+	)
+
+	return MapStrings(errMessage, m)
 }
 
 // TimeZoneByNames - parse one of time zones from passed arguments.
 func TimeZoneByNames(
 	locationNames ...string,
-) (p.Combinator[rune, Position, *time.Location], error) {
+) (common.Combinator[rune, Position, *time.Location], error) {
+	// TODO : fallback for len=1
+
 	locations := make([]*time.Location, 0, len(locationNames))
 
 	for _, locationName := range locationNames {

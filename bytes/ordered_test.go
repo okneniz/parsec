@@ -7,7 +7,7 @@ import (
 )
 
 func TestRange(t *testing.T) {
-	comb := Range('a', 'c')
+	comb := Range("expected byte between 'a' and 'c'", 'a', 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	Check(t, err)
@@ -31,7 +31,7 @@ func TestRange(t *testing.T) {
 }
 
 func TestNotRange(t *testing.T) {
-	comb := NotRange('a', 'c')
+	comb := NotRange("expecte byte between 'a' and 'c'", 'a', 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	AssertError(t, err)
@@ -55,7 +55,7 @@ func TestNotRange(t *testing.T) {
 }
 
 func TestGt(t *testing.T) {
-	comb := Gt('c')
+	comb := Gt("expected byte greater than 'c'", 'c')
 
 	result, err := Parse([]byte("d"), comb)
 	Check(t, err)
@@ -79,7 +79,7 @@ func TestGt(t *testing.T) {
 }
 
 func TestGte(t *testing.T) {
-	comb := Gte('c')
+	comb := Gte("expected byte greater or equal than 'c'", 'c')
 
 	result, err := Parse([]byte("d"), comb)
 	Check(t, err)
@@ -103,7 +103,7 @@ func TestGte(t *testing.T) {
 }
 
 func TestLt(t *testing.T) {
-	comb := Lt('c')
+	comb := Lt("expected byte less than 'c'", 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	Check(t, err)
@@ -127,7 +127,7 @@ func TestLt(t *testing.T) {
 }
 
 func TestLte(t *testing.T) {
-	comb := Lte('c')
+	comb := Lte("expecte byte less than or equal 'c'", 'c')
 
 	result, err := Parse([]byte("a"), comb)
 	Check(t, err)

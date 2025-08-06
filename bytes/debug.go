@@ -1,15 +1,15 @@
 package bytes
 
 import (
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 // Trace - writes messages to the log about the state of the buffer before
 // and after using the combinator, the result of the cobinator and its error.
 func Trace[T any](
-	l p.Logged,
+	l common.Logged,
 	m string,
-	c p.Combinator[rune, int, T],
-) p.Combinator[rune, int, T] {
-	return p.Trace[rune, int, T](l, m, c)
+	c common.Combinator[rune, int, T],
+) common.Combinator[rune, int, T] {
+	return common.Trace[rune, int, T](l, m, c)
 }

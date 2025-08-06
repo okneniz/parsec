@@ -1,55 +1,59 @@
 package strings
 
 import (
-	p "github.com/okneniz/parsec/common"
+	"fmt"
+
+	"github.com/okneniz/parsec/common"
 )
 
 // Eq - succeeds for any item which equal input t.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func Eq(t rune) p.Combinator[rune, Position, rune] {
-	return p.Eq[rune, Position](t)
+func Eq(
+	errMessage string,
+	t rune,
+) common.Combinator[rune, Position, rune] {
+	return common.Eq[rune, Position](errMessage, t)
 }
 
 // NotEq - succeeds for any item which not equal input t.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func NotEq(t rune) p.Combinator[rune, Position, rune] {
-	return p.NotEq[rune, Position](t)
+func NotEq(
+	errMessage string,
+	r rune,
+) common.Combinator[rune, Position, rune] {
+	return common.NotEq[rune, Position](errMessage, r)
 }
 
 // OneOf - succeeds for any item which included in input data.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func OneOf(data ...rune) p.Combinator[rune, Position, rune] {
-	return p.OneOf[rune, Position](data...)
-}
-
-// OneOfStrings - succeeds for any item which included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
-func OneOfStrings(strs ...string) p.Combinator[rune, Position, string] {
-	combs := make([]p.Combinator[rune, Position, string], len(strs))
-
-	for i, str := range strs {
-		combs[i] = Try(String(str))
-	}
-
-	return Choice(combs...)
+func OneOf(
+	errMessage string,
+	data ...rune,
+) common.Combinator[rune, Position, rune] {
+	return common.OneOf[rune, Position](errMessage, data...)
 }
 
 // NoneOf - succeeds for any item which not included in input data.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func NoneOf(data ...rune) p.Combinator[rune, Position, rune] {
-	return p.NoneOf[rune, Position](data...)
+func NoneOf(
+	errMessage string,
+	data ...rune,
+) common.Combinator[rune, Position, rune] {
+	return common.NoneOf[rune, Position](errMessage, data...)
 }
 
 // SequenceOf - expects a sequence of elements in the buffer
 // equal to the input data sequence. If expectations are not met,
 // returns NothingMatched error.
-func SequenceOf(data ...rune) p.Combinator[rune, Position, []rune] {
-	return p.SequenceOf[rune, Position](data...)
+func SequenceOf(
+	errMessage string,
+	data ...rune,
+) common.Combinator[rune, Position, []rune] {
+	return common.SequenceOf[rune, Position](errMessage, data...)
 }
 
 // Map - Reads one element from the input buffer using the combinator,
@@ -57,10 +61,11 @@ func SequenceOf(data ...rune) p.Combinator[rune, Position, []rune] {
 // match it in cases map passed by first argument.
 // If the value is not found then it returns NothingMatched error.
 func Map[K comparable, V any](
+	errMessage string,
 	cases map[K]V,
-	c p.Combinator[rune, Position, K],
-) p.Combinator[rune, Position, V] {
-	return p.Map[rune, Position, K, V](cases, c)
+	c common.Combinator[rune, Position, K],
+) common.Combinator[rune, Position, V] {
+	return common.Map(errMessage, cases, c)
 }
 
 // MapStrings - Reads text from the input buffer using the combinator and
@@ -68,11 +73,13 @@ func Map[K comparable, V any](
 // If the value is not found then it returns NothingMatched error.
 // This combinator use special trie-like structure for text matching.
 func MapStrings[V any](
+	errMessage string,
 	cases map[string]V,
-) p.Combinator[rune, Position, V] {
+) common.Combinator[rune, Position, V] {
 	tr := stringTrie(cases)
+	var null V
 
-	return func(buffer p.Buffer[rune, Position]) (V, error) {
+	return func(buffer common.Buffer[rune, Position]) (V, common.Error[Position]) {
 		current := tr.children
 		pos := buffer.Position()
 
@@ -100,7 +107,7 @@ func MapStrings[V any](
 		buffer.Seek(pos)
 
 		if result == nil {
-			return *new(V), p.NothingMatched
+			return null, common.NewParseError(pos, errMessage)
 		}
 
 		return *result, nil
@@ -109,16 +116,24 @@ func MapStrings[V any](
 
 // String - read input text and match with string passed by first argument.
 // If the text not matched then it returns NothingMatched error.
-func String(str string) p.Combinator[rune, Position, string] {
-	return func(buffer p.Buffer[rune, Position]) (string, error) {
+func String(str string) common.Combinator[rune, Position, string] {
+	return func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
+		pos := buffer.Position()
+
 		for _, r := range str {
 			c, err := buffer.Read(true)
 			if err != nil {
-				return "", err
+				return "", common.NewParseError(
+					pos,
+					fmt.Sprintf("expected '%s'", str),
+				)
 			}
 
 			if r != c {
-				return "", p.NothingMatched
+				return "", common.NewParseError(
+					pos,
+					fmt.Sprintf("expected '%s'", str),
+				)
 			}
 		}
 

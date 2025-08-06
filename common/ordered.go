@@ -7,8 +7,11 @@ import (
 // Range - succeeds for any item which include in input range.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func Range[T constraints.Ordered, P any](from T, to T) Combinator[T, P, T] {
-	return Satisfy[T, P](true, func(x T) bool {
+func Range[T constraints.Ordered, P any](
+	errMessage string,
+	from, to T,
+) Combinator[T, P, T] {
+	return Satisfy[T, P](errMessage, true, func(x T) bool {
 		return x >= from && x <= to
 	})
 }
@@ -16,8 +19,11 @@ func Range[T constraints.Ordered, P any](from T, to T) Combinator[T, P, T] {
 // NotRange - succeeds for any item which not included in input range.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func NotRange[T constraints.Ordered, P any](from T, to T) Combinator[T, P, T] {
-	return Satisfy[T, P](true, func(x T) bool {
+func NotRange[T constraints.Ordered, P any](
+	errMessage string,
+	from, to T,
+) Combinator[T, P, T] {
+	return Satisfy[T, P](errMessage, true, func(x T) bool {
 		return x < from || x > to
 	})
 }
@@ -25,8 +31,11 @@ func NotRange[T constraints.Ordered, P any](from T, to T) Combinator[T, P, T] {
 // Gt - succeeds for any item which greater than input value.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func Gt[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
-	return Satisfy[T, P](true, func(x T) bool {
+func Gt[T constraints.Ordered, P any](
+	errMessage string,
+	t T,
+) Combinator[T, P, T] {
+	return Satisfy[T, P](errMessage, true, func(x T) bool {
 		return t > x
 	})
 }
@@ -34,8 +43,11 @@ func Gt[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
 // Gte - succeeds for any item which greater than or equal input value.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func Gte[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
-	return Satisfy[T, P](true, func(x T) bool {
+func Gte[T constraints.Ordered, P any](
+	errMessage string,
+	t T,
+) Combinator[T, P, T] {
+	return Satisfy[T, P](errMessage, true, func(x T) bool {
 		return t >= x
 	})
 }
@@ -43,8 +55,11 @@ func Gte[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
 // Lt - succeeds for any item which less than input value.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func Lt[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
-	return Satisfy[T, P](true, func(x T) bool {
+func Lt[T constraints.Ordered, P any](
+	errMessage string,
+	t T,
+) Combinator[T, P, T] {
+	return Satisfy[T, P](errMessage, true, func(x T) bool {
 		return t < x
 	})
 }
@@ -52,8 +67,11 @@ func Lt[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
 // Lte - succeeds for any item which less than or equal input value.
 // Returns the item that is actually readed from input buffer.
 // Greedy by default - keep position after reading.
-func Lte[T constraints.Ordered, P any](t T) Combinator[T, P, T] {
-	return Satisfy[T, P](true, func(x T) bool {
+func Lte[T constraints.Ordered, P any](
+	errMessage string,
+	t T,
+) Combinator[T, P, T] {
+	return Satisfy[T, P](errMessage, true, func(x T) bool {
 		return t <= x
 	})
 }

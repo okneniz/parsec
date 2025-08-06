@@ -25,3 +25,16 @@ func (p Position) Column() uint {
 func (p Position) String() string {
 	return fmt.Sprintf("line=%d column=%d index=%d", p.line, p.column, p.index)
 }
+
+// Deeper - is it deeper position?.
+func (p Position) Deeper(other Position) bool {
+	if other.Line() <= p.Line() {
+		return true
+	}
+
+	if other.Column() <= p.Column() {
+		return true
+	}
+
+	return false
+}

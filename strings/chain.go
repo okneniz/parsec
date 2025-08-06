@@ -1,7 +1,7 @@
 package strings
 
 import (
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 )
 
 // Chainl - read zero or more occurrences of data readed by c combinator,
@@ -10,11 +10,11 @@ import (
 // all functions returned by op combinator to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainl[T any](
-	c p.Combinator[rune, Position, T],
-	op p.Combinator[rune, Position, func(T, T) T],
+	c common.Combinator[rune, Position, T],
+	op common.Combinator[rune, Position, func(T, T) T],
 	def T,
-) p.Combinator[rune, Position, T] {
-	return p.Chainl[rune, Position, T](c, op, def)
+) common.Combinator[rune, Position, T] {
+	return common.Chainl[rune, Position, T](c, op, def)
 }
 
 // Chainl1 - read one or more occurrences of data readed by c combinator,
@@ -23,10 +23,10 @@ func Chainl[T any](
 // all functions returned by op combinator to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainl1[T any](
-	c p.Combinator[rune, Position, T],
-	op p.Combinator[rune, Position, func(T, T) T],
-) p.Combinator[rune, Position, T] {
-	return p.Chainl1[rune, Position, T](c, op)
+	c common.Combinator[rune, Position, T],
+	op common.Combinator[rune, Position, func(T, T) T],
+) common.Combinator[rune, Position, T] {
+	return common.Chainl1[rune, Position, T](c, op)
 }
 
 // Chainr - read zero or more occurrences of data readed by c combinator,
@@ -35,11 +35,11 @@ func Chainl1[T any](
 // of all functions returned by op to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainr[T any](
-	c p.Combinator[rune, Position, T],
-	op p.Combinator[rune, Position, func(T, T) T],
+	c common.Combinator[rune, Position, T],
+	op common.Combinator[rune, Position, func(T, T) T],
 	def T,
-) p.Combinator[rune, Position, T] {
-	return p.Chainr[rune, Position, T](c, op, def)
+) common.Combinator[rune, Position, T] {
+	return common.Chainr[rune, Position, T](c, op, def)
 }
 
 // Chainr - read one or more occurrences of data readed by c combinator,
@@ -48,10 +48,10 @@ func Chainr[T any](
 // of all functions returned by op to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainr1[T any](
-	c p.Combinator[rune, Position, T],
-	op p.Combinator[rune, Position, func(T, T) T],
-) p.Combinator[rune, Position, T] {
-	return p.Chainr1[rune, Position, T](c, op)
+	c common.Combinator[rune, Position, T],
+	op common.Combinator[rune, Position, func(T, T) T],
+) common.Combinator[rune, Position, T] {
+	return common.Chainr1[rune, Position, T](c, op)
 }
 
 // SepBy - read zero or more occurrences of data readed by c combinator,
@@ -59,10 +59,10 @@ func Chainr1[T any](
 // Returns a slice of values returned by p.
 func SepBy[T any, S any](
 	cap int,
-	body p.Combinator[rune, Position, T],
-	sep p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.SepBy[rune, Position, T](cap, body, sep)
+	body common.Combinator[rune, Position, T],
+	sep common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.SepBy[rune, Position, T](cap, body, sep)
 }
 
 // SepBy1 - read one or more occurrences of data readed by c combinator,
@@ -70,10 +70,11 @@ func SepBy[T any, S any](
 // Returns a slice of values returned by p.
 func SepBy1[T any, S any](
 	cap int,
-	body p.Combinator[rune, Position, T],
-	sep p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.SepBy1[rune, Position, T](cap, body, sep)
+	errMessage string,
+	body common.Combinator[rune, Position, T],
+	sep common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.SepBy1[rune, Position, T](cap, errMessage, body, sep)
 }
 
 // EndBy - read zero or more occurrences of data readed by c combinator,
@@ -81,10 +82,10 @@ func SepBy1[T any, S any](
 // Returns a slice of values returned by p.
 func EndBy[T any, S any](
 	cap int,
-	body p.Combinator[rune, Position, T],
-	sep p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.EndBy[rune, Position, T](cap, body, sep)
+	body common.Combinator[rune, Position, T],
+	sep common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.EndBy[rune, Position, T](cap, body, sep)
 }
 
 // EndBy1 - read one or more occurrences of data readed by c combinator,
@@ -92,10 +93,11 @@ func EndBy[T any, S any](
 // Returns a slice of values returned by c combinator.
 func EndBy1[T any, S any](
 	cap int,
-	body p.Combinator[rune, Position, T],
-	sep p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.EndBy1[rune, Position, T](cap, body, sep)
+	errMessage string,
+	body common.Combinator[rune, Position, T],
+	sep common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.EndBy1[rune, Position, T](cap, errMessage, body, sep)
 }
 
 // SepEndBy - read zero or more occurrences of data readed by body combinator,
@@ -103,10 +105,10 @@ func EndBy1[T any, S any](
 // Returns a slice of values returned by body combinator.
 func SepEndBy[T any, S any](
 	cap int,
-	body p.Combinator[rune, Position, T],
-	sep p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.SepEndBy[rune, Position, T](cap, body, sep)
+	body common.Combinator[rune, Position, T],
+	sep common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.SepEndBy[rune, Position, T](cap, body, sep)
 }
 
 // SepEndBy1 - read one or more occurrences of data readed by body combinator,
@@ -114,18 +116,19 @@ func SepEndBy[T any, S any](
 // Returns a slice of values returned by body combinator.
 func SepEndBy1[T any, S any](
 	cap int,
-	body p.Combinator[rune, Position, T],
-	sep p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.SepEndBy1[rune, Position, T](cap, body, sep)
+	errMessage string,
+	body common.Combinator[rune, Position, T],
+	sep common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.SepEndBy1[rune, Position, T](cap, errMessage, body, sep)
 }
 
 // ManyTill - accumulate data readed by c combinator until combinantor end succeeds.
 // Returns a slice of values returned by body combinator.
 func ManyTill[T any, S any](
 	cap int,
-	c p.Combinator[rune, Position, T],
-	end p.Combinator[rune, Position, S],
-) p.Combinator[rune, Position, []T] {
-	return p.ManyTill[rune, Position, T](cap, c, end)
+	c common.Combinator[rune, Position, T],
+	end common.Combinator[rune, Position, S],
+) common.Combinator[rune, Position, []T] {
+	return common.ManyTill[rune, Position, T](cap, c, end)
 }

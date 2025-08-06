@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 	. "github.com/okneniz/parsec/testing"
 )
 
@@ -15,7 +15,7 @@ func TestSatisfy(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Satisfy(true, func(x rune) bool { return x != 'c' })
+		comb := Satisfy("expecte not 'c'", true, func(x rune) bool { return x != 'c' })
 
 		result, err := ParseString("a", comb)
 		Check(t, err)
@@ -31,7 +31,7 @@ func TestSatisfy(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Satisfy(true, func(x rune) bool { return false })
+		comb := Satisfy("nothing", true, func(x rune) bool { return false })
 
 		result, err := ParseString("", comb)
 		AssertError(t, err)
@@ -68,29 +68,29 @@ func TestTry(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := Try(Satisfy(true, func(x rune) bool { return x <= 'b' }))
+		comb := Try(Satisfy("expected char less or equal than 'b'", true, func(x rune) bool { return x <= 'b' }))
 
 		// TODO : recover position assertions
 
 		buf := Buffer([]rune("abcd"))
 		// AssertEq(t, buf.Position(), 0)
 
-		result, err := p.Parse[rune, Position, rune](buf, comb)
+		result, err := common.Parse[rune, Position, rune](buf, comb)
 		Check(t, err)
 		AssertEq(t, result, 'a')
 		// AssertEq(t, buf.Position(), 1)
 
-		result, err = p.Parse[rune, Position, rune](buf, comb)
+		result, err = common.Parse[rune, Position, rune](buf, comb)
 		Check(t, err)
 		AssertEq(t, result, 'b')
 		// AssertEq(t, buf.Position(), 2)
 
-		result, err = p.Parse[rune, Position, rune](buf, comb)
+		result, err = common.Parse[rune, Position, rune](buf, comb)
 		AssertError(t, err)
 		AssertEq(t, result, 0)
 		// AssertEq(t, buf.Position(), 2)
 
-		result, err = p.Parse[rune, Position, rune](buf, comb)
+		result, err = common.Parse[rune, Position, rune](buf, comb)
 		AssertError(t, err)
 		AssertEq(t, result, 0)
 		// AssertEq(t, buf.Position(), 2)
@@ -101,14 +101,14 @@ func TestBetween(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		notBrackets := Satisfy(true, func(x rune) bool {
+		notBrackets := Satisfy("expected not brackets", true, func(x rune) bool {
 			return !(x == ')' || x == '(')
 		})
 
 		comb := Between(
-			Eq('('),
-			Some(0, Try(notBrackets)),
-			Eq(')'),
+			Eq("expected '('", '('),
+			Some(0, "expected any char except ()", Try(notBrackets)),
+			Eq("expected ')'", ')'),
 		)
 
 		result, err := ParseString("(abc)", comb)
@@ -162,8 +162,8 @@ func TestPadded(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Padded(
-			Eq('.'),
-			Range('0', '9'),
+			Eq("expected dot", '.'),
+			Range("expected digit", '0', '9'),
 		)
 
 		result, err := ParseString("1", comb)
@@ -205,7 +205,7 @@ func TestCast(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Cast(
-			Satisfy(true, p.Anything[rune]),
+			Satisfy("expected any char", true, common.Anything[rune]),
 			func(x rune) (int, error) { return int(x), nil },
 		)
 

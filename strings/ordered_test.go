@@ -7,7 +7,7 @@ import (
 )
 
 func TestRange(t *testing.T) {
-	comb := Range('a', 'c')
+	comb := Range("expected char between 'a' and 'c'", 'a', 'c')
 
 	result, err := ParseString("a", comb)
 	Check(t, err)
@@ -31,7 +31,7 @@ func TestRange(t *testing.T) {
 }
 
 func TestNotRange(t *testing.T) {
-	comb := NotRange('a', 'c')
+	comb := NotRange("expected char between 'a' and 'c'", 'a', 'c')
 
 	result, err := ParseString("a", comb)
 	AssertError(t, err)
@@ -55,7 +55,7 @@ func TestNotRange(t *testing.T) {
 }
 
 func TestGt(t *testing.T) {
-	comb := Gt('c')
+	comb := Gt("expected char greater than 'c'", 'c')
 
 	result, err := ParseString("d", comb)
 	Check(t, err)
@@ -79,7 +79,7 @@ func TestGt(t *testing.T) {
 }
 
 func TestGte(t *testing.T) {
-	comb := Gte('c')
+	comb := Gte("expected char greater or equal than 'c'", 'c')
 
 	result, err := ParseString("d", comb)
 	Check(t, err)
@@ -103,7 +103,7 @@ func TestGte(t *testing.T) {
 }
 
 func TestLt(t *testing.T) {
-	comb := Lt('c')
+	comb := Lt("expected char less than 'c'", 'c')
 
 	result, err := ParseString("a", comb)
 	Check(t, err)
@@ -127,7 +127,7 @@ func TestLt(t *testing.T) {
 }
 
 func TestLte(t *testing.T) {
-	comb := Lte('c')
+	comb := Lte("expected char less than or equal than 'c'", 'c')
 
 	result, err := ParseString("a", comb)
 	Check(t, err)

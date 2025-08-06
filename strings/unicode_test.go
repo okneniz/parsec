@@ -37,12 +37,12 @@ var (
 	symbolChars       = []rune("$+<=>^`|~¢£¤¥¦¨©")
 )
 
-func TestIsControl(t *testing.T) {
+func TestControl(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsControl())
+			result, err := ParseString(string(c), Control("expected control"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -50,7 +50,7 @@ func TestIsControl(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsControl())
+			result, err := ParseString(string(c), Control("expected control"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -58,19 +58,19 @@ func TestIsControl(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range graphChars {
-			result, err := ParseString(string(c), IsControl())
+			result, err := ParseString(string(c), Control("expected control"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsDigit(t *testing.T) {
+func TestDigit(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsDigit())
+			result, err := ParseString(string(c), Digit("expected digit"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -78,7 +78,7 @@ func TestIsDigit(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsDigit())
+			result, err := ParseString(string(c), Digit("expected digit"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -86,19 +86,19 @@ func TestIsDigit(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsDigit())
+			result, err := ParseString(string(c), Digit("expected digit"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsGraphic(t *testing.T) {
+func TestGraphic(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range graphChars {
-			result, err := ParseString(string(c), IsGraphic())
+			result, err := ParseString(string(c), Graphic("expected graphic"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -106,7 +106,7 @@ func TestIsGraphic(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsGraphic())
+			result, err := ParseString(string(c), Graphic("expected graphic"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -114,7 +114,7 @@ func TestIsGraphic(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsGraphic())
+			result, err := ParseString(string(c), Graphic("expected graphic"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -122,19 +122,19 @@ func TestIsGraphic(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsGraphic())
+			result, err := ParseString(string(c), Graphic("expected graphic"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsLetter(t *testing.T) {
+func TestLetter(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsLetter())
+			result, err := ParseString(string(c), Letter("expected letter"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -142,7 +142,7 @@ func TestIsLetter(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), IsLetter())
+			result, err := ParseString(string(c), Letter("expected letter"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -150,7 +150,7 @@ func TestIsLetter(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsLetter())
+			result, err := ParseString(string(c), Letter("expected letter"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -158,7 +158,7 @@ func TestIsLetter(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for _, c := range graphChars {
-			result, err := ParseString(string(c), IsLetter())
+			result, err := ParseString(string(c), Letter("expected letter"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -166,19 +166,19 @@ func TestIsLetter(t *testing.T) {
 
 	t.Run("case 5", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsLetter())
+			result, err := ParseString(string(c), Letter("expected letter"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsLower(t *testing.T) {
+func TestLower(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsLower())
+			result, err := ParseString(string(c), Lower("expected lower"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -186,7 +186,7 @@ func TestIsLower(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), IsLower())
+			result, err := ParseString(string(c), Lower("expected lower"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -194,19 +194,19 @@ func TestIsLower(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsLower())
+			result, err := ParseString(string(c), Lower("expected lower"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsMark(t *testing.T) {
+func TestMark(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range markChars {
-			result, err := ParseString(string(c), IsMark())
+			result, err := ParseString(string(c), Mark("expected mark"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -214,7 +214,7 @@ func TestIsMark(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), IsMark())
+			result, err := ParseString(string(c), Mark("expected mark"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -222,7 +222,7 @@ func TestIsMark(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsMark())
+			result, err := ParseString(string(c), Mark("expected mark"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -230,7 +230,7 @@ func TestIsMark(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for _, c := range graphChars {
-			result, err := ParseString(string(c), IsMark())
+			result, err := ParseString(string(c), Mark("expected mark"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -238,19 +238,19 @@ func TestIsMark(t *testing.T) {
 
 	t.Run("case 5", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsMark())
+			result, err := ParseString(string(c), Mark("expected mark"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsNumber(t *testing.T) {
+func TestNumber(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsNumber())
+			result, err := ParseString(string(c), Number("expected number"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -258,7 +258,7 @@ func TestIsNumber(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsNumber())
+			result, err := ParseString(string(c), Number("expected number"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -266,7 +266,7 @@ func TestIsNumber(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), IsNumber())
+			result, err := ParseString(string(c), Number("expected number"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -274,7 +274,7 @@ func TestIsNumber(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for _, c := range graphChars {
-			result, err := ParseString(string(c), IsNumber())
+			result, err := ParseString(string(c), Number("expected number"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -282,19 +282,19 @@ func TestIsNumber(t *testing.T) {
 
 	t.Run("case 5", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsNumber())
+			result, err := ParseString(string(c), Number("expected number"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsPrint(t *testing.T) {
+func TestPrint(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsPrint())
+			result, err := ParseString(string(c), Print("expected print"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -302,7 +302,7 @@ func TestIsPrint(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsPrint())
+			result, err := ParseString(string(c), Print("expected print"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -310,7 +310,7 @@ func TestIsPrint(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range graphChars {
-			result, err := ParseString(string(c), IsPrint())
+			result, err := ParseString(string(c), Print("expected print"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -318,7 +318,7 @@ func TestIsPrint(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for _, c := range controllChars {
-			result, err := ParseString(string(c), IsPrint())
+			result, err := ParseString(string(c), Print("expected print"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -329,19 +329,19 @@ func TestIsPrint(t *testing.T) {
 			if c == ' ' {
 				continue
 			}
-			result, err := ParseString(string(c), IsPrint())
+			result, err := ParseString(string(c), Print("expected print"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsPunct(t *testing.T) {
+func TestPunct(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range puntcChars {
-			result, err := ParseString(string(c), IsPunct())
+			result, err := ParseString(string(c), Punct("expected punctuation"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -349,7 +349,7 @@ func TestIsPunct(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range spaceChars {
-			result, err := ParseString(string(c), IsPunct())
+			result, err := ParseString(string(c), Punct("expected punctuation"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -357,7 +357,7 @@ func TestIsPunct(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsPunct())
+			result, err := ParseString(string(c), Punct("expected punctuation"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -365,19 +365,19 @@ func TestIsPunct(t *testing.T) {
 
 	t.Run("case 4", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsPunct())
+			result, err := ParseString(string(c), Punct("expected punctuation"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsSpace(t *testing.T) {
+func TestSpace(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range spaceChars {
-			result, err := ParseString(string(c), IsSpace())
+			result, err := ParseString(string(c), Space("expected space"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -385,7 +385,7 @@ func TestIsSpace(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsSpace())
+			result, err := ParseString(string(c), Space("expected space"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -393,19 +393,19 @@ func TestIsSpace(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsSpace())
+			result, err := ParseString(string(c), Space("expected space"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsSymbol(t *testing.T) {
+func TestSymbol(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range symbolChars {
-			result, err := ParseString(string(c), IsSymbol())
+			result, err := ParseString(string(c), Symbol("expected symbol"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -413,7 +413,7 @@ func TestIsSymbol(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsSymbol())
+			result, err := ParseString(string(c), Symbol("expected symbol"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -421,19 +421,19 @@ func TestIsSymbol(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsSymbol())
+			result, err := ParseString(string(c), Symbol("expected symbol"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsTitle(t *testing.T) {
+func TestTitle(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range titleChars {
-			result, err := ParseString(string(c), IsTitle())
+			result, err := ParseString(string(c), Title("expected title"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -441,7 +441,7 @@ func TestIsTitle(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsTitle())
+			result, err := ParseString(string(c), Title("expected title"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -449,19 +449,19 @@ func TestIsTitle(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsTitle())
+			result, err := ParseString(string(c), Title("expected title"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
 	})
 }
 
-func TestIsUpper(t *testing.T) {
+func TestUpper(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
 		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), IsUpper())
+			result, err := ParseString(string(c), Upper("expected upper"))
 			Check(t, err)
 			AssertEq(t, result, c)
 		}
@@ -469,7 +469,7 @@ func TestIsUpper(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		for _, c := range lettersChars {
-			result, err := ParseString(string(c), IsUpper())
+			result, err := ParseString(string(c), Upper("expected upper"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -477,7 +477,7 @@ func TestIsUpper(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		for _, c := range digitsChars {
-			result, err := ParseString(string(c), IsUpper())
+			result, err := ParseString(string(c), Upper("expected upper"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}

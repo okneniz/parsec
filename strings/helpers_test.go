@@ -9,7 +9,7 @@ import (
 func TestParens(t *testing.T) {
 	t.Parallel()
 
-	comb := Parens(Some(1, Try(IsDigit())))
+	comb := Parens(Some(1, "expected at least one digit", Try(Digit("digit"))))
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("(123)", comb)
@@ -63,7 +63,7 @@ func TestParens(t *testing.T) {
 func TestBraces(t *testing.T) {
 	t.Parallel()
 
-	comb := Braces(Some(1, Try(IsDigit())))
+	comb := Braces(Some(1, "expected at least one digit", Try(Digit("expected digit"))))
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("{123}", comb)
@@ -117,7 +117,7 @@ func TestBraces(t *testing.T) {
 func TestAngles(t *testing.T) {
 	t.Parallel()
 
-	comb := Angles(Some(1, Try(IsDigit())))
+	comb := Angles(Some(1, "expected at least one digit", Try(Digit("expected digit"))))
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("<123>", comb)
@@ -171,7 +171,7 @@ func TestAngles(t *testing.T) {
 func TestSquares(t *testing.T) {
 	t.Parallel()
 
-	comb := Squares(Some(1, Try(IsDigit())))
+	comb := Squares(Some(1, "expected at least one digit", Try(Digit("expected digit"))))
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("[123]", comb)
@@ -225,7 +225,12 @@ func TestSquares(t *testing.T) {
 func TestSemi(t *testing.T) {
 	t.Parallel()
 
-	comb := SepBy1(3, NotEq(';'), Semi())
+	comb := SepBy1(
+		3,
+		"expected at least one char separated by ';'",
+		NotEq("expected not ';'", ';'),
+		Semi(),
+	)
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("1;2;3", comb)
@@ -249,7 +254,12 @@ func TestSemi(t *testing.T) {
 func TestComma(t *testing.T) {
 	t.Parallel()
 
-	comb := SepBy1(3, NotEq(','), Comma())
+	comb := SepBy1(
+		3,
+		"expected at least one char not equal ','",
+		NotEq("expected char not equal ','", ','),
+		Comma(),
+	)
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("1,2,3", comb)
@@ -273,7 +283,12 @@ func TestComma(t *testing.T) {
 func TestColon(t *testing.T) {
 	t.Parallel()
 
-	comb := SepBy1(3, NotEq(':'), Colon())
+	comb := SepBy1(
+		3,
+		"expected at least one char not equal ':'",
+		NotEq("expected char not equal':'", ':'),
+		Colon(),
+	)
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("1:2:3", comb)
@@ -297,7 +312,12 @@ func TestColon(t *testing.T) {
 func TestDot(t *testing.T) {
 	t.Parallel()
 
-	comb := SepBy1(3, NotEq('.'), Dot())
+	comb := SepBy1(
+		3,
+		"expected at least one char not equal dot",
+		NotEq("expected not dot", '.'),
+		Dot(),
+	)
 
 	t.Run("case 1", func(t *testing.T) {
 		result, err := ParseString("1.2.3", comb)
@@ -372,7 +392,7 @@ func TestUnsignedN(t *testing.T) {
 			"500":    5,
 			"100500": 1,
 		} {
-			result, err := ParseString(s, UnsignedN[uint](1))
+			result, err := ParseString(s, UnsignedN[uint](1, "expected one digit"))
 			Check(t, err)
 			AssertEq(t, result, i)
 		}
@@ -391,7 +411,7 @@ func TestUnsignedN(t *testing.T) {
 			"8": 8,
 			"9": 9,
 		} {
-			result, err := ParseString(s, UnsignedN[uint](2))
+			result, err := ParseString(s, UnsignedN[uint](2, "expected two digits"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}
@@ -404,7 +424,7 @@ func TestUnsignedN(t *testing.T) {
 			"100500": 10,
 			"10asd":  10,
 		} {
-			result, err := ParseString(s, UnsignedN[uint](2))
+			result, err := ParseString(s, UnsignedN[uint](2, "expected two digits"))
 			Check(t, err)
 			AssertEq(t, result, i)
 		}
@@ -417,7 +437,7 @@ func TestUnsignedN(t *testing.T) {
 			"10)(*(0))": 10,
 			"10asd":     10,
 		} {
-			result, err := ParseString(s, UnsignedN[uint](2))
+			result, err := ParseString(s, UnsignedN[uint](2, "expected two digits"))
 			Check(t, err)
 			AssertEq(t, result, i)
 		}
@@ -430,7 +450,7 @@ func TestUnsignedN(t *testing.T) {
 			"(10)(*(0))",
 			"_10asd",
 		} {
-			result, err := ParseString(s, UnsignedN[uint](2))
+			result, err := ParseString(s, UnsignedN[uint](2, "expected two digits"))
 			AssertError(t, err)
 			AssertEq(t, result, 0)
 		}

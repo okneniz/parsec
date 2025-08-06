@@ -4,25 +4,27 @@ import (
 	"fmt"
 	"time"
 
-	p "github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/strings"
+	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/strings"
 )
 
 // RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"
-func rfc1123() p.Combinator[rune, Position, *time.Time] {
+func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 	dayOfWeek := dayOfWeekPrefix()
-	comma := Comma()
-	space := IsSpace()
+	comma := strings.Comma()
+	space := strings.Space("expected space")
 	day := paddedDayNum()
 	month := monthPrefix()
 	year := yearWithCentury()
 	hour := paddedHourNum()
-	separator := Colon()
+	separator := strings.Colon()
 	minute := paddedMinuteNum()
 	second := paddedSecondNum()
-	zone, _ := TimeZoneByNames("UTC", "EST", "GMT")
+	zone, _ := strings.TimeZoneByNames("UTC", "EST", "GMT")
 
-	return func(buffer p.Buffer[rune, Position]) (*time.Time, error) {
+	return func(
+		buffer common.Buffer[rune, strings.Position],
+	) (*time.Time, common.Error[strings.Position]) {
 		dw, err := dayOfWeek(buffer)
 		if err != nil {
 			return nil, err
@@ -30,12 +32,12 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = comma(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected comma")
+			return nil, err
 		}
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		d, err := day(buffer)
@@ -45,7 +47,7 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		m, err := month(buffer)
@@ -55,7 +57,7 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		y, err := year(buffer)
@@ -65,7 +67,7 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		h, err := hour(buffer)
@@ -75,7 +77,7 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = separator(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected separator ':'")
+			return nil, err
 		}
 
 		min, err := minute(buffer)
@@ -85,7 +87,7 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = separator(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected separator ':'")
+			return nil, err
 		}
 
 		sec, err := second(buffer)
@@ -95,7 +97,7 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		_, err = space(buffer)
 		if err != nil {
-			return nil, fmt.Errorf("expected space")
+			return nil, err
 		}
 
 		loc, err := zone(buffer)
@@ -105,10 +107,9 @@ func rfc1123() p.Combinator[rune, Position, *time.Time] {
 
 		result := time.Date(y, m, d, h, min, sec, 0, loc)
 		if result.Weekday() != dw {
-			return nil, fmt.Errorf(
-				"unexpected day of week: expected %s, actual %v",
-				dw,
-				result.Weekday(),
+			return nil, common.NewParseError(
+				buffer.Position(),
+				fmt.Sprintf("unexpected day of week: expected %s, actual %v", dw, result.Weekday()),
 			)
 		}
 

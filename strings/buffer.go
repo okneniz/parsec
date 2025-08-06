@@ -17,7 +17,7 @@ type buffer struct {
 // Read - read next item, if greedy buffer keep position after reading.
 func (b *buffer) Read(greedy bool) (rune, error) {
 	if b.IsEOF() {
-		return 0, common.EndOfFile
+		return 0, common.ErrEndOfFile
 	}
 
 	x := b.data[b.position.index]

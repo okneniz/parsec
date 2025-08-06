@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 	. "github.com/okneniz/parsec/testing"
 )
 
@@ -17,7 +17,7 @@ func TestSatisfy(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		c := byte('c')
 
-		comb := Satisfy(true, func(x byte) bool { return x != c })
+		comb := Satisfy("test", true, func(x byte) bool { return x != c })
 
 		result, err := Parse([]byte("a"), comb)
 		Check(t, err)
@@ -33,7 +33,7 @@ func TestSatisfy(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb := Satisfy(true, func(x byte) bool { return false })
+		comb := Satisfy("test", true, func(x byte) bool { return false })
 
 		result, err := Parse([]byte{}, comb)
 		AssertError(t, err)
@@ -71,28 +71,28 @@ func TestTry(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Try(
-			Satisfy(true, func(x byte) bool { return x <= byte('b') }),
+			Satisfy("test", true, func(x byte) bool { return x <= byte('b') }),
 		)
 
 		buf := Buffer([]byte("abcd"))
 		AssertEq(t, buf.Position(), 0)
 
-		result, err := p.Parse[byte, int, byte](buf, comb)
+		result, err := common.Parse[byte, int, byte](buf, comb)
 		Check(t, err)
 		AssertEq(t, result, byte('a'))
 		AssertEq(t, buf.Position(), 1)
 
-		result, err = p.Parse[byte, int, byte](buf, comb)
+		result, err = common.Parse[byte, int, byte](buf, comb)
 		Check(t, err)
 		AssertEq(t, result, byte('b'))
 		AssertEq(t, buf.Position(), 2)
 
-		result, err = p.Parse[byte, int, byte](buf, comb)
+		result, err = common.Parse[byte, int, byte](buf, comb)
 		AssertError(t, err)
 		AssertEq(t, result, 0)
 		AssertEq(t, buf.Position(), 2)
 
-		result, err = p.Parse[byte, int, byte](buf, comb)
+		result, err = common.Parse[byte, int, byte](buf, comb)
 		AssertError(t, err)
 		AssertEq(t, result, 0)
 		AssertEq(t, buf.Position(), 2)
@@ -103,14 +103,14 @@ func TestBetween(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		notBrackets := Satisfy(true, func(x byte) bool {
+		notBrackets := Satisfy("test", true, func(x byte) bool {
 			return !(x == byte(')') || x == byte('('))
 		})
 
 		comb := Between(
-			Eq('('),
-			Some(0, Try(notBrackets)),
-			Eq(')'),
+			Eq("expected '('", '('),
+			Some(0, "expected not ( or ) symbols", Try(notBrackets)),
+			Eq("expected ')'", ')'),
 		)
 
 		result, err := Parse([]byte("(abc)"), comb)
@@ -164,8 +164,8 @@ func TestSkip(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Skip(
-			Optional(Eq('a'), 0),
-			Eq('b'),
+			Optional(Eq("expected 'a'", 'a'), 0),
+			Eq("expected 'b'", 'b'),
 		)
 
 		result, err := Parse([]byte("abc"), comb)
@@ -178,8 +178,11 @@ func TestSkip(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		phrase := SequenceOf('a', 'b', 'c')
-		comb := p.SkipMany(NoneOf('a', 'b', 'c'), phrase)
+		phrase := SequenceOf("expected abc", 'a', 'b', 'c')
+		comb := common.SkipMany(
+			NoneOf("expected not abc", 'a', 'b', 'c'),
+			phrase,
+		)
 
 		result, err := Parse([]byte("abc"), comb)
 		Check(t, err)
@@ -199,7 +202,11 @@ func TestSkip(t *testing.T) {
 	})
 
 	t.Run("case 3", func(t *testing.T) {
-		comb := Skip(NotEq('a'), Eq('a'))
+		comb := Skip(
+			NotEq("expected not 'a'", 'a'),
+			Eq("expected 'a'", 'a'),
+		)
+
 		result, err := Parse([]byte("abc"), comb)
 		AssertError(t, err)
 		AssertEq(t, result, 0)
@@ -210,7 +217,10 @@ func TestSkipAfter(t *testing.T) {
 	t.Parallel()
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := SkipAfter(Eq('b'), Eq('a'))
+		comb := SkipAfter(
+			Eq("expected 'b'", 'b'),
+			Eq("expected 'a'", 'a'),
+		)
 
 		result, err := Parse([]byte("abc"), comb)
 		Check(t, err)
@@ -227,8 +237,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 2", func(t *testing.T) {
 		comb := SkipAfter(
-			Eq('b'),
-			Satisfy(true, p.Nothing[byte]),
+			Eq("expected 'b'", 'b'),
+			Satisfy("test", true, common.Nothing[byte]),
 		)
 
 		result, err := Parse([]byte("abc"), comb)
@@ -238,8 +248,8 @@ func TestSkipAfter(t *testing.T) {
 
 	t.Run("case 3", func(t *testing.T) {
 		comb := SkipAfter(
-			Satisfy(true, p.Nothing[byte]),
-			Eq('a'),
+			Satisfy("test", true, common.Nothing[byte]),
+			Eq("expected 'a'", 'a'),
 		)
 
 		result, err := Parse([]byte("abc"), comb)
@@ -253,8 +263,8 @@ func TestPadded(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Padded(
-			Eq('.'),
-			Range('0', '9'),
+			Eq("expected dot", '.'),
+			Range("expected digit between 0 and 9", '0', '9'),
 		)
 
 		result, err := Parse([]byte("1"), comb)
@@ -296,7 +306,7 @@ func TestCast(t *testing.T) {
 
 	t.Run("case 1", func(t *testing.T) {
 		comb := Cast(
-			Satisfy(true, p.Anything[byte]),
+			Satisfy("test", true, common.Anything[byte]),
 			func(x byte) (int, error) { return int(x), nil },
 		)
 

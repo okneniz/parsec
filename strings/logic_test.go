@@ -7,7 +7,10 @@ import (
 )
 
 func TestOr(t *testing.T) {
-	comb := Or(Try(Eq('a')), Eq('b'))
+	comb := Or(
+		Try(Eq("expected 'a'", 'a')),
+		Eq("expected 'b'", 'b'),
+	)
 
 	result, err := ParseString("a", comb)
 	Check(t, err)
@@ -23,9 +26,11 @@ func TestOr(t *testing.T) {
 }
 
 func TestAnd(t *testing.T) {
-	comb := And(Eq('a'), Eq('b'), func(x, y rune) []rune {
-		return []rune{x, y}
-	})
+	comb := And(
+		Eq("expected 'a'", 'a'),
+		Eq("expected 'b'", 'b'),
+		func(x, y rune) []rune { return []rune{x, y} },
+	)
 
 	result, err := ParseString("abc", comb)
 	Check(t, err)

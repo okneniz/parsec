@@ -3,11 +3,11 @@ package timestamp
 import (
 	"time"
 
-	p "github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec/common"
 	. "github.com/okneniz/parsec/strings"
 )
 
-func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
+func dayOfWeekPrefix() common.Combinator[rune, Position, time.Weekday] {
 	dwDict := map[string]time.Weekday{
 		"Mon": time.Monday,
 		"Tue": time.Tuesday,
@@ -18,10 +18,10 @@ func dayOfWeekPrefix() p.Combinator[rune, Position, time.Weekday] {
 		"Sun": time.Sunday,
 	}
 
-	return MapStrings(dwDict)
+	return MapStrings("expected day of week", dwDict)
 }
 
-func monthPrefix() p.Combinator[rune, Position, time.Month] {
+func monthPrefix() common.Combinator[rune, Position, time.Month] {
 	monthDict := map[string]time.Month{
 		"Jan": time.January,
 		"Feb": time.February,
@@ -37,25 +37,25 @@ func monthPrefix() p.Combinator[rune, Position, time.Month] {
 		"Dec": time.December,
 	}
 
-	return MapStrings(monthDict)
+	return MapStrings("expected name of month", monthDict)
 }
 
-func yearWithCentury() p.Combinator[rune, Position, int] {
-	return UnsignedN[int](4)
+func yearWithCentury() common.Combinator[rune, Position, int] {
+	return UnsignedN[int](4, "expected year with century")
 }
 
-func paddedDayNum() p.Combinator[rune, Position, int] {
-	return UnsignedN[int](2)
+func paddedDayNum() common.Combinator[rune, Position, int] {
+	return UnsignedN[int](2, "expected day number")
 }
 
-func paddedHourNum() p.Combinator[rune, Position, int] {
-	return UnsignedN[int](2)
+func paddedHourNum() common.Combinator[rune, Position, int] {
+	return UnsignedN[int](2, "expected hour number")
 }
 
-func paddedMinuteNum() p.Combinator[rune, Position, int] {
-	return UnsignedN[int](2)
+func paddedMinuteNum() common.Combinator[rune, Position, int] {
+	return UnsignedN[int](2, "expected minute number")
 }
 
-func paddedSecondNum() p.Combinator[rune, Position, int] {
-	return UnsignedN[int](2)
+func paddedSecondNum() common.Combinator[rune, Position, int] {
+	return UnsignedN[int](2, "expected second number")
 }
