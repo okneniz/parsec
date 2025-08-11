@@ -17,7 +17,6 @@ func ansic() common.Combinator[rune, strings.Position, *time.Time] {
 	minute := paddedMinuteNum()
 	second := paddedSecondNum()
 	year := yearWithCentury()
-	space := strings.Space("space")
 
 	return func(
 		buffer common.Buffer[rune, strings.Position],
@@ -27,27 +26,12 @@ func ansic() common.Combinator[rune, strings.Position, *time.Time] {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		m, err := monthPrefix()(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		d, err := day(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -73,11 +57,6 @@ func ansic() common.Combinator[rune, strings.Position, *time.Time] {
 		}
 
 		sec, err := second(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}

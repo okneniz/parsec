@@ -1,127 +1,57 @@
 package timestamp
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"testing"
 	"time"
 
+	"github.com/okneniz/oh-snap"
+
 	"github.com/okneniz/parsec/strings"
-	. "github.com/okneniz/parsec/testing"
 )
 
-func TestTimestamps(t *testing.T) {
+func TestTimstapsParsing(t *testing.T) {
+	const iterations = 100000
+
 	seed := time.Now().UnixNano()
-	t.Log("seed: ", seed)
+	t.Logf("seed: %v", seed)
 
-	source := rand.New(rand.NewSource(seed))
-	r := rand.New(source)
+	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
 
-	dates := randomDates(r, 1000)
-	formattedDates := randomFormattedDates(r, dates)
-	input := JoinBy(func() string { return "\n" }, formattedDates...)
+	arbTime := ohsnap.ArbitraryTime(
+		rnd,
+		time.Date(1990, 5, 30, 0, 0, 0, 0, time.UTC),
+		time.Date(2025, 5, 30, 0, 0, 0, 0, time.UTC),
+	)
 
-	t.Log("input:")
-	t.Logf("%#v", input)
+	arbLayout := ohsnap.OneOfValue(
+		rnd,
+		time.ANSIC,
+		time.UnixDate,
+		time.RFC1123,
+	)
 
-	oneOfDate := strings.Choice(
+	arb := ohsnap.Combine(arbTime, arbLayout)
+
+	parser := strings.Choice(
 		strings.Try(ansic()),
 		strings.Try(unixDate()),
 		strings.Try(rfc1123()),
 	)
 
-	comb := strings.SepBy(
-		len(dates),
-		oneOfDate,
-		strings.Eq("expected end of line", '\n'),
-	)
+	ohsnap.Check(t, iterations, arb, func(p ohsnap.Pair[time.Time, string]) bool {
+		str := p.First.UTC().Format(p.Second)
 
-	result, err := strings.ParseString(input, comb)
-	Check(t, err)
-	AssertEqDump(t, result, dates)
-}
+		result, err := strings.ParseString(str, parser)
+		if err != nil {
+			t.Logf("time: %v", p.First)
+			t.Logf("layout: %v", p.Second)
+			t.Logf("string: %v", str)
+			t.Logf("result: %v", result)
+			t.Error(err)
+			return false
+		}
 
-func BenchmarkNativeUnixDate(b *testing.B) {
-	seed := time.Now().UnixNano()
-	source := rand.New(rand.NewSource(seed))
-	r := rand.New(source)
-
-	b.Log("seed: ", seed)
-	layout := "Mon Jan _2 15:04:05 MST 2006"
-
-	dates := make([]string, b.N)
-	for i, d := range randomDates(r, b.N) {
-		dates[i] = d.Format(layout)
-	}
-
-	b.ResetTimer()
-	for _, input := range dates {
-		time.Parse(layout, input)
-	}
-}
-
-func BenchmarkParsecUnixDate(b *testing.B) {
-	seed := time.Now().UnixNano()
-	source := rand.New(rand.NewSource(seed))
-	r := rand.New(source)
-
-	b.Log("seed: ", seed)
-	layout := "Mon Jan _2 15:04:05 MST 2006"
-
-	dates := make([]string, b.N)
-	for i, d := range randomDates(r, b.N) {
-		dates[i] = d.Format(layout)
-	}
-
-	comb := unixDate()
-
-	b.ResetTimer()
-	for _, input := range dates {
-		strings.ParseString(input, comb)
-	}
-}
-
-func randomFormattedDates(r *rand.Rand, dt []*time.Time) []string {
-	result := make([]string, len(dt))
-	for i, d := range dt {
-		l := randomLayout(r)
-		result[i] = d.Format(l)
-	}
-	return result
-}
-
-func randomDates(r *rand.Rand, count int) []*time.Time {
-	result := make([]*time.Time, count)
-	for i := 0; i < count; i++ {
-		result[i] = randomDate(r)
-	}
-	return result
-}
-
-func randomDate(r *rand.Rand) *time.Time {
-	year := randomInt(r, 1000, 2025)
-	month := time.Month(randomInt(r, 1, 12))
-	day := randomInt(r, 10, 28)
-	hour := randomInt(r, 0, 23)
-	min := randomInt(r, 0, 59)
-	sec := randomInt(r, 0, 59)
-	loc := time.UTC
-	d := time.Date(year, month, day, hour, min, sec, 0, loc)
-	return &d
-}
-
-var (
-	allowLayouts = []string{
-		time.ANSIC,
-		time.UnixDate,
-		time.RFC1123,
-	}
-)
-
-func randomInt(r *rand.Rand, from, to int) int {
-	return from + r.Intn(to-from+1)
-}
-
-func randomLayout(r *rand.Rand) string {
-	x := randomInt(r, 0, len(allowLayouts)-1)
-	return allowLayouts[x]
+		return p.First.Truncate(time.Second).Equal(*result)
+	})
 }

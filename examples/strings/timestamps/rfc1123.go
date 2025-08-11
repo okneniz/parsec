@@ -12,7 +12,6 @@ import (
 func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 	dayOfWeek := dayOfWeekPrefix()
 	comma := strings.Comma()
-	space := strings.Space("expected space")
 	day := paddedDayNum()
 	month := monthPrefix()
 	year := yearWithCentury()
@@ -35,17 +34,7 @@ func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		d, err := day(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -55,17 +44,7 @@ func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		y, err := year(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -91,11 +70,6 @@ func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 		}
 
 		sec, err := second(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}

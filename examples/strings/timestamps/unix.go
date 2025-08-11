@@ -11,7 +11,6 @@ import (
 // UnixDate = "Mon Jan _2 15:04:05 MST 2006"
 func unixDate() common.Combinator[rune, strings.Position, *time.Time] {
 	dayOfWeek := dayOfWeekPrefix()
-	space := strings.Space("space")
 	month := monthPrefix()
 	day := paddedDayNum()
 	hour := paddedHourNum()
@@ -29,27 +28,12 @@ func unixDate() common.Combinator[rune, strings.Position, *time.Time] {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		m, err := month(buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		d, err := day(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -79,17 +63,7 @@ func unixDate() common.Combinator[rune, strings.Position, *time.Time] {
 			return nil, err
 		}
 
-		_, err = space(buffer)
-		if err != nil {
-			return nil, err
-		}
-
 		loc, err := zone(buffer)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = space(buffer)
 		if err != nil {
 			return nil, err
 		}
