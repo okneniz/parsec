@@ -23,7 +23,7 @@ func Sequence[T any](
 }
 
 // Choice - searches for a combinator that works successfully on the input data.
-// if one is not found, it returns an NothingMatched error.
+// if one is not found, it returns an ParseError error.
 func Choice[T any](
 	cs ...common.Combinator[byte, int, T],
 ) common.Combinator[byte, int, T] {

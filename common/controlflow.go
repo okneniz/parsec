@@ -45,7 +45,7 @@ func Sequence[T any, P any, S any](
 }
 
 // Choice - searches for a combinator that works successfully on the input data.
-// if one is not found, it returns an NothingMatched error.
+// if one is not found, it returns an ParseError error.
 func Choice[T any, P any, S any](
 	errMesssage string,
 	cs ...Combinator[T, P, S],

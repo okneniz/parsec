@@ -48,7 +48,7 @@ func NoneOf(
 
 // SequenceOf - expects a sequence of elements in the buffer
 // equal to the input data sequence. If expectations are not met,
-// returns NothingMatched error.
+// returns ParseError error.
 func SequenceOf(
 	errMessage string,
 	data ...rune,
@@ -59,7 +59,7 @@ func SequenceOf(
 // Map - Reads one element from the input buffer using the combinator,
 // then uses the resulting element to obtain a value from the map cases and try to
 // match it in cases map passed by first argument.
-// If the value is not found then it returns NothingMatched error.
+// If the value is not found then it returns ParseError error.
 func Map[K comparable, V any](
 	errMessage string,
 	cases map[K]V,
@@ -70,7 +70,7 @@ func Map[K comparable, V any](
 
 // MapStrings - Reads text from the input buffer using the combinator and
 // match it in on the fly by cases map passed by first argument.
-// If the value is not found then it returns NothingMatched error.
+// If the value is not found then it returns ParseError error.
 // This combinator use special trie-like structure for text matching.
 func MapStrings[V any](
 	errMessage string,
@@ -115,7 +115,7 @@ func MapStrings[V any](
 }
 
 // String - read input text and match with string passed by first argument.
-// If the text not matched then it returns NothingMatched error.
+// If the text not matched then it returns ParseError error.
 func String(str string) common.Combinator[rune, Position, string] {
 	return func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
 		pos := buffer.Position()

@@ -46,7 +46,7 @@ func NoneOf(
 
 // SequenceOf - expects a sequence of bytes in the buffer
 // equal to the input data sequence. If expectations are not met,
-// returns NothingMatched error.
+// returns ParseError.
 func SequenceOf(
 	errMessage string,
 	data ...byte,
@@ -56,7 +56,7 @@ func SequenceOf(
 
 // Map - Reads one element from the bytes buffer using the combinator,
 // then uses the resulting element to obtain a value from the map cases and returns it.
-// If the value is not found then it returns NothingMatched error.
+// If the value is not found then it returns ParseError error.
 func Map[K comparable, V any](
 	errMessage string,
 	cases map[K]V,

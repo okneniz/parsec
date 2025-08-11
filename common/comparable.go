@@ -62,7 +62,7 @@ func NoneOf[T comparable, P any](
 
 // SequenceOf - expects a sequence of elements in the buffer
 // equal to the input data sequence. If expectations are not met,
-// returns NothingMatched error.
+// returns ParseError error.
 func SequenceOf[T comparable, P any](
 	errMessage string,
 	data ...T,
@@ -92,7 +92,7 @@ func SequenceOf[T comparable, P any](
 // Map - Reads one element from the input buffer using the combinator,
 // then uses the resulting element to obtain a value from the map cases and try to
 // match it in cases map passed by first argument.
-// If the value is not found then it returns NothingMatched error.
+// If the value is not found then it returns ParseError error.
 func Map[T any, P any, K comparable, V any](
 	errMessage string,
 	cases map[K]V,
@@ -120,7 +120,7 @@ func Map[T any, P any, K comparable, V any](
 // MapAs - Read one element from the input buffer using the combinator,
 // then match the resulting item to obtain a value from map cases and try to match it
 // in cases map passed by first argument.
-// If the value it not found then it returns NothingMatched error.
+// If the value it not found then it returns ParseError error.
 // Otherwise try to parse input data by combinator from cases.
 func MapAs[T any, P any, K comparable, V any](
 	errMessage string,
