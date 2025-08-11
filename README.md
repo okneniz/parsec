@@ -1,30 +1,8 @@
-<p align="center">
-  <h3 align="center">Parsec</h3>
-
-  <p align="center">
-    Golang parser combinator library inspired by <a href="https://hackage.haskell.org/package/parsec">haskell parsec</a>.
-    <br/>
-    <a href="https://pkg.go.dev/github.com/okneniz/parsec"><strong>Explore the docs »</strong></a>
-    <br/>
-    <a href="https://github.com/okneniz/parsec/issues">Report Bug</a>.
-    <a href="https://github.com/okneniz/parsec/issues">Request Feature</a>
-  </p>
-</p>
+# Parsec
 
 ![Downloads](https://img.shields.io/github/downloads/okneniz/parsec/total) ![Contributors](https://img.shields.io/github/contributors/okneniz/parsec?color=dark-green) ![Forks](https://img.shields.io/github/forks/okneniz/parsec?style=social) ![Stargazers](https://img.shields.io/github/stars/okneniz/parsec?style=social) ![Issues](https://img.shields.io/github/issues/okneniz/parsec) ![License](https://img.shields.io/github/license/okneniz/parsec) 
 
-## Table Of Contents
-
-* [About the Project](#about-the-project)
-* [Getting Started](#getting-started)
-  * [Installation](#installation)
-* [Usage](#usage)
-* [Roadmap](#roadmap)
-* [Contributing](#contributing)
-
-## About The Project
-
-Golang parser combinator library (inspired by haskell parsec).
+Golang parser combinator library inspired by [haskell parsec](https://hackage.haskell.org/package/parsec).
 
 > But what is parser combinator?
 
@@ -40,8 +18,11 @@ Golang parser combinator library (inspired by haskell parsec).
 go get github.com/okneniz/parsec
 ```
 
-## Examples
+## Documentation
 
+[GoDoc documentation](https://pkg.go.dev/github.com/okneniz/parsec)
+
+### Examples
 
 - text
   - [json](https://github.com/okneniz/parsec/tree/master/examples/strings/json)
