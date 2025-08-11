@@ -9,10 +9,7 @@ Golang parser combinator library inspired by [haskell parsec](https://hackage.ha
 > In the parse combinatorial framework, a "parser" is a function that takes some semistructured input and produces some structured output, and "combinator" is a function that allows combining / composing things. So "parser combinators" is a way of expressing a system where you write a lot of small parsing functions and compose then together.
 
 
-## Getting Started
-
-
-### Installation
+## Installation
 
 ```bash
 go get github.com/okneniz/parsec
