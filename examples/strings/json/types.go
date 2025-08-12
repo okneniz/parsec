@@ -78,7 +78,7 @@ func (j JSArray) ToString() (string, error) {
 
 		b.WriteString(vs)
 
-		if index < len(j.values) {
+		if index < len(j.values)-1 {
 			b.WriteString(",")
 		}
 	}

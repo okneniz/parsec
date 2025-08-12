@@ -171,12 +171,19 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 		rightSquare,
 	)
 
-	bool := common.Trace(t, "bool", Bool())
-	null := common.Trace(t, "null", Null())
-	num := common.Trace(t, "number", Number_())
-	str := common.Trace(t, "string", String_())
-	obj := common.Trace(t, "object", object)
-	arr := common.Trace(t, "array", array)
+	// bool := common.Trace(t, "bool", Bool())
+	// null := common.Trace(t, "null", Null())
+	// num := common.Trace(t, "number", Number_())
+	// str := common.Trace(t, "string", String_())
+	// obj := common.Trace(t, "object", object)
+	// arr := common.Trace(t, "array", array)
+
+	bool := Bool()
+	null := Null()
+	num := Number_()
+	str := String_()
+	obj := object
+	arr := array
 
 	value = strings.Padded(
 		whitespace,
