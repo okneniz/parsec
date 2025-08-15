@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	ErrEndOfFile = errors.New("end of file")
+	ErrEndOfFile   = errors.New("end of file")
+	ErrOutOfBounds = errors.New("out of bounds")
 )
 
 type Error[T any] interface {

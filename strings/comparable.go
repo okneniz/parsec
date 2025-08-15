@@ -104,7 +104,9 @@ func MapStrings[V any](
 			current = next.children
 		}
 
-		buffer.Seek(pos)
+		if seekErr := buffer.Seek(pos); seekErr != nil {
+			return null, common.NewParseError(buffer.Position(), seekErr.Error())
+		}
 
 		if result == nil {
 			return null, common.NewParseError(pos, errMessage)

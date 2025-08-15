@@ -99,7 +99,9 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 			return nil, err
 		}
 
-		buffer.Seek(pos)
+		if seekErr := buffer.Seek(pos); seekErr != nil {
+			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
+		}
 
 		entries := make([]*RGB, 0, uint32(size/3))
 
@@ -126,9 +128,16 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 			})
 		}
 
-		// TODO : check end pos to avoid BOMBs (endless parsing and resource consumming)
+		if size < 0 {
+			return nil, common.NewParseError(
+				buffer.Position(),
+				"YOU FOUND A BOMB! Who try to make parsing endless!",
+			)
+		}
 
-		buffer.Seek(pos + int(size))
+		if seekErr := buffer.Seek(pos + int(size)); seekErr != nil {
+			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
+		}
 
 		crc, err := parseCRC(buffer)
 		if err != nil {

@@ -1,193 +1,384 @@
 package strings
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/okneniz/parsec/common"
 	. "github.com/okneniz/parsec/testing"
 )
 
 func TestBuffer(t *testing.T) {
-	t.Run("case 1", func(t *testing.T) {
-		b := Buffer([]rune("foo\nbar\nbaz"))
+	t.Parallel()
 
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), false)
+	type (
+		read struct {
+			greedy bool
+			output rune
+			err    error
+		}
 
-		x, err := b.Read(false)
-		Check(t, err)
+		seek struct {
+			pos Position
+			err error
+		}
 
-		AssertEq(t, x, 'f')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), false)
+		call struct {
+			read *read
+			seek *seek
 
-		x, err = b.Read(false)
-		Check(t, err)
+			afterPosition Position
+			afterIsEOF    bool
+		}
 
-		AssertEq(t, x, 'f')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), false)
+		test struct {
+			input string
 
-		x, err = b.Read(true)
-		Check(t, err)
+			beforePosition Position
+			beforeIsEOF    bool
 
-		AssertEq(t, x, 'f')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 1)
-		AssertEq(t, b.IsEOF(), false)
+			calls []call
+		}
+	)
 
-		x, err = b.Read(true)
-		Check(t, err)
+	tests := []test{
+		{
+			input: "",
+			beforePosition: Position{
+				line:   0,
+				column: 0,
+				index:  0,
+			},
+			beforeIsEOF: true,
+			calls: []call{
+				{
+					read: &read{
+						greedy: false,
+						output: 0,
+						err:    common.ErrEndOfFile,
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: true,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 0,
+						err:    common.ErrEndOfFile,
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: true,
+				},
+				{
+					seek: &seek{
+						pos: Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: true,
+				},
+				{
+					seek: &seek{
+						pos: Position{
+							line:   0,
+							column: 1,
+							index:  1,
+						},
+						err: common.ErrOutOfBounds,
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: true,
+				},
+				{
+					seek: &seek{
+						pos: Position{
+							line:   0,
+							column: 0,
+							index:  -1,
+						},
+						err: common.ErrOutOfBounds,
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: true,
+				},
+				{
+					seek: &seek{
+						pos: Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: true,
+				},
+			},
+		},
+		{
+			input: "foo\nbar\nbaz",
+			beforePosition: Position{
+				line:   0,
+				column: 0,
+				index:  0,
+			},
+			beforeIsEOF: false,
+			calls: []call{
+				{
+					read: &read{
+						greedy: false,
+						output: 'f',
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 0,
+						index:  0,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'f',
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 1,
+						index:  1,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 2,
+						index:  2,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+					},
+					afterPosition: Position{
+						line:   0,
+						column: 3,
+						index:  3,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: '\n',
+					},
+					afterPosition: Position{
+						line:   1,
+						column: 0,
+						index:  4,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'b',
+					},
+					afterPosition: Position{
+						line:   1,
+						column: 1,
+						index:  5,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'a',
+					},
+					afterPosition: Position{
+						line:   1,
+						column: 2,
+						index:  6,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'r',
+					},
+					afterPosition: Position{
+						line:   1,
+						column: 3,
+						index:  7,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: '\n',
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 0,
+						index:  8,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'b',
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 1,
+						index:  9,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'a',
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 2,
+						index:  10,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'z',
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 3,
+						index:  11,
+					},
+					afterIsEOF: true,
+				},
+				{
+					seek: &seek{
+						pos: Position{
+							line:   2,
+							column: 1,
+							index:  9,
+						},
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 1,
+						index:  9,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'a',
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 2,
+						index:  10,
+					},
+					afterIsEOF: false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'z',
+					},
+					afterPosition: Position{
+						line:   2,
+						column: 3,
+						index:  11,
+					},
+					afterIsEOF: true,
+				},
+			},
+		},
+	}
 
-		AssertEq(t, x, 'o')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 2)
-		AssertEq(t, b.IsEOF(), false)
+	for i, example := range tests {
+		test := example
+		name := fmt.Sprintf("case %d", i)
 
-		x, err = b.Read(true)
-		Check(t, err)
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-		AssertEq(t, x, 'o')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 3)
-		AssertEq(t, b.IsEOF(), false)
+			b := Buffer([]rune(test.input))
 
-		x, err = b.Read(true)
-		Check(t, err)
+			AssertEq(t, b.Position(), example.beforePosition)
+			AssertEq(t, b.IsEOF(), example.beforeIsEOF)
 
-		AssertEq(t, x, '\n')
-		AssertEq(t, b.Position().Line(), 1)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), false)
+			for i, call := range test.calls {
+				t.Logf("call %d", i)
 
-		x, err = b.Read(true)
-		Check(t, err)
+				if call.read != nil {
+					result, err := b.Read(call.read.greedy)
 
-		AssertEq(t, x, 'b')
-		AssertEq(t, b.Position().Line(), 1)
-		AssertEq(t, b.Position().Column(), 1)
-		AssertEq(t, b.IsEOF(), false)
+					if call.read.err == nil {
+						Check(t, err)
+					} else {
+						AssertError(t, err)
+						AssertEq(t, err.Error(), call.read.err.Error())
+					}
 
-		x, err = b.Read(true)
-		Check(t, err)
+					AssertEq(t, result, call.read.output)
+				} else if call.seek != nil {
+					err := b.Seek(call.seek.pos)
 
-		AssertEq(t, x, 'a')
-		AssertEq(t, b.Position().Line(), 1)
-		AssertEq(t, b.Position().Column(), 2)
-		AssertEq(t, b.IsEOF(), false)
+					if call.seek.err == nil {
+						Check(t, err)
+					} else {
+						AssertError(t, err)
+						AssertEq(t, err.Error(), call.seek.err.Error())
+					}
+				} else {
+					t.Fatal("invalid test")
+				}
 
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'r')
-		AssertEq(t, b.Position().Line(), 1)
-		AssertEq(t, b.Position().Column(), 3)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, '\n')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), false)
-
-		pos := b.Position()
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'b')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 1)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'a')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 2)
-		AssertEq(t, b.IsEOF(), false)
-
-		b.Seek(pos)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'b')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 1)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'a')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 2)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'z')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 3)
-		AssertEq(t, b.IsEOF(), true)
-
-		x, err = b.Read(true)
-		AssertError(t, err)
-
-		AssertEq(t, x, 0)
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 3)
-		AssertEq(t, b.IsEOF(), true)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		b := Buffer([]rune("12a3a"), 'a')
-
-		x, err := b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, '1')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 1)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, '2')
-		AssertEq(t, b.Position().Line(), 0)
-		AssertEq(t, b.Position().Column(), 2)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'a')
-		AssertEq(t, b.Position().Line(), 1)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, '3')
-		AssertEq(t, b.Position().Line(), 1)
-		AssertEq(t, b.Position().Column(), 1)
-		AssertEq(t, b.IsEOF(), false)
-
-		x, err = b.Read(true)
-		Check(t, err)
-
-		AssertEq(t, x, 'a')
-		AssertEq(t, b.Position().Line(), 2)
-		AssertEq(t, b.Position().Column(), 0)
-		AssertEq(t, b.IsEOF(), true)
-	})
+				AssertEq(t, b.Position().String(), call.afterPosition.String())
+				AssertEq(t, b.IsEOF(), call.afterIsEOF)
+			}
+		})
+	}
 }

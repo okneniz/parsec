@@ -76,7 +76,9 @@ func IHDRChunk(size uint32) common.Combinator[byte, int, *IHDR] {
 			return nil, err
 		}
 
-		buffer.Seek(pos)
+		if seekErr := buffer.Seek(pos); seekErr != nil {
+			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
+		}
 
 		width, err := parseWidth(buffer)
 		if err != nil {

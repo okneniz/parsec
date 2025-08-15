@@ -14,6 +14,8 @@ type buffer struct {
 	newLineRunes map[rune]struct{}
 }
 
+var _ common.Buffer[rune, Position] = new(buffer)
+
 // Read - read next item, if greedy buffer keep position after reading.
 func (b *buffer) Read(greedy bool) (rune, error) {
 	if b.IsEOF() {
@@ -37,8 +39,22 @@ func (b *buffer) Read(greedy bool) (rune, error) {
 }
 
 // Seek - change buffer position
-func (b *buffer) Seek(x Position) {
+// change nothing if you try to seek to the same position
+func (b *buffer) Seek(x Position) error {
+	if b.position.index == x.index {
+		return nil
+	}
+
+	if x.index < 0 {
+		return common.ErrOutOfBounds
+	}
+
+	if x.index >= len(b.data) {
+		return common.ErrOutOfBounds
+	}
+
 	b.position = x
+	return nil
 }
 
 // Position - return current buffer position

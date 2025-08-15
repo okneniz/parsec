@@ -7,7 +7,7 @@ type Buffer[T any, P any] interface {
 	// Read - read next item, if greedy buffer keep position after reading.
 	Read(greedy bool) (T, error)
 	// Seek - change buffer position
-	Seek(position P)
+	Seek(position P) error
 	// Position - return current buffer position
 	Position() P
 	// IsEOF - true if buffer ended.

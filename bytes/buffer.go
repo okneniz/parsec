@@ -11,6 +11,8 @@ type buffer struct {
 	position int
 }
 
+var _ common.Buffer[byte, int] = new(buffer)
+
 // Read - read next item, if greedy buffer keep position after reading.
 func (s *buffer) Read(greedy bool) (byte, error) {
 	if s.position >= len(s.data) {
@@ -26,8 +28,22 @@ func (s *buffer) Read(greedy bool) (byte, error) {
 }
 
 // Seek - change buffer position
-func (s *buffer) Seek(x int) {
+// change nothing if you try to seek to the same position
+func (s *buffer) Seek(x int) error {
+	if s.position == x {
+		return nil
+	}
+
+	if x < 0 {
+		return common.ErrOutOfBounds
+	}
+
+	if x >= len(s.data) {
+		return common.ErrOutOfBounds
+	}
+
 	s.position = x
+	return nil
 }
 
 // Position - return current buffer position

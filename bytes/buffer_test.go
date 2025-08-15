@@ -1,65 +1,294 @@
 package bytes
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/okneniz/parsec/common"
 	. "github.com/okneniz/parsec/testing"
 )
 
 func TestBuffer(t *testing.T) {
-	b := Buffer([]byte("foo"))
+	t.Parallel()
 
-	AssertEq(t, b.Position(), 0)
-	AssertEq(t, b.IsEOF(), false)
+	type (
+		read struct {
+			greedy bool
+			output byte
+			err    error
+		}
 
-	x, err := b.Read(false)
-	Check(t, err)
+		seek struct {
+			pos int
+			err error
+		}
 
-	AssertEq(t, x, byte('f'))
-	AssertEq(t, b.Position(), 0)
-	AssertEq(t, b.IsEOF(), false)
+		call struct {
+			read *read
+			seek *seek
 
-	x, err = b.Read(false)
-	Check(t, err)
+			afterPosition int
+			afterIsEOF    bool
+		}
 
-	AssertEq(t, x, byte('f'))
-	AssertEq(t, b.Position(), 0)
-	AssertEq(t, b.IsEOF(), false)
+		test struct {
+			input []byte
 
-	x, err = b.Read(true)
-	Check(t, err)
+			beforePosition int
+			beforeIsEOF    bool
 
-	AssertEq(t, x, byte('f'))
-	AssertEq(t, b.Position(), 1)
-	AssertEq(t, b.IsEOF(), false)
+			calls []call
+		}
+	)
 
-	x, err = b.Read(true)
-	Check(t, err)
+	tests := []test{
+		{
+			input:          []byte(""),
+			beforePosition: 0,
+			beforeIsEOF:    true,
+			calls: []call{
+				{
+					read: &read{
+						greedy: false,
+						output: 0,
+						err:    common.ErrEndOfFile,
+					},
+					afterPosition: 0,
+					afterIsEOF:    true,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 0,
+						err:    common.ErrEndOfFile,
+					},
+					afterPosition: 0,
+					afterIsEOF:    true,
+				},
+				{
+					seek: &seek{
+						pos: 0,
+					},
+					afterPosition: 0,
+					afterIsEOF:    true,
+				},
+				{
+					seek: &seek{
+						pos: 1,
+						err: common.ErrOutOfBounds,
+					},
+					afterPosition: 0,
+					afterIsEOF:    true,
+				},
+				{
+					seek: &seek{
+						pos: -1,
+						err: common.ErrOutOfBounds,
+					},
+					afterPosition: 0,
+					afterIsEOF:    true,
+				},
+			},
+		},
+		{
+			input:          []byte("foo"),
+			beforePosition: 0,
+			beforeIsEOF:    false,
+			calls: []call{
+				{
+					read: &read{
+						greedy: false,
+						output: 'f',
+						err:    nil,
+					},
+					afterPosition: 0,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'f',
+						err:    nil,
+					},
+					afterPosition: 1,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: false,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 1,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 2,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: false,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 2,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 3,
+					afterIsEOF:    true,
+				},
+			},
+		},
+		{
+			input:          []byte("foo"),
+			beforePosition: 0,
+			beforeIsEOF:    false,
+			calls: []call{
+				{
+					read: &read{
+						greedy: false,
+						output: 'f',
+						err:    nil,
+					},
+					afterPosition: 0,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'f',
+						err:    nil,
+					},
+					afterPosition: 1,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: false,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 1,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 2,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: false,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 2,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 3,
+					afterIsEOF:    true,
+				},
+				{
+					seek: &seek{
+						pos: 100,
+						err: common.ErrOutOfBounds,
+					},
+					afterPosition: 3,
+					afterIsEOF:    true,
+				},
+				{
+					seek: &seek{
+						pos: 2,
+					},
+					afterPosition: 2,
+					afterIsEOF:    false,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 'o',
+						err:    nil,
+					},
+					afterPosition: 3,
+					afterIsEOF:    true,
+				},
+				{
+					read: &read{
+						greedy: true,
+						output: 0,
+						err:    common.ErrEndOfFile,
+					},
+					afterPosition: 3,
+					afterIsEOF:    true,
+				},
+			},
+		},
+	}
 
-	AssertEq(t, x, byte('o'))
-	AssertEq(t, b.Position(), 2)
-	AssertEq(t, b.IsEOF(), false)
+	for i, example := range tests {
+		test := example
+		name := fmt.Sprintf("case %d", i)
 
-	x, err = b.Read(true)
-	Check(t, err)
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	AssertEq(t, x, byte('o'))
-	AssertEq(t, b.Position(), 3)
-	AssertEq(t, b.IsEOF(), true)
+			b := Buffer(test.input)
 
-	b.Seek(1)
+			AssertEq(t, b.Position(), example.beforePosition)
+			AssertEq(t, b.IsEOF(), example.beforeIsEOF)
 
-	x, err = b.Read(true)
-	Check(t, err)
+			for i, call := range test.calls {
+				t.Logf("call %d", i)
 
-	AssertEq(t, x, byte('o'))
-	AssertEq(t, b.Position(), 2)
-	AssertEq(t, b.IsEOF(), false)
+				if call.read != nil {
+					result, err := b.Read(call.read.greedy)
 
-	x, err = b.Read(true)
-	Check(t, err)
+					if call.read.err == nil {
+						Check(t, err)
+					} else {
+						AssertError(t, err)
+						AssertEq(t, err.Error(), call.read.err.Error())
+					}
 
-	AssertEq(t, x, byte('o'))
-	AssertEq(t, b.Position(), 3)
-	AssertEq(t, b.IsEOF(), true)
+					AssertEq(t, result, call.read.output)
+				} else if call.seek != nil {
+					err := b.Seek(call.seek.pos)
+
+					if call.seek.err == nil {
+						Check(t, err)
+					} else {
+						AssertError(t, err)
+						AssertEq(t, err.Error(), call.seek.err.Error())
+					}
+				} else {
+					t.Fatal("invalid test")
+				}
+
+				AssertEq(t, b.Position(), call.afterPosition)
+				AssertEq(t, b.IsEOF(), call.afterIsEOF)
+			}
+		})
+	}
 }
