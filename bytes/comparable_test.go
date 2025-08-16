@@ -4,118 +4,225 @@ import (
 	"testing"
 
 	"github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/testing"
 )
 
 func TestEq(t *testing.T) {
-	comb := Eq("expected 'c'", 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("b"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("c"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'c')
+	runTests(t, []test[byte]{
+		{
+			comb: Eq("expected 'c'", 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 0,
+					err:    common.NewParseError(0, "expected 'c'"),
+				},
+				{
+					input:  []byte("c"),
+					output: 'c',
+				},
+				{
+					input:  []byte("ca"),
+					output: 'c',
+				},
+				{
+					input:  []byte("ac"),
+					output: 0,
+					err:    common.NewParseError(0, "expected 'c'"),
+				},
+			},
+		},
+	})
 }
 
 func TestNotEq(t *testing.T) {
-	comb := NotEq("expecte not 'c'", 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('a'))
-
-	result, err = Parse([]byte("b"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('b'))
-
-	result, err = Parse([]byte("abc"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('a'))
-
-	result, err = Parse([]byte("c"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: NotEq("expected not c", 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected not c"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("c"),
+					output: 0,
+					err:    common.NewParseError(0, "expected not c"),
+				},
+				{
+					input:  []byte("ca"),
+					output: 0,
+					err:    common.NewParseError(0, "expected not c"),
+				},
+				{
+					input:  []byte("ac"),
+					output: 'a',
+				},
+			},
+		},
+	})
 }
 
 func TestOneOf(t *testing.T) {
-	comb := OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('a'))
-
-	result, err = Parse([]byte("b"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('b'))
-
-	result, err = Parse([]byte("c"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('c'))
-
-	result, err = Parse([]byte("d"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected 'a', 'b' or 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("b"),
+					output: 'b',
+				},
+				{
+					input:  []byte("c"),
+					output: 'c',
+				},
+				{
+					input:  []byte("d"),
+					output: 0,
+					err:    common.NewParseError(0, "expected 'a', 'b' or 'c'"),
+				},
+				{
+					input:  []byte("ca"),
+					output: 'c',
+				},
+				{
+					input:  []byte("ac"),
+					output: 'a',
+				},
+				{
+					input:  []byte("bb"),
+					output: 'b',
+				},
+				{
+					input: []byte("fa"),
+					err:   common.NewParseError(0, "expected 'a', 'b' or 'c'"),
+				},
+			},
+		},
+	})
 }
 
 func TestSequenceOf(t *testing.T) {
-	comb := SequenceOf("expected foo", 'f', 'o', 'o')
-
-	result, err := Parse([]byte("foo"), comb)
-	Check(t, err)
-	AssertSlice(t, result, []byte{'f', 'o', 'o'})
-
-	result, err = Parse([]byte("foobar"), comb)
-	Check(t, err)
-	AssertSlice(t, result, []byte{'f', 'o', 'o'})
-
-	result, err = Parse([]byte("fo"), comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
-
-	result, err = Parse([]byte(" foobar"), comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
-
-	result, err = Parse([]byte(" "), comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
-
-	result, err = Parse([]byte(""), comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: SequenceOf("expected foo", 'f', 'o', 'o'),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected foo"),
+				},
+				{
+					input:  []byte{' '},
+					output: nil,
+					err:    common.NewParseError(0, "expected foo"),
+				},
+				{
+					input:  []byte("f"),
+					output: nil,
+					err:    common.NewParseError(0, "expected foo"),
+				},
+				{
+					input:  []byte("fo"),
+					output: nil,
+					err:    common.NewParseError(0, "expected foo"),
+				},
+				{
+					input:  []byte("foo"),
+					output: []byte{'f', 'o', 'o'},
+				},
+				{
+					input:  []byte("foo."),
+					output: []byte{'f', 'o', 'o'},
+				},
+				{
+					input:  []byte(".foo"),
+					output: nil,
+					err:    common.NewParseError(0, "expected foo"),
+				},
+				{
+					input:  []byte("foobar"),
+					output: []byte{'f', 'o', 'o'},
+				},
+				{
+					input:  []byte("barfoo"),
+					output: nil,
+					err:    common.NewParseError(0, "expected foo"),
+				},
+			},
+		},
+	})
 }
 
 func TestMap(t *testing.T) {
-	cases := map[byte]string{0: "foo", 1: "bar", 2: "baz"}
-
-	comb := Some(
-		1,
-		"exepcted at least one case",
-		common.SkipMany(
-			NoneOf("expected not 0, 1 or 2", 0, 1, 2),
-			Map("expected one of cases", cases, Any()),
-		),
-	)
-
-	result, err := Parse([]byte{1}, comb)
-	Check(t, err)
-	AssertSlice(t, result, []string{"bar"})
-
-	result, err = Parse([]byte{10, 0, 4, 1, 6, 8, 2, 5, 5, 3}, comb)
-	Check(t, err)
-	AssertSlice(t, result, []string{"foo", "bar", "baz"})
-
-	result, err = Parse([]byte{10}, comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
-
-	result, err = Parse([]byte{}, comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]string]{
+		{
+			comb: Some(
+				1,
+				"expected at least one 0, 1 or 2",
+				common.SkipMany(
+					NoneOf("skip not 0, 1 or 2", 0, 1, 2),
+					Map(
+						"expected 0, 1 or 2",
+						map[byte]string{
+							0: "foo",
+							1: "bar",
+							2: "baz",
+						},
+						Any(),
+					),
+				),
+			),
+			cases: []testCase[[]string]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one 0, 1 or 2"),
+				},
+				{
+					input:  []byte{0},
+					output: []string{"foo"},
+				},
+				{
+					input:  []byte{0, 1},
+					output: []string{"foo", "bar"},
+				},
+				{
+					input:  []byte{0, 1, 2},
+					output: []string{"foo", "bar", "baz"},
+				},
+				{
+					input:  []byte{0, 1, 2, 3},
+					output: []string{"foo", "bar", "baz"},
+				},
+				{
+					input:  []byte{10, 0, 1, 2, 3, 4, 5, 1, 2, 3, 0, 1},
+					output: []string{"foo", "bar", "baz", "bar", "baz", "foo", "bar"},
+				},
+				{
+					input:  []byte{5, 6, 7, 8, 9, 10, 11},
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one 0, 1 or 2"),
+				},
+			},
+		},
+	})
 }
