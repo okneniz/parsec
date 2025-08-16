@@ -3,149 +3,254 @@ package bytes
 import (
 	"testing"
 
-	. "github.com/okneniz/parsec/testing"
+	"github.com/okneniz/parsec/common"
 )
 
 func TestRange(t *testing.T) {
-	comb := Range("expected byte between 'a' and 'c'", 'a', 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('a'))
-
-	result, err = Parse([]byte("b"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('b'))
-
-	result, err = Parse([]byte("c"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('c'))
-
-	result, err = Parse([]byte("d"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte(""), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: Range("expected any byte between 'a' and 'c'", 'a', 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("b"),
+					output: 'b',
+				},
+				{
+					input:  []byte("c"),
+					output: 'c',
+				},
+				{
+					input:  []byte("d"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("da"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("ad"),
+					output: 'a',
+				},
+			},
+		},
+	})
 }
 
 func TestNotRange(t *testing.T) {
-	comb := NotRange("expecte byte between 'a' and 'c'", 'a', 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("b"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("c"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("d"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('d'))
-
-	result, err = Parse([]byte(""), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: NotRange("expected any byte not between 'a' and 'c'", 'a', 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("b"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("c"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+				},
+				{
+					input:  []byte("d"),
+					output: 'd',
+				},
+				{
+					input:  []byte("da"),
+					output: 'd',
+				},
+				{
+					input: []byte("ad"),
+					err:   common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+				},
+			},
+		},
+	})
 }
 
 func TestGt(t *testing.T) {
-	comb := Gt("expected byte greater than 'c'", 'c')
-
-	result, err := Parse([]byte("d"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'd')
-
-	result, err = Parse([]byte("e"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'e')
-
-	result, err = Parse([]byte("a"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("b"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("c"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: Gt("expected any byte greater than 'c'", 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+				},
+				{
+					input:  []byte("b"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+				},
+				{
+					input:  []byte("c"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+				},
+				{
+					input:  []byte("d"),
+					output: 'd',
+				},
+				{
+					input:  []byte("da"),
+					output: 'd',
+				},
+				{
+					input:  []byte("e"),
+					output: 'e',
+				},
+				{
+					input: []byte("ad"),
+					err:   common.NewParseError(0, "expected any byte greater than 'c'"),
+				},
+			},
+		},
+	})
 }
 
 func TestGte(t *testing.T) {
-	comb := Gte("expected byte greater or equal than 'c'", 'c')
-
-	result, err := Parse([]byte("d"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'd')
-
-	result, err = Parse([]byte("e"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'e')
-
-	result, err = Parse([]byte("a"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("b"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("c"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'c')
+	runTests(t, []test[byte]{
+		{
+			comb: Gte("expected any byte greater than or equal 'c'", 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+				},
+				{
+					input:  []byte("b"),
+					output: 0,
+					err:    common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+				},
+				{
+					input:  []byte("c"),
+					output: 'c',
+				},
+				{
+					input:  []byte("d"),
+					output: 'd',
+				},
+				{
+					input:  []byte("da"),
+					output: 'd',
+				},
+				{
+					input:  []byte("e"),
+					output: 'e',
+				},
+				{
+					input: []byte("ad"),
+					err:   common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+				},
+			},
+		},
+	})
 }
 
 func TestLt(t *testing.T) {
-	comb := Lt("expected byte less than 'c'", 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'a')
-
-	result, err = Parse([]byte("b"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'b')
-
-	result, err = Parse([]byte("c"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("d"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("e"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: Lt("expected byte less than 'c'", 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("b"),
+					output: 'b',
+				},
+				{
+					input:  []byte("c"),
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than 'c'"),
+				},
+				{
+					input:  []byte("d"),
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than 'c'"),
+				},
+				{
+					input:  []byte("da"),
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than 'c'"),
+				},
+			},
+		},
+	})
 }
 
 func TestLte(t *testing.T) {
-	comb := Lte("expecte byte less than or equal 'c'", 'c')
-
-	result, err := Parse([]byte("a"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'a')
-
-	result, err = Parse([]byte("b"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'b')
-
-	result, err = Parse([]byte("c"), comb)
-	Check(t, err)
-	AssertEq(t, result, 'c')
-
-	result, err = Parse([]byte("d"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = Parse([]byte("e"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: Lte("expected byte less than or equal 'c'", 'c'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than or equal 'c'"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("b"),
+					output: 'b',
+				},
+				{
+					input:  []byte("c"),
+					output: 'c',
+				},
+				{
+					input:  []byte("d"),
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than or equal 'c'"),
+				},
+				{
+					input:  []byte("da"),
+					output: 0,
+					err:    common.NewParseError(0, "expected byte less than or equal 'c'"),
+				},
+			},
+		},
+	})
 }
