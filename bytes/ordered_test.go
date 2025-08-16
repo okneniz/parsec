@@ -7,6 +7,8 @@ import (
 )
 
 func TestRange(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: Range("expected any byte between 'a' and 'c'", 'a', 'c'),
@@ -48,6 +50,8 @@ func TestRange(t *testing.T) {
 }
 
 func TestNotRange(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: NotRange("expected any byte not between 'a' and 'c'", 'a', 'c'),
@@ -90,6 +94,8 @@ func TestNotRange(t *testing.T) {
 }
 
 func TestGt(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: Gt("expected any byte greater than 'c'", 'c'),
@@ -136,6 +142,8 @@ func TestGt(t *testing.T) {
 }
 
 func TestGte(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: Gte("expected any byte greater than or equal 'c'", 'c'),
@@ -181,6 +189,8 @@ func TestGte(t *testing.T) {
 }
 
 func TestLt(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: Lt("expected byte less than 'c'", 'c'),
@@ -219,6 +229,8 @@ func TestLt(t *testing.T) {
 }
 
 func TestLte(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: Lte("expected byte less than or equal 'c'", 'c'),
