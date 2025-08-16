@@ -3,44 +3,127 @@ package bytes
 import (
 	"testing"
 
-	. "github.com/okneniz/parsec/testing"
+	"github.com/okneniz/parsec/common"
 )
 
 func TestOr(t *testing.T) {
-	comb := Or(
-		Try(Eq("expected 'a'", 'a')),
-		Eq("expected 'b'", 'b'),
-	)
+	t.Parallel()
 
-	result, err := Parse([]byte("a"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('a'))
-
-	result, err = Parse([]byte("b"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('b'))
-
-	result, err = Parse([]byte("c"), comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: Or(
+				"expected symbol 'a' or digit",
+				Try(Eq("expected 'a'", 'a')),
+				Range("expected digit", '0', '9'),
+			),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("3"),
+					output: '3',
+				},
+				{
+					input:  []byte("5"),
+					output: '5',
+				},
+				{
+					input:  []byte("c"),
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+			},
+		},
+		{
+			comb: Or(
+				"expected symbol 'a' or digit",
+				Eq("expected 'a'", 'a'),
+				Range("expected digit", '0', '9'),
+			),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("3"),
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+				{
+					input:  []byte("5"),
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+				{
+					input:  []byte("x3"),
+					output: '3',
+				},
+				{
+					input:  []byte("xz"),
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+				{
+					input:  []byte("c"),
+					output: 0,
+					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+				},
+			},
+		},
+	})
 }
 
 func TestAnd(t *testing.T) {
-	comb := And(
-		Eq("expected 'a'", 'a'),
-		Eq("expected 'b'", 'b'),
-		func(x, y byte) []byte { return []byte{x, y} },
-	)
-
-	result, err := Parse([]byte("abc"), comb)
-	Check(t, err)
-	AssertSlice(t, result, []byte{'a', 'b'})
-
-	result, err = Parse([]byte("bca"), comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
-
-	result, err = Parse([]byte("acb"), comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: And(
+				Eq("expected 'a'", 'a'),
+				Eq("expected 'b'", 'b'),
+				func(x, y byte) []byte { return []byte{x, y} },
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected 'a'"),
+				},
+				{
+					input:  []byte("ab"),
+					output: []byte{'a', 'b'},
+				},
+				{
+					input:  []byte("abc"),
+					output: []byte{'a', 'b'},
+				},
+				{
+					input:  []byte("a"),
+					output: nil,
+					err:    common.NewParseError(1, "expected 'b'"),
+				},
+				{
+					input:  []byte("ac"),
+					output: nil,
+					err:    common.NewParseError(1, "expected 'b'"),
+				},
+				{
+					input:  []byte(".ab"),
+					output: nil,
+					err:    common.NewParseError(0, "expected 'a'"),
+				},
+			},
+		},
+	})
 }

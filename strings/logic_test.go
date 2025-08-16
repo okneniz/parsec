@@ -8,6 +8,7 @@ import (
 
 func TestOr(t *testing.T) {
 	comb := Or(
+		"expected a or b",
 		Try(Eq("expected 'a'", 'a')),
 		Eq("expected 'b'", 'b'),
 	)

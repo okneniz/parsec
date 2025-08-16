@@ -2,14 +2,28 @@ package common
 
 // Or - returns the result of the first combinator,
 // if it fails, uses the second combinator.
-func Or[T any, P any, S any](x, y Combinator[T, P, S]) Combinator[T, P, S] {
+func Or[T any, P any, S any](
+	errMessage string,
+	x, y Combinator[T, P, S],
+) Combinator[T, P, S] {
+	var null S
+
 	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		result, err := x(buffer)
-		if err != nil {
-			return y(buffer)
+		pos := buffer.Position()
+
+		result, xErr := x(buffer)
+		if xErr == nil {
+			return result, nil
 		}
 
-		return result, nil
+		result, yErr := y(buffer)
+		if yErr == nil {
+			return result, nil
+		}
+
+		// add xErr and yErr to final error?
+
+		return null, NewParseError(pos, errMessage)
 	}
 }
 
@@ -20,15 +34,17 @@ func And[T any, P any, S any, B any, M any](
 	y Combinator[T, P, B],
 	compose Composer[S, B, M],
 ) Combinator[T, P, M] {
+	var null M
+
 	return func(buffer Buffer[T, P]) (M, Error[P]) {
-		first, err := x(buffer)
-		if err != nil {
-			return *new(M), err
+		first, xErr := x(buffer)
+		if xErr != nil {
+			return null, xErr
 		}
 
-		second, err := y(buffer)
-		if err != nil {
-			return *new(M), err
+		second, yErr := y(buffer)
+		if yErr != nil {
+			return null, yErr
 		}
 
 		return compose(first, second), nil

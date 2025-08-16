@@ -7,10 +7,11 @@ import (
 // Or - returns the result of the first combinator,
 // if it fails, uses the second combinator.
 func Or[T any](
+	errMessage string,
 	x common.Combinator[byte, int, T],
 	y common.Combinator[byte, int, T],
 ) common.Combinator[byte, int, T] {
-	return common.Or[byte, int, T](x, y)
+	return common.Or[byte, int, T](errMessage, x, y)
 }
 
 // And - use x and y combinators to consume input bytes.

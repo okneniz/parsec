@@ -135,11 +135,9 @@ func TestSatisfy(t *testing.T) {
 func TestAny(t *testing.T) {
 	t.Parallel()
 
-	comb := Any()
-
 	runTests(t, []test[byte]{
 		{
-			comb: comb,
+			comb: Any(),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -160,6 +158,7 @@ func TestAny(t *testing.T) {
 		seed := time.Now().UnixNano()
 		t.Logf("seed: %v", seed)
 		rnd := rand.New(rand.NewPCG(0, uint64(seed)))
+		comb := Any()
 
 		ohsnap.Check(t, 1000, ohsnap.NewBuilder(rnd).Byte(), func(b byte) bool {
 			result, err := Parse([]byte{b}, comb)

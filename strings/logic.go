@@ -7,10 +7,11 @@ import (
 // Or - returns the result of the first combinator,
 // if it fails, uses the second combinator.
 func Or[T any](
+	errMessage string,
 	x common.Combinator[rune, Position, T],
 	y common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
-	return common.Or[rune, Position, T](x, y)
+	return common.Or[rune, Position, T](errMessage, x, y)
 }
 
 // And - use x and y combinators to consume input data.
