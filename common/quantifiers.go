@@ -67,7 +67,7 @@ func Count[T any, P any, S any](
 		pos := buffer.Position()
 
 		result := make([]S, 0, cap)
-		for i := 0; i < cap; i++ {
+		for i := 0; !buffer.IsEOF() && i < cap; i++ {
 			n, err := c(buffer)
 			if err != nil {
 				return nil, err

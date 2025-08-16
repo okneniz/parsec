@@ -92,16 +92,4 @@ func TestCount(t *testing.T) {
 		AssertError(t, err)
 		AssertSlice(t, result, nil)
 	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := Count(2, "expected", EOF())
-
-		result, err := ParseString("aab", comb)
-		Check(t, err)
-		AssertSlice(t, result, []bool{false, false})
-
-		result, err = ParseString("", comb)
-		Check(t, err)
-		AssertSlice(t, result, []bool{true, true})
-	})
 }

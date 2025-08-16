@@ -4,101 +4,174 @@ import (
 	"testing"
 
 	"github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/testing"
 )
 
 func TestMany(t *testing.T) {
-	comb := Many(0, Eq("expected 'a'", 'a'))
+	t.Parallel()
 
-	result, err := Parse([]byte("aaa"), comb)
-	Check(t, err)
-	AssertSlice(t, result, []byte("aaa"))
-
-	result, err = Parse([]byte("aaabc"), comb)
-	Check(t, err)
-	AssertSlice(t, result, []byte("aaa"))
-
-	result, err = Parse([]byte("xaaabc"), comb)
-	Check(t, err)
-	AssertSlice(t, result, []byte{})
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: Many(0, Eq("expected a", 'a')),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+				},
+				{
+					input:  []byte("a"),
+					output: []byte{'a'},
+				},
+				{
+					input:  []byte("aaa"),
+					output: []byte{'a', 'a', 'a'},
+				},
+				{
+					input:  []byte("aaab"),
+					output: []byte{'a', 'a', 'a'},
+				},
+				{
+					input:  []byte("aaa.aa"),
+					output: []byte{'a', 'a', 'a'},
+				},
+				{
+					input:  []byte(".aaa"),
+					output: nil,
+				},
+			},
+		},
+	})
 }
 
 func TestSome(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := Some(0, "expected at least one 'a'", Eq("expected 'a'", 'a'))
-
-		result, err := Parse([]byte("aaa"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte("aaa"))
-
-		result, err = Parse([]byte("aaabc"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte("aaa"))
-
-		result, err = Parse([]byte("xaaabc"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := Some(
-			0,
-			"expected at least one byte",
-			Satisfy("test", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("abc"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, []byte{})
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: Some(0, "expected at least one 'a'", Eq("expected 'a'", 'a')),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one 'a'"),
+				},
+				{
+					input:  []byte("a"),
+					output: []byte{'a'},
+				},
+				{
+					input:  []byte("aaa"),
+					output: []byte{'a', 'a', 'a'},
+				},
+				{
+					input:  []byte("aa."),
+					output: []byte{'a', 'a'},
+				},
+				{
+					input:  []byte("aa.aaa"),
+					output: []byte{'a', 'a'},
+				},
+				{
+					input:  []byte(".aa"),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one 'a'"),
+				},
+			},
+		},
 	})
 }
 
 func TestOptional(t *testing.T) {
-	comb := Optional(Eq("expecte 'a'", 'a'), 0)
+	t.Parallel()
 
-	result, err := Parse([]byte("aaa"), comb)
-	Check(t, err)
-	AssertEq(t, result, byte('a'))
-
-	result, err = Parse([]byte("bcd"), comb)
-	Check(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[byte]{
+		{
+			comb: Optional(Eq("expected a", 'a'), 123),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 123,
+				},
+				{
+					input:  []byte("a"),
+					output: 'a',
+				},
+				{
+					input:  []byte("aa"),
+					output: 'a',
+				},
+				{
+					input:  []byte("xa"),
+					output: 123,
+				},
+				{
+					input:  []byte("ax"),
+					output: 'a',
+				},
+			},
+		},
+		{
+			comb: Optional(Satisfy("never match", true, common.Nothing[byte]), 'x'),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 'x',
+				},
+				{
+					input:  []byte("a"),
+					output: 'x',
+				},
+				{
+					input:  []byte("aa"),
+					output: 'x',
+				},
+				{
+					input:  []byte("za"),
+					output: 'x',
+				},
+				{
+					input:  []byte("az"),
+					output: 'x',
+				},
+			},
+		},
+	})
 }
 
 func TestCount(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := Count(
-			2,
-			"expected 'aa'",
-			Eq("expected 'a'", 'a'),
-		)
-
-		result, err := Parse([]byte("aabbcc"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'a'})
-
-		result, err = Parse([]byte("abbcc"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("bbaacc"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := Count(2, "expected two ends of files", EOF())
-
-		result, err := Parse([]byte("aab"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []bool{false, false})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, []bool{true, true})
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: Count(2, "expected 'aa'", Eq("expected 'a'", 'a')),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected 'aa'"),
+				},
+				{
+					input:  []byte("aa"),
+					output: []byte{'a', 'a'},
+				},
+				{
+					input:  []byte("aaa"),
+					output: []byte{'a', 'a'},
+				},
+				{
+					input:  []byte("aa."),
+					output: []byte{'a', 'a'},
+				},
+				{
+					input:  []byte(".aa"),
+					output: nil,
+					err:    common.NewParseError(0, "expected 'a'"),
+				},
+				{
+					input:  []byte("a."),
+					output: nil,
+					err:    common.NewParseError(1, "expected 'a'"),
+				},
+			},
+		},
 	})
 }
