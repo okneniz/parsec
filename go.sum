@@ -2,6 +2,8 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/okneniz/oh-snap v0.0.0-20250811170615-1724911f5d7c h1:THFMDd/PTzsISkBMYrqZy5IVeSpPeSvkhchj4jaknaw=
 github.com/okneniz/oh-snap v0.0.0-20250811170615-1724911f5d7c/go.mod h1:uTSdxe5FwA4VEBH0cblEJ9QI1gULWCY5VhNRU7TQPig=
+github.com/okneniz/oh-snap v0.0.0-20250815201657-df20b028e967 h1:Ese7x6JgneMhffl7I9z1esVYNCEUOeUSQDu3WxF7v1w=
+github.com/okneniz/oh-snap v0.0.0-20250815201657-df20b028e967/go.mod h1:uTSdxe5FwA4VEBH0cblEJ9QI1gULWCY5VhNRU7TQPig=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
