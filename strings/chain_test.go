@@ -15,6 +15,7 @@ func TestChainl(t *testing.T) {
 		next := Satisfy("expected rune", true, common.Anything[rune])
 
 		comb := Chainl(
+			"default",
 			func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
 				x, err := next(buffer)
 				if err != nil {
@@ -25,12 +26,11 @@ func TestChainl(t *testing.T) {
 			},
 			func(
 				buffer common.Buffer[rune, Position],
-			) (func(string, string) string, common.Error[Position]) {
+			) (common.BinaryOp[string], common.Error[Position]) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
 			},
-			"default",
 		)
 
 		result, err := ParseString("abcd", comb)
@@ -55,6 +55,7 @@ func TestChainl(t *testing.T) {
 		c := 0
 
 		comb := Chainl(
+			"default",
 			func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
 				c++
 				if c > 1 {
@@ -68,12 +69,13 @@ func TestChainl(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(
+				buffer common.Buffer[rune, Position],
+			) (common.BinaryOp[string], common.Error[Position]) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
 			},
-			"default",
 		)
 
 		result, err := ParseString("abcd", comb)
@@ -97,6 +99,7 @@ func TestChainl(t *testing.T) {
 		next := Satisfy("expected byte", true, common.Anything[rune])
 
 		comb := Chainl(
+			"default",
 			func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
 				x, err := next(buffer)
 				if err != nil {
@@ -105,13 +108,12 @@ func TestChainl(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
-				return func(x, y string) string {
-						return ""
-					},
+			func(
+				buffer common.Buffer[rune, Position],
+			) (common.BinaryOp[string], common.Error[Position]) {
+				return func(x, y string) string { return "" },
 					common.NewParseError(buffer.Position(), "test error")
 			},
-			"default",
 		)
 
 		result, err := ParseString("abcd", comb)
@@ -143,7 +145,7 @@ func TestChainl1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (common.BinaryOp[string], common.Error[Position]) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -185,7 +187,7 @@ func TestChainl1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (common.BinaryOp[string], common.Error[Position]) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -221,7 +223,9 @@ func TestChainl1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string { return "++" },
 					common.NewParseError(buffer.Position(), "test error")
 			},
@@ -256,7 +260,9 @@ func TestChainr(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -299,7 +305,9 @@ func TestChainr(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -336,7 +344,9 @@ func TestChainr(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string { return "" },
 					common.NewParseError(buffer.Position(), "test error")
 			},
@@ -372,7 +382,9 @@ func TestChainr1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -414,7 +426,9 @@ func TestChainr1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string {
 					return fmt.Sprintf("(%v %v)", x, y)
 				}, nil
@@ -450,7 +464,9 @@ func TestChainr1(t *testing.T) {
 
 				return string(x), nil
 			},
-			func(buffer common.Buffer[rune, Position]) (func(string, string) string, common.Error[Position]) {
+			func(buffer common.Buffer[rune, Position]) (
+				common.BinaryOp[string], common.Error[Position],
+			) {
 				return func(x, y string) string {
 						return ""
 					},

@@ -1,14 +1,17 @@
 package common
 
+// BinaryOp - binary operation
+type BinaryOp[T any] func(T, T) T
+
 // Chainl - read zero or more occurrences of data readed by c combinator,
 // separated by op combinator.
 // Returns a value obtained by a left associative application of
 // all functions returned by op combinator to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainl[T any, P any, S any](
-	c Combinator[T, P, S],
-	op Combinator[T, P, func(S, S) S],
 	def S,
+	c Combinator[T, P, S],
+	op Combinator[T, P, BinaryOp[S]],
 ) Combinator[T, P, S] {
 	parse := Chainl1(c, op)
 
@@ -29,7 +32,7 @@ func Chainl[T any, P any, S any](
 // If nothing read, the value def is returned.
 func Chainl1[T any, P any, S any](
 	c Combinator[T, P, S],
-	op Combinator[T, P, func(S, S) S],
+	op Combinator[T, P, BinaryOp[S]],
 ) Combinator[T, P, S] {
 	var null S
 
@@ -65,9 +68,9 @@ func Chainl1[T any, P any, S any](
 // of all functions returned by op to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainr[T any, P any, S any](
-	c Combinator[T, P, S],
-	op Combinator[T, P, func(S, S) S],
 	def S,
+	c Combinator[T, P, S],
+	op Combinator[T, P, BinaryOp[S]],
 ) Combinator[T, P, S] {
 	f := Chainr1(c, op)
 
@@ -88,7 +91,7 @@ func Chainr[T any, P any, S any](
 // If nothing read, the value def is returned.
 func Chainr1[T any, P any, S any](
 	c Combinator[T, P, S],
-	op Combinator[T, P, func(S, S) S],
+	op Combinator[T, P, BinaryOp[S]],
 ) Combinator[T, P, S] {
 	var null S
 

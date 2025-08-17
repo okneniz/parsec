@@ -5,446 +5,307 @@ import (
 	"testing"
 
 	"github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/testing"
 )
 
 func TestChainl(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
+	mul := func(x, y string) string {
+		return fmt.Sprintf("(%s * %s)", x, y)
+	}
 
-		comb := Chainl(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
+	plus := func(x, y string) string {
+		return fmt.Sprintf("(%s + %s)", x, y)
+	}
 
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-			"default",
-		)
+	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+		pos := buf.Position()
 
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "(((a b) c) d)")
+		symbol, err := buf.Read(true)
+		if err != nil {
+			return nil, common.NewParseError(pos, err.Error())
+		}
 
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
+		if symbol == '+' {
+			return plus, nil
+		} else {
+			return mul, nil
+		}
+	}
 
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertEq(t, result, "default")
+	parseItem := Cast(Any(), func(b byte) (string, error) {
+		return fmt.Sprintf("%d", int(b)), nil
 	})
 
-	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-		c := 0
-
-		comb := Chainl(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				c++
-				if c > 1 {
-					return "-", common.NewParseError(buffer.Position(), "test error")
-				}
-
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
+	runTests(t, []test[string]{
+		{
+			comb: Chainl("default", parseItem, parseOp),
+			cases: []testCase[string]{
+				{
+					input:  []byte{},
+					output: "default",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, '?', 4},
+					output: "(((1 + 2) * 3) * 4)",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3},
+					output: "((1 + 2) * 3)",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, 100},
+					output: "((1 + 2) * 3)",
+				},
+				{
+					input:  []byte{1, '+', 2},
+					output: "(1 + 2)",
+				},
+				{
+					input:  []byte{1, '*', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '?', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '+'},
+					output: "1",
+				},
+				{
+					input:  []byte{1},
+					output: "1",
+				},
 			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-			"default",
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertEq(t, result, "default")
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-
-		comb := Chainl(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string { return "" }, common.NewParseError(buffer.Position(), "test error")
-			},
-			"default",
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertEq(t, result, "default")
+		},
 	})
 }
 
 func TestChainl1(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
+	mul := func(x, y string) string {
+		return fmt.Sprintf("(%s * %s)", x, y)
+	}
 
-		comb := Chainl1(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
+	plus := func(x, y string) string {
+		return fmt.Sprintf("(%s + %s)", x, y)
+	}
 
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-		)
+	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+		pos := buf.Position()
 
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "(((a b) c) d)")
+		symbol, err := buf.Read(true)
+		if err != nil {
+			return nil, common.NewParseError(pos, err.Error())
+		}
 
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
+		if symbol == '+' {
+			return plus, nil
+		} else {
+			return mul, nil
+		}
+	}
 
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
+	parseItem := Cast(Any(), func(b byte) (string, error) {
+		return fmt.Sprintf("%d", int(b)), nil
 	})
 
-	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-		c := 0
-
-		comb := Chainl1(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				c++
-				if c > 1 {
-					return "-", common.NewParseError(buffer.Position(), "test error")
-				}
-
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
+	runTests(t, []test[string]{
+		{
+			comb: Chainl1(parseItem, parseOp),
+			cases: []testCase[string]{
+				{
+					input:  []byte{},
+					output: "",
+					err:    common.NewParseError(0, "end of file"),
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, '?', 4},
+					output: "(((1 + 2) * 3) * 4)",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3},
+					output: "((1 + 2) * 3)",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, 100},
+					output: "((1 + 2) * 3)",
+				},
+				{
+					input:  []byte{1, '+', 2},
+					output: "(1 + 2)",
+				},
+				{
+					input:  []byte{1, '*', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '?', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '+'},
+					output: "1",
+				},
+				{
+					input:  []byte{1},
+					output: "1",
+				},
 			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-
-		comb := Chainl1(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "--", err
-				}
-
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string { return "++" }, common.NewParseError(buffer.Position(), "test error")
-			},
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
+		},
 	})
 }
 
 func TestChainr(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
+	mul := func(x, y string) string {
+		return fmt.Sprintf("(%s * %s)", x, y)
+	}
 
-		comb := Chainr(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
+	plus := func(x, y string) string {
+		return fmt.Sprintf("(%s + %s)", x, y)
+	}
 
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-			"default",
-		)
+	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+		pos := buf.Position()
 
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "(a (b (c d)))")
+		symbol, err := buf.Read(true)
+		if err != nil {
+			return nil, common.NewParseError(pos, err.Error())
+		}
 
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
+		if symbol == '+' {
+			return plus, nil
+		} else {
+			return mul, nil
+		}
+	}
 
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertEq(t, result, "default")
+	parseItem := Cast(Any(), func(b byte) (string, error) {
+		return fmt.Sprintf("%d", int(b)), nil
 	})
 
-	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-		c := 0
-
-		comb := Chainr(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				c++
-				if c > 1 {
-					return "-", common.NewParseError(buffer.Position(), "test error")
-				}
-
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
+	runTests(t, []test[string]{
+		{
+			comb: Chainr("default", parseItem, parseOp),
+			cases: []testCase[string]{
+				{
+					input:  []byte{},
+					output: "default",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, '?', 4},
+					output: "(1 + (2 * (3 * 4)))",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3},
+					output: "(1 + (2 * 3))",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, 100},
+					output: "(1 + (2 * 3))",
+				},
+				{
+					input:  []byte{1, '+', 2},
+					output: "(1 + 2)",
+				},
+				{
+					input:  []byte{1, '*', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '?', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '+'},
+					output: "1",
+				},
+				{
+					input:  []byte{1},
+					output: "1",
+				},
 			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-			"default",
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertEq(t, result, "default")
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-
-		comb := Chainr(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string { return "" }, common.NewParseError(buffer.Position(), "test error")
-			},
-			"default",
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertEq(t, result, "default")
+		},
 	})
 }
 
 func TestChainr1(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
+	mul := func(x, y string) string {
+		return fmt.Sprintf("(%s * %s)", x, y)
+	}
 
-		comb := Chainr1(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
+	plus := func(x, y string) string {
+		return fmt.Sprintf("(%s + %s)", x, y)
+	}
 
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-		)
+	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+		pos := buf.Position()
 
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "(a (b (c d)))")
+		symbol, err := buf.Read(true)
+		if err != nil {
+			return nil, common.NewParseError(pos, err.Error())
+		}
 
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
+		if symbol == '+' {
+			return plus, nil
+		} else {
+			return mul, nil
+		}
+	}
 
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
+	parseItem := Cast(Any(), func(b byte) (string, error) {
+		return fmt.Sprintf("%d", int(b)), nil
 	})
 
-	t.Run("case 2", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-		c := 0
-
-		comb := Chainr1(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				c++
-				if c > 1 {
-					return "-", common.NewParseError(buffer.Position(), "test error")
-				}
-
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
+	runTests(t, []test[string]{
+		{
+			comb: Chainr1(parseItem, parseOp),
+			cases: []testCase[string]{
+				{
+					input:  []byte{},
+					output: "",
+					err:    common.NewParseError(0, "end of file"),
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, '?', 4},
+					output: "(1 + (2 * (3 * 4)))",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3},
+					output: "(1 + (2 * 3))",
+				},
+				{
+					input:  []byte{1, '+', 2, '*', 3, 100},
+					output: "(1 + (2 * 3))",
+				},
+				{
+					input:  []byte{1, '+', 2},
+					output: "(1 + 2)",
+				},
+				{
+					input:  []byte{1, '*', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '?', 2},
+					output: "(1 * 2)",
+				},
+				{
+					input:  []byte{1, '+'},
+					output: "1",
+				},
+				{
+					input:  []byte{1},
+					output: "1",
+				},
 			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return fmt.Sprintf("(%v %v)", x, y)
-				}, nil
-			},
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		c = 0
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		next := Satisfy("any byte", true, common.Anything[byte])
-
-		comb := Chainr1(
-			func(buffer common.Buffer[byte, int]) (string, common.Error[int]) {
-				x, err := next(buffer)
-				if err != nil {
-					return "", err
-				}
-
-				return string(x), nil
-			},
-			func(buffer common.Buffer[byte, int]) (func(string, string) string, common.Error[int]) {
-				return func(x, y string) string {
-					return ""
-				}, common.NewParseError(buffer.Position(), "test error")
-			},
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertEq(t, result, "a")
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
+		},
 	})
 }
 

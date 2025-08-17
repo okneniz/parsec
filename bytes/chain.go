@@ -10,11 +10,11 @@ import (
 // all functions returned by op combinator to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainl[T any](
-	c common.Combinator[byte, int, T],
-	op common.Combinator[byte, int, func(T, T) T],
 	def T,
+	c common.Combinator[byte, int, T],
+	op common.Combinator[byte, int, common.BinaryOp[T]],
 ) common.Combinator[byte, int, T] {
-	return common.Chainl[byte, int, T](c, op, def)
+	return common.Chainl[byte, int, T](def, c, op)
 }
 
 // Chainl1 - read one or more occurrences of byte readed by c combinator,
@@ -24,7 +24,7 @@ func Chainl[T any](
 // If nothing read, the value def is returned.
 func Chainl1[T any](
 	c common.Combinator[byte, int, T],
-	op common.Combinator[byte, int, func(T, T) T],
+	op common.Combinator[byte, int, common.BinaryOp[T]],
 ) common.Combinator[byte, int, T] {
 	return common.Chainl1[byte, int, T](c, op)
 }
@@ -35,11 +35,11 @@ func Chainl1[T any](
 // of all functions returned by op to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainr[T any](
-	c common.Combinator[byte, int, T],
-	op common.Combinator[byte, int, func(T, T) T],
 	def T,
+	c common.Combinator[byte, int, T],
+	op common.Combinator[byte, int, common.BinaryOp[T]],
 ) common.Combinator[byte, int, T] {
-	return common.Chainr[byte, int, T](c, op, def)
+	return common.Chainr[byte, int, T](def, c, op)
 }
 
 // Chainr - read one or more occurrences of byte readed by c combinator,
@@ -49,7 +49,7 @@ func Chainr[T any](
 // If nothing read, the value def is returned.
 func Chainr1[T any](
 	c common.Combinator[byte, int, T],
-	op common.Combinator[byte, int, func(T, T) T],
+	op common.Combinator[byte, int, common.BinaryOp[T]],
 ) common.Combinator[byte, int, T] {
 	return common.Chainr1[byte, int, T](c, op)
 }

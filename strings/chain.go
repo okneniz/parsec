@@ -10,11 +10,11 @@ import (
 // all functions returned by op combinator to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainl[T any](
-	c common.Combinator[rune, Position, T],
-	op common.Combinator[rune, Position, func(T, T) T],
 	def T,
+	c common.Combinator[rune, Position, T],
+	op common.Combinator[rune, Position, common.BinaryOp[T]],
 ) common.Combinator[rune, Position, T] {
-	return common.Chainl[rune, Position, T](c, op, def)
+	return common.Chainl[rune, Position, T](def, c, op)
 }
 
 // Chainl1 - read one or more occurrences of data readed by c combinator,
@@ -24,7 +24,7 @@ func Chainl[T any](
 // If nothing read, the value def is returned.
 func Chainl1[T any](
 	c common.Combinator[rune, Position, T],
-	op common.Combinator[rune, Position, func(T, T) T],
+	op common.Combinator[rune, Position, common.BinaryOp[T]],
 ) common.Combinator[rune, Position, T] {
 	return common.Chainl1[rune, Position, T](c, op)
 }
@@ -36,10 +36,10 @@ func Chainl1[T any](
 // If nothing read, the value def is returned.
 func Chainr[T any](
 	c common.Combinator[rune, Position, T],
-	op common.Combinator[rune, Position, func(T, T) T],
+	op common.Combinator[rune, Position, common.BinaryOp[T]],
 	def T,
 ) common.Combinator[rune, Position, T] {
-	return common.Chainr[rune, Position, T](c, op, def)
+	return common.Chainr[rune, Position, T](def, c, op)
 }
 
 // Chainr - read one or more occurrences of data readed by c combinator,
@@ -49,7 +49,7 @@ func Chainr[T any](
 // If nothing read, the value def is returned.
 func Chainr1[T any](
 	c common.Combinator[rune, Position, T],
-	op common.Combinator[rune, Position, func(T, T) T],
+	op common.Combinator[rune, Position, common.BinaryOp[T]],
 ) common.Combinator[rune, Position, T] {
 	return common.Chainr1[rune, Position, T](c, op)
 }
