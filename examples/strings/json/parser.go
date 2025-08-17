@@ -28,7 +28,7 @@ func Bool() common.Combinator[rune, strings.Position, JSON] {
 
 func Null() common.Combinator[rune, strings.Position, JSON] {
 	return strings.Cast(
-		strings.String("null"),
+		strings.String("expected null value", "null"),
 		func(_ string) (JSON, error) {
 			return JSNull{}, nil
 		},

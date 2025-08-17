@@ -1,8 +1,6 @@
 package strings
 
 import (
-	"fmt"
-
 	"github.com/okneniz/parsec/common"
 )
 
@@ -118,24 +116,18 @@ func MapStrings[V any](
 
 // String - read input text and match with string passed by first argument.
 // If the text not matched then it returns ParseError error.
-func String(str string) common.Combinator[rune, Position, string] {
+func String(errMessage, str string) common.Combinator[rune, Position, string] {
 	return func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
 		pos := buffer.Position()
 
 		for _, r := range str {
 			c, err := buffer.Read(true)
 			if err != nil {
-				return "", common.NewParseError(
-					pos,
-					fmt.Sprintf("expected '%s'", str),
-				)
+				return "", common.NewParseError(pos, errMessage)
 			}
 
 			if r != c {
-				return "", common.NewParseError(
-					pos,
-					fmt.Sprintf("expected '%s'", str),
-				)
+				return "", common.NewParseError(pos, errMessage)
 			}
 		}
 

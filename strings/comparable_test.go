@@ -1,275 +1,503 @@
 package strings
 
 import (
-	"math/rand"
 	"testing"
-	"time"
 
-	. "github.com/okneniz/parsec/testing"
+	"github.com/okneniz/parsec/common"
 )
 
 func TestEq(t *testing.T) {
-	comb := Eq("expected 'c'", 'c')
+	t.Parallel()
 
-	result, err := ParseString("a", comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = ParseString("b", comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
-
-	result, err = ParseString("c", comb)
-	Check(t, err)
-	AssertEq(t, result, 'c')
+	runTests(t, []test[rune]{
+		{
+			comb: Eq("expected 'c'", 'c'),
+			cases: []testCase[rune]{
+				{
+					input:  "",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'c'",
+					),
+				},
+				{
+					input:  "a",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'c'",
+					),
+				},
+				{
+					input:  "c",
+					output: 'c',
+				},
+				{
+					input:  "ca",
+					output: 'c',
+				},
+				{
+					input:  "ac",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'c'",
+					),
+				},
+			},
+		},
+	})
 }
 
 func TestNotEq(t *testing.T) {
-	comb := NotEq("expected not 'c'", 'c')
+	t.Parallel()
 
-	result, err := ParseString("a", comb)
-	Check(t, err)
-	AssertEq(t, result, 'a')
-
-	result, err = ParseString("b", comb)
-	Check(t, err)
-	AssertEq(t, result, 'b')
-
-	result, err = ParseString("abc", comb)
-	Check(t, err)
-	AssertEq(t, result, 'a')
-
-	result, err = ParseString("c", comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[rune]{
+		{
+			comb: NotEq("expected not c", 'c'),
+			cases: []testCase[rune]{
+				{
+					input:  "",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected not c",
+					),
+				},
+				{
+					input:  "a",
+					output: 'a',
+				},
+				{
+					input:  "c",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected not c",
+					),
+				},
+				{
+					input:  "ca",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected not c",
+					),
+				},
+				{
+					input:  "ac",
+					output: 'a',
+				},
+			},
+		},
+	})
 }
 
 func TestOneOf(t *testing.T) {
-	comb := OneOf("expected not 'a', 'b' or 'c'", 'a', 'b', 'c')
+	t.Parallel()
 
-	result, err := ParseString("a", comb)
-	Check(t, err)
-	AssertEq(t, result, 'a')
-
-	result, err = ParseString("b", comb)
-	Check(t, err)
-	AssertEq(t, result, 'b')
-
-	result, err = ParseString("c", comb)
-	Check(t, err)
-	AssertEq(t, result, 'c')
-
-	result, err = ParseString("d", comb)
-	AssertError(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[rune]{
+		{
+			comb: OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
+			cases: []testCase[rune]{
+				{
+					input:  "",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'a', 'b' or 'c'",
+					),
+				},
+				{
+					input:  "a",
+					output: 'a',
+				},
+				{
+					input:  "b",
+					output: 'b',
+				},
+				{
+					input:  "c",
+					output: 'c',
+				},
+				{
+					input:  "d",
+					output: 0,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'a', 'b' or 'c'",
+					),
+				},
+				{
+					input:  "ca",
+					output: 'c',
+				},
+				{
+					input:  "ac",
+					output: 'a',
+				},
+				{
+					input:  "bb",
+					output: 'b',
+				},
+				{
+					input: "fa",
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'a', 'b' or 'c'",
+					),
+				},
+			},
+		},
+	})
 }
 
 func TestSequenceOf(t *testing.T) {
-	comb := String("foo")
+	t.Parallel()
 
-	result, err := ParseString("foo", comb)
-	Check(t, err)
-	AssertEq(t, result, "foo")
-
-	result, err = ParseString("foobar", comb)
-	Check(t, err)
-	AssertEq(t, result, "foo")
-
-	result, err = ParseString("fo", comb)
-	AssertError(t, err)
-	AssertEq(t, result, "")
-
-	result, err = ParseString(" foobar", comb)
-	AssertError(t, err)
-	AssertEq(t, result, "")
-
-	result, err = ParseString(" ", comb)
-	AssertError(t, err)
-	AssertEq(t, result, "")
-
-	result, err = ParseString("", comb)
-	AssertError(t, err)
-	AssertEq(t, result, "")
+	runTestsString(t, []test[[]rune]{
+		{
+			comb: SequenceOf("expected foo", 'f', 'o', 'o'),
+			cases: []testCase[[]rune]{
+				{
+					input:  "",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  " ",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  "f",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  "fo",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  "foo",
+					output: []rune{'f', 'o', 'o'},
+				},
+				{
+					input:  "foo.",
+					output: []rune{'f', 'o', 'o'},
+				},
+				{
+					input:  ".foo",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  "foobar",
+					output: []rune{'f', 'o', 'o'},
+				},
+				{
+					input:  "barfoo",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+			},
+		},
+	})
 }
 
 func TestMap(t *testing.T) {
-	cases := map[rune]int{'a': 1, 'b': 2, 'c': 3}
+	t.Parallel()
 
-	comb := Some(
-		1,
-		"sequence of keys from map",
-		SkipMany(
-			NoneOf(
-				"expected not 'a', 'b' or 'c'",
-				'a', 'b', 'c',
+	runTestsString(t, []test[[]string]{
+		{
+			comb: Some(
+				1,
+				"expected at least one a, b or c",
+				common.SkipMany(
+					NoneOf("skip not a, b or c", 'a', 'b', 'c'),
+					Map(
+						"expected a, b or c",
+						map[rune]string{
+							'a': "foo",
+							'b': "bar",
+							'c': "baz",
+						},
+						Any(),
+					),
+				),
 			),
-			Map(
-				"expected 'a', 'b' or 'c'",
-				cases,
-				Any(),
-			),
-		),
-	)
+			cases: []testCase[[]string]{
+				{
+					input:  "",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected at least one a, b or c",
+					),
+				},
+				{
+					input:  "a",
+					output: []string{"foo"},
+				},
+				{
+					input:  "ab",
+					output: []string{"foo", "bar"},
+				},
+				{
+					input:  "abc",
+					output: []string{"foo", "bar", "baz"},
+				},
+				{
+					input:  "abcd",
+					output: []string{"foo", "bar", "baz"},
+				},
+				{
+					input:  "abcbcabzx",
+					output: []string{"foo", "bar", "baz", "bar", "baz", "foo", "bar"},
+				},
+				{
+					input:  "xyzsert",
+					output: nil,
 
-	result, err := ParseString("a", comb)
-	Check(t, err)
-	AssertSlice(t, result, []int{1})
-
-	result, err = ParseString("..a//b++c**d,,e--a", comb)
-	Check(t, err)
-	AssertSlice(t, result, []int{1, 2, 3, 1})
-
-	result, err = ParseString("bb", comb)
-	Check(t, err)
-	AssertSlice(t, result, []int{2, 2})
-
-	result, err = ParseString("", comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected at least one a, b or c",
+					),
+				},
+			},
+		},
+	})
 }
 
 func TestMapStrings(t *testing.T) {
-	cases := map[string]int{"a": 1, "b": 2, "c": 3}
+	t.Parallel()
 
-	comb := Some(
-		1,
-		"sequence of keys",
-		SkipMany(
-			NoneOf(
-				"none of 'a', 'b' or 'c'",
-				'a', 'b', 'c',
+	runTestsString(t, []test[[]string]{
+		{
+			comb: Some(
+				1,
+				"sequence of keys",
+				SkipMany(
+					NoneOf(
+						"none of 'a', 'b' or 'c'",
+						'a', 'b', 'c',
+					),
+					MapStrings(
+						"expect 'a', 'b' or 'c'",
+						map[string]string{
+							"a": "foo",
+							"b": "bar",
+							"c": "baz",
+						},
+					),
+				),
 			),
-			MapStrings("expect 'a', 'b' or 'c'", cases),
-		),
-	)
-
-	result, err := ParseString("a", comb)
-	Check(t, err)
-	AssertSlice(t, result, []int{1})
-
-	result, err = ParseString("..a//b++c**d,,e--a", comb)
-	Check(t, err)
-	AssertSlice(t, result, []int{1, 2, 3, 1})
-
-	result, err = ParseString("bb", comb)
-	Check(t, err)
-	AssertSlice(t, result, []int{2, 2})
-
-	result, err = ParseString("", comb)
-	AssertError(t, err)
-	AssertSlice(t, result, nil)
+			cases: []testCase[[]string]{
+				{
+					input:  "",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"sequence of keys",
+					),
+				},
+				{
+					input:  "a",
+					output: []string{"foo"},
+				},
+				{
+					input:  "ab",
+					output: []string{"foo", "bar"},
+				},
+				{
+					input:  "abc",
+					output: []string{"foo", "bar", "baz"},
+				},
+				{
+					input:  "abcd",
+					output: []string{"foo", "bar", "baz"},
+				},
+				{
+					input:  "abcbcabzx",
+					output: []string{"foo", "bar", "baz", "bar", "baz", "foo", "bar"},
+				},
+				{
+					input:  "..a//b++c**d,,e--a",
+					output: []string{"foo", "bar", "baz", "foo"},
+				},
+				{
+					input:  "xyzsert",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"sequence of keys",
+					),
+				},
+			},
+		},
+	})
 }
 
 func TestString(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := String("foo")
-
-		result, err := ParseString("foo", comb)
-		Check(t, err)
-		AssertEq(t, result, "foo")
-
-		result, err = ParseString("foobar", comb)
-		Check(t, err)
-		AssertEq(t, result, "foo")
-
-		result, err = ParseString("bar", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-
-		result, err = ParseString("baz", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-
-		result, err = ParseString(" foo", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-
-		result, err = ParseString(" foobar", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-
-		result, err = ParseString("", comb)
-		AssertError(t, err)
-		AssertEq(t, result, "")
-	})
-}
-
-func BenchmarkMap(b *testing.B) {
-	seed := time.Now().UnixNano()
-	source := rand.New(rand.NewSource(seed))
-	r := rand.New(source)
-
-	b.Log("seed: ", seed)
-
-	dict := map[string]time.Month{
-		"Jan": time.January,
-		"Feb": time.February,
-		"Mar": time.March,
-		"Apr": time.April,
-		"May": time.May,
-		"Jun": time.June,
-		"Jul": time.July,
-		"Aug": time.August,
-		"Sep": time.September,
-		"Oct": time.October,
-		"Nov": time.November,
-		"Dec": time.December,
-	}
-
-	gen := func(count int) []string {
-		examples := make([]string, 0, count)
-
-		for {
-			for key := range dict {
-				examples = append(examples, key)
-				count--
-
-				if count == 0 {
-					break
-				}
-			}
-
-			if count == 0 {
-				break
-			}
-		}
-
-		r.Shuffle(len(examples), func(i, j int) { examples[i], examples[j] = examples[j], examples[i] })
-
-		return examples
-	}
-
-	b.Run("MapString", func(b *testing.B) {
-		examples := gen(b.N)
-		comb := MapStrings("map string", dict)
-
-		b.ResetTimer()
-
-		for _, example := range examples {
-			_, _ = ParseString(example, comb)
-		}
-	})
-
-	b.Run("Map", func(b *testing.B) {
-		examples := gen(b.N)
-
-		comb := Map(
-			"expected one month",
-			dict,
-			Cast(
-				Count(3, "3 chars", Any()),
-				func(x []rune) (string, error) {
-					return string(x), nil
+	runTests(t, []test[string]{
+		{
+			comb: String("expected foo", "foo"),
+			cases: []testCase[string]{
+				{
+					input:  "",
+					output: "",
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
 				},
-			),
-		)
-
-		b.ResetTimer()
-
-		for _, example := range examples {
-			_, _ = ParseString(example, comb)
-		}
+				{
+					input:  "foo",
+					output: "foo",
+				},
+				{
+					input:  "foobar",
+					output: "foo",
+				},
+				{
+					input:  "fo",
+					output: "",
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  "f",
+					output: "",
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+				{
+					input:  "bar",
+					output: "",
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected foo",
+					),
+				},
+			},
+		},
 	})
 }
