@@ -562,22 +562,22 @@ func TestCast(t *testing.T) {
 				},
 				{
 					input:  []byte{0},
-					output: 0,
+					output: -1,
 					err:    common.NewParseError(0, "test error"),
 				},
 				{
 					input:  []byte{1},
-					output: 0,
+					output: -1,
 					err:    common.NewParseError(0, "test error"),
 				},
 				{
 					input:  []byte{math.MaxUint8},
-					output: 0,
+					output: -1,
 					err:    common.NewParseError(0, "test error"),
 				},
 				{
 					input:  []byte{math.MaxInt8},
-					output: 0,
+					output: -1,
 					err:    common.NewParseError(0, "test error"),
 				},
 			},

@@ -7,8 +7,7 @@ func Parse[T any, P any, S any](
 ) (S, Error[P]) {
 	result, err := c(buffer)
 	if err != nil {
-		var null S
-		return null, err
+		return result, err
 	}
 
 	return result, nil

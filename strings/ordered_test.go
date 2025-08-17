@@ -54,6 +54,39 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 	}
 }
 
+func runTestsString[T comparable](t *testing.T, tests []test[[]T]) {
+	t.Helper()
+
+	for i, example := range tests {
+		test := example
+		name := fmt.Sprintf("test %d", i)
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			for i, x := range test.cases {
+				testCase := x
+				name := fmt.Sprintf("case %d", i)
+
+				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+
+					result, err := ParseString(testCase.input, test.comb)
+
+					if testCase.err != nil {
+						AssertError(t, err)
+						AssertEq(t, err.Error(), testCase.err.Error())
+					} else {
+						Check(t, err)
+					}
+
+					AssertSlice(t, result, testCase.output)
+				})
+			}
+		})
+	}
+}
+
 func TestRange(t *testing.T) {
 	t.Parallel()
 

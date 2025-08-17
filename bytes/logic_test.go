@@ -87,6 +87,8 @@ func TestOr(t *testing.T) {
 }
 
 func TestAnd(t *testing.T) {
+	t.Parallel()
+
 	runTestsSlice(t, []test[[]byte]{
 		{
 			comb: And(

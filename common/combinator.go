@@ -119,7 +119,7 @@ func Cast[T any, P any, S any, B any](
 
 		value, castError := cast(result)
 		if castError != nil {
-			return null, NewParseError(pos, castError.Error())
+			return value, NewParseError(pos, castError.Error())
 		}
 
 		return value, nil
