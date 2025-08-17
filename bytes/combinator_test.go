@@ -40,6 +40,8 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 				name := fmt.Sprintf("case %d", i)
 
 				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+
 					result, err := Parse(testCase.input, test.comb)
 
 					if testCase.err != nil {
@@ -71,6 +73,8 @@ func runTestsSlice[T comparable](t *testing.T, tests []test[[]T]) {
 				name := fmt.Sprintf("case %d", i)
 
 				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+
 					result, err := Parse(testCase.input, test.comb)
 
 					if testCase.err != nil {
