@@ -6,7 +6,6 @@ import (
 
 	"github.com/okneniz/parsec/common"
 	"github.com/okneniz/parsec/strings"
-	testHelpers "github.com/okneniz/parsec/testing"
 )
 
 var (
@@ -42,10 +41,15 @@ func Number_() common.Combinator[rune, strings.Position, JSON] {
 			strings.Count(1, "not zero", notZero),
 			strings.Many(0, strings.Try(digit)),
 		),
-		func(x []rune) (JSON, error) {
-			v, err := testHelpers.DigitsToNum(x)
-			if err != nil {
-				return nil, err
+		func(ds []rune) (JSON, error) {
+			v := 0
+
+			for i, x := range ds {
+				v += int(x - '0')
+
+				if len(ds)-1 != i {
+					v *= 10
+				}
 			}
 
 			return JSNumber{v}, nil

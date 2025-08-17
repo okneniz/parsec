@@ -1,8 +1,6 @@
 package testing
 
 import (
-	"encoding/json"
-	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -56,26 +54,6 @@ func AssertSlice[T comparable](t *testing.T, xs, ys []T) {
 		if x != ys[i] {
 			t.Fatalf("%v != %v", xs, ys)
 		}
-	}
-}
-
-func AssertEqDump[T any](t *testing.T, actual, expected T) {
-	t.Helper()
-
-	ex, err := json.Marshal(expected)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ac, err := json.Marshal(actual)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(ex) != string(ac) {
-		t.Errorf("expected %v", string(ex))
-		t.Errorf("actual %v", string(ac))
-		t.Fatal("invalid result")
 	}
 }
 
@@ -142,33 +120,4 @@ func Noicer(seed int64, from, to rune) func() string {
 
 		return result
 	}
-}
-
-func DigitsToNum(ds []rune) (int, error) {
-	if len(ds) == 0 {
-		return -1, fmt.Errorf("invalid number []runes: %v, string: %v", ds, string(ds))
-	}
-
-	m := map[rune]int{
-		'0': 0,
-		'1': 1,
-		'2': 2,
-		'3': 3,
-		'4': 4,
-		'5': 5,
-		'6': 6,
-		'7': 7,
-		'8': 8,
-		'9': 9,
-	}
-
-	num := m[ds[len(ds)-1]]
-
-	for i, d := range ds[:len(ds)-1] {
-		l := math.Pow(10, float64(len(ds)-i-1))
-		v := int(l) * m[d]
-		num += v
-	}
-
-	return num, nil
 }
