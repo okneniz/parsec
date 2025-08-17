@@ -307,26 +307,29 @@ func SepEndBy1[T any, P any, S any, B any](
 // Returns a slice of values returned by body combinator.
 func ManyTill[T any, P any, S any, B any](
 	cap int,
+	errMessage string,
 	c Combinator[T, P, S],
 	end Combinator[T, P, B],
 ) Combinator[T, P, []S] {
-	z := Try(end)
+	needStop := Try(end)
 
 	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
 
-		for {
-			_, err := z(buffer)
+		for !buffer.IsEOF() {
+			_, err := needStop(buffer)
 			if err == nil {
 				break
 			}
 
-			x, err := c(buffer)
+			pos := buffer.Position()
+
+			data, err := c(buffer)
 			if err != nil {
-				break
+				return nil, NewParseError(pos, errMessage)
 			}
 
-			result = append(result, x)
+			result = append(result, data)
 		}
 
 		return result, nil

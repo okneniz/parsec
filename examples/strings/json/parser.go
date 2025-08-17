@@ -64,7 +64,12 @@ func String_() common.Combinator[rune, strings.Position, JSON] {
 		strings.Eq(`expected double quote as end of string literal`, '"'),
 	)
 
-	parse := strings.ManyTill(0, strings.Any(), rightQuote)
+	parse := strings.ManyTill(
+		0,
+		"expected string literal",
+		strings.Any(),
+		rightQuote,
+	)
 
 	return func(
 		buffer common.Buffer[rune, strings.Position],

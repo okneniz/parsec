@@ -7,6 +7,8 @@ import (
 )
 
 func TestEq(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: Eq("expected 'c'", 'c'),
@@ -40,6 +42,8 @@ func TestEq(t *testing.T) {
 }
 
 func TestNotEq(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: NotEq("expected not c", 'c'),
@@ -73,6 +77,8 @@ func TestNotEq(t *testing.T) {
 }
 
 func TestOneOf(t *testing.T) {
+	t.Parallel()
+
 	runTests(t, []test[byte]{
 		{
 			comb: OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
@@ -121,6 +127,8 @@ func TestOneOf(t *testing.T) {
 }
 
 func TestSequenceOf(t *testing.T) {
+	t.Parallel()
+
 	runTestsSlice(t, []test[[]byte]{
 		{
 			comb: SequenceOf("expected foo", 'f', 'o', 'o'),
@@ -173,6 +181,8 @@ func TestSequenceOf(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
+	t.Parallel()
+
 	runTestsSlice(t, []test[[]string]{
 		{
 			comb: Some(

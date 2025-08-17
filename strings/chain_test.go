@@ -935,6 +935,7 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 1", func(t *testing.T) {
 		comb := ManyTill(
 			0,
+			"expected sequence of any characters optionaly ended by 'd'",
 			Any(),
 			Satisfy("expected 'd'", false, func(x rune) bool { return x == 'd' }),
 		)
@@ -955,6 +956,7 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 2", func(t *testing.T) {
 		comb := ManyTill(
 			0,
+			"expected something",
 			Any(),
 			Satisfy("expected any char", true, common.Nothing[rune]),
 		)
@@ -976,6 +978,7 @@ func TestManyTill(t *testing.T) {
 	t.Run("case 3", func(t *testing.T) {
 		comb := ManyTill(
 			0,
+			"expected something",
 			Any(),
 			Any(),
 		)

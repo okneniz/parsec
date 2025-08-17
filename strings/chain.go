@@ -127,8 +127,9 @@ func SepEndBy1[T any, S any](
 // Returns a slice of values returned by body combinator.
 func ManyTill[T any, S any](
 	cap int,
+	errMessage string,
 	c common.Combinator[rune, Position, T],
 	end common.Combinator[rune, Position, S],
 ) common.Combinator[rune, Position, []T] {
-	return common.ManyTill[rune, Position, T](cap, c, end)
+	return common.ManyTill[rune, Position, T](cap, errMessage, c, end)
 }

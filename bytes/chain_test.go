@@ -451,521 +451,370 @@ func TestChainr1(t *testing.T) {
 func TestSepBy(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := SepBy(
-			0,
-			NotEq("expected not ','", ','),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{})
-
-		result, err = Parse([]byte(","), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{})
-
-		result, err = Parse([]byte(",a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{})
-
-		result, err = Parse([]byte("a,b,c,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte("a,b,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b'})
-
-		result, err = Parse([]byte("abc"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := SepBy(
-			0,
-			Satisfy("expected any byte", true, common.Nothing[byte]),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := SepBy(
-			0,
-			NotEq("expected not ','", ','),
-			Satisfy("any byte", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: SepBy(
+				0,
+				NotEq("expected not ','", ','),
+				Eq("expected ','", ','),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+				},
+				{
+					input:  []byte("a,b,c"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte(","),
+					output: nil,
+				},
+				{
+					input:  []byte(",a,b,c"),
+					output: nil,
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a"),
+					output: []byte{'a'},
+				},
+				{
+					input:  []byte("abc"),
+					output: []byte{'a'},
+				},
+			},
+		},
 	})
 }
 
 func TestSepBy1(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := SepBy1(
-			0,
-			"expected at least one item separated by ','",
-			NotEq("expected not ','", ','),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(","), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(",a,b,c"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a,b,c,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte("a,b,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b'})
-
-		result, err = Parse([]byte("abc"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := SepBy1(
-			0,
-			"expected at least one item separated by ','",
-			Satisfy("any byte", true, common.Nothing[byte]),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := SepBy1(
-			0,
-			"expected at least one item separated by ','",
-			NotEq("expected ','", ','),
-			Satisfy("any byte", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: SepBy1(
+				0,
+				"expected at least one item separated by ','",
+				NotEq("expected not ','", ','),
+				Eq("expected ','", ','),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated by ','"),
+				},
+				{
+					input:  []byte("a,b,c"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte(","),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated by ','"),
+				},
+				{
+					input:  []byte(",a,b,c"),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated by ','"),
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a"),
+					output: []byte{'a'},
+				},
+				{
+					input:  []byte("abc"),
+					output: []byte{'a'},
+				},
+			},
+		},
 	})
 }
 
 func TestEndBy(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := EndBy(
-			0,
-			NotEq("expected not ','", ','),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b'})
-
-		result, err = Parse([]byte("a,b,c,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(","), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(",a"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a,,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(",a,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := EndBy(
-			0,
-			Satisfy("any byte", true, common.Nothing[byte]),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := EndBy(
-			0,
-			NotEq("expected not ','", ','),
-			Satisfy("aby byte", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: EndBy(
+				0,
+				NotEq("expected not ','", ','),
+				Eq("expected ','", ','),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+				},
+				{
+					input:  []byte("a,b,c"),
+					output: []byte{'a', 'b'},
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte(","),
+					output: nil,
+				},
+				{
+					input:  []byte(",a,b,c"),
+					output: nil,
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a"),
+					output: nil,
+				},
+				{
+					input:  []byte("a,"),
+					output: []byte{'a'},
+				},
+				{
+					input:  []byte(",a"),
+					output: nil,
+				},
+				{
+					input:  []byte(",a,"),
+					output: nil,
+				},
+				{
+					input:  []byte("a,,"),
+					output: []byte{'a'},
+				},
+			},
+		},
 	})
 }
 
 func TestEndBy1(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := EndBy1(
-			0,
-			"expected at least one item ended by ','",
-			NotEq("expected not ','", ','),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b'})
-
-		result, err = Parse([]byte("a,b,c,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(","), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(",a"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte("a,,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(",a,"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := EndBy1(
-			0,
-			"expected at least one item ended by ','",
-			Satisfy("any byte", true, common.Nothing[byte]),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := EndBy1(
-			0,
-			"expected at least one item ended by ','",
-			NotEq("expected ','", ','),
-			Satisfy(
-				"test nothing",
-				true,
-				common.Nothing[byte],
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: EndBy1(
+				0,
+				"expected at least one item separated and ended by ','",
+				NotEq("expected not ','", ','),
+				Eq("expected ','", ','),
 			),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte("a,b,c"),
+					output: []byte{'a', 'b'},
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte(","),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte(",a,b,c"),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a"),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte("a,"),
+					output: []byte{'a'},
+				},
+				{
+					input:  []byte(",a"),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte(",a,"),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte("a,,"),
+					output: []byte{'a'},
+				},
+			},
+		},
 	})
 }
 
 func TestSepEndBy(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := SepEndBy(
-			0,
-			NotEq("expected not eq ','", ','),
-			Eq("expected eq ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte("a,b,c,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte("a,b,c,,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(","), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(",a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := SepEndBy(
-			0,
-			Satisfy("test nothing", true, common.Nothing[byte]),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(","), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := SepEndBy(
-			0,
-			NotEq("exepcted not ','", ','),
-			Satisfy("expected ','", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(","), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: SepEndBy(
+				0,
+				NotEq("expected not eq ','", ','),
+				Eq("expected eq ','", ','),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+				},
+				{
+					input:  []byte("a,b,c"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a,b,c,,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a,b,c,,d"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte(","),
+					output: []byte{},
+				},
+				{
+					input:  []byte(",a,b,c"),
+					output: []byte{},
+				},
+			},
+		},
 	})
 }
 
 func TestSepEndBy1(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := SepEndBy1(
-			0,
-			"expected at least one item separated and ended by ','",
-			NotEq("expected not eq ','", ','),
-			Eq("expected eq ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte("a,b,c,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte("a,b,c,,"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a', 'b', 'c'})
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(","), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(",a,b,c"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := SepEndBy1(
-			0,
-			"expected at least one item separated and ended by ','",
-			Satisfy("test nothing", true, common.Nothing[byte]),
-			Eq("expected ','", ','),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := SepEndBy1(
-			0,
-			"expected at least one item separated by ','",
-			NotEq("expected not ','", ','),
-			Satisfy("test nothing", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("a,b,c"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{'a'})
-
-		result, err = Parse([]byte(""), comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: SepEndBy1(
+				0,
+				"expected at least one item separated and ended by ','",
+				NotEq("expected not eq ','", ','),
+				Eq("expected eq ','", ','),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input:  []byte("a,b,c"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a,b,c,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a,b,c,,"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte("a,b,c,,d"),
+					output: []byte{'a', 'b', 'c'},
+				},
+				{
+					input:  []byte(","),
+					output: nil,
+					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+				{
+					input: []byte(",a,b,c"),
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+				},
+			},
+		},
 	})
 }
 
 func TestManyTill(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := ManyTill(
-			0,
-			Any(),
-			Satisfy("expected 'd'", false, func(x byte) bool { return x == byte('d') }),
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{
-			byte('a'),
-			byte('b'),
-			byte('c'),
-		})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := ManyTill(
-			0,
-			Any(),
-			Satisfy("test nothing", true, common.Nothing[byte]),
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertSlice(t, result, []byte{
-			byte('a'),
-			byte('b'),
-			byte('c'),
-			byte('d'),
-		})
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		comb := ManyTill(
-			0,
-			Any(),
-			Any(),
-		)
-
-		result, err := Parse([]byte("abcd"), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = Parse([]byte(""), comb)
-		Check(t, err)
-		AssertSlice(t, result, nil)
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: ManyTill(
+				0,
+				"expected sequence of digits ended by dot",
+				Range("expected digit", '0', '9'),
+				Eq("expected dot", '.'),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+				},
+				{
+					input:  []byte("123."),
+					output: []byte{'1', '2', '3'},
+				},
+				{
+					input:  []byte("123"),
+					output: []byte{'1', '2', '3'},
+				},
+				{
+					input:  []byte("123.45"),
+					output: []byte{'1', '2', '3'},
+				},
+				{
+					input:  []byte("1"),
+					output: []byte{'1'},
+				},
+				{
+					input: []byte(".1"),
+					err:   nil,
+				},
+				{
+					input: []byte("a"),
+					err:   common.NewParseError(0, "expected sequence of digits ended by dot"),
+				},
+				{
+					input: []byte("123a."),
+					err:   common.NewParseError(3, "expected sequence of digits ended by dot"),
+				},
+				{
+					input:  []byte("123.a"),
+					output: []byte{'1', '2', '3'},
+				},
+				{
+					input: []byte("a123."),
+					err:   common.NewParseError(0, "expected sequence of digits ended by dot"),
+				},
+				{
+					input: []byte("12a3"),
+					err:   common.NewParseError(2, "expected sequence of digits ended by dot"),
+				},
+			},
+		},
 	})
 }
