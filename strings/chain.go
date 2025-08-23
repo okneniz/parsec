@@ -35,9 +35,9 @@ func Chainl1[T any](
 // of all functions returned by op to the values returned by c combinator.
 // If nothing read, the value def is returned.
 func Chainr[T any](
+	def T,
 	c common.Combinator[rune, Position, T],
 	op common.Combinator[rune, Position, common.BinaryOp[T]],
-	def T,
 ) common.Combinator[rune, Position, T] {
 	return common.Chainr[rune, Position, T](def, c, op)
 }
