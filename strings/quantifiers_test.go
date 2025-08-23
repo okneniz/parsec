@@ -3,93 +3,210 @@ package strings
 import (
 	"testing"
 
-	. "github.com/okneniz/parsec/testing"
+	"github.com/okneniz/parsec/common"
 )
 
 func TestMany(t *testing.T) {
-	comb := Many(0, Eq("expected 'a'", 'a'))
+	t.Parallel()
 
-	result, err := ParseString("aaa", comb)
-	Check(t, err)
-	AssertSlice(t, result, []rune("aaa"))
-
-	result, err = ParseString("aaabc", comb)
-	Check(t, err)
-	AssertSlice(t, result, []rune("aaa"))
-
-	result, err = ParseString("xaaabc", comb)
-	Check(t, err)
-	AssertSlice(t, result, []rune{})
+	runTestsString(t, []test[[]rune]{
+		{
+			comb: Many(0, Eq("expected a", 'a')),
+			cases: []testCase[[]rune]{
+				{
+					input:  "",
+					output: nil,
+				},
+				{
+					input:  "a",
+					output: []rune{'a'},
+				},
+				{
+					input:  "aaa",
+					output: []rune{'a', 'a', 'a'},
+				},
+				{
+					input:  "aaab",
+					output: []rune{'a', 'a', 'a'},
+				},
+				{
+					input:  "aaa.aa",
+					output: []rune{'a', 'a', 'a'},
+				},
+				{
+					input:  ".aaa",
+					output: nil,
+				},
+			},
+		},
+	})
 }
 
 func TestSome(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := Some(
-			0,
-			"expected at least one 'a'",
-			Eq("expected 'a'", 'a'),
-		)
-
-		result, err := ParseString("aaa", comb)
-		Check(t, err)
-		AssertSlice(t, result, []rune("aaa"))
-
-		result, err = ParseString("aaabc", comb)
-		Check(t, err)
-		AssertSlice(t, result, []rune("aaa"))
-
-		result, err = ParseString("xaaabc", comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		comb := Some(
-			0,
-			"expected at least one char",
-			Satisfy("expected any char", true, func(x rune) bool { return false }),
-		)
-
-		result, err := ParseString("abc", comb)
-		AssertError(t, err)
-		AssertSlice(t, result, []rune{})
+	runTestsString(t, []test[[]rune]{
+		{
+			comb: Some(0, "expected at least one 'a'", Eq("expected 'a'", 'a')),
+			cases: []testCase[[]rune]{
+				{
+					input:  "",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected at least one 'a'",
+					),
+				},
+				{
+					input:  "a",
+					output: []rune{'a'},
+				},
+				{
+					input:  "aaa",
+					output: []rune{'a', 'a', 'a'},
+				},
+				{
+					input:  "aa.",
+					output: []rune{'a', 'a'},
+				},
+				{
+					input:  "aa.aaa",
+					output: []rune{'a', 'a'},
+				},
+				{
+					input:  ".aa",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected at least one 'a'",
+					),
+				},
+			},
+		},
 	})
 }
 
 func TestOptional(t *testing.T) {
-	comb := Optional(Eq("expected 'a'", 'a'), 0)
+	t.Parallel()
 
-	result, err := ParseString("aaa", comb)
-	Check(t, err)
-	AssertEq(t, result, rune('a'))
-
-	result, err = ParseString("bcd", comb)
-	Check(t, err)
-	AssertEq(t, result, 0)
+	runTests(t, []test[rune]{
+		{
+			comb: Optional(Eq("expected a", 'a'), 123),
+			cases: []testCase[rune]{
+				{
+					input:  "",
+					output: 123,
+				},
+				{
+					input:  "a",
+					output: 'a',
+				},
+				{
+					input:  "aa",
+					output: 'a',
+				},
+				{
+					input:  "xa",
+					output: 123,
+				},
+				{
+					input:  "ax",
+					output: 'a',
+				},
+			},
+		},
+		{
+			comb: Optional(Satisfy("never match", true, common.Nothing[rune]), 'x'),
+			cases: []testCase[rune]{
+				{
+					input:  "",
+					output: 'x',
+				},
+				{
+					input:  "a",
+					output: 'x',
+				},
+				{
+					input:  "aa",
+					output: 'x',
+				},
+				{
+					input:  "za",
+					output: 'x',
+				},
+				{
+					input:  "az",
+					output: 'x',
+				},
+			},
+		},
+	})
 }
 
 func TestCount(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		comb := Count(
-			2,
-			"expected two 'a'",
-			Eq("expected 'a'", 'a'),
-		)
-
-		result, err := ParseString("aabbcc", comb)
-		Check(t, err)
-		AssertSlice(t, result, []rune{'a', 'a'})
-
-		result, err = ParseString("abbcc", comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
-
-		result, err = ParseString("bbaacc", comb)
-		AssertError(t, err)
-		AssertSlice(t, result, nil)
+	runTestsString(t, []test[[]rune]{
+		{
+			comb: Count(2, "expected 'aa'", Eq("expected 'a'", 'a')),
+			cases: []testCase[[]rune]{
+				{
+					input:  "",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'aa'",
+					),
+				},
+				{
+					input:  "aa",
+					output: []rune{'a', 'a'},
+				},
+				{
+					input:  "aaa",
+					output: []rune{'a', 'a'},
+				},
+				{
+					input:  "aa.",
+					output: []rune{'a', 'a'},
+				},
+				{
+					input:  ".aa",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 0,
+							index:  0,
+						},
+						"expected 'a'",
+					),
+				},
+				{
+					input:  "a.",
+					output: nil,
+					err: common.NewParseError(
+						Position{
+							line:   0,
+							column: 1,
+							index:  1,
+						},
+						"expected 'a'",
+					),
+				},
+			},
+		},
 	})
 }
