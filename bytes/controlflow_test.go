@@ -163,3 +163,231 @@ func TestChoice(t *testing.T) {
 		},
 	})
 }
+
+func TestSkip(t *testing.T) {
+	t.Parallel()
+
+	t.Run("skip not optional", func(t *testing.T) {
+		runTests(t, []test[byte]{
+			{
+				comb: Skip(
+					Eq("expected 'a'", 'a'),
+					Eq("expected 'b'", 'b'),
+				),
+				cases: []testCase[byte]{
+					{
+						input:  []byte{},
+						output: 0,
+						err:    common.NewParseError(0, "expected 'a'"),
+					},
+					{
+						input:  []byte("abc"),
+						output: byte('b'),
+					},
+					{
+						input:  []byte("b"),
+						output: 0,
+						err:    common.NewParseError(0, "expected 'a'"),
+					},
+					{
+						input: []byte("bbb"),
+						err:   common.NewParseError(0, "expected 'a'"),
+					},
+					{
+						input:  []byte("ac"),
+						output: 0,
+						err:    common.NewParseError(1, "expected 'b'"),
+					},
+				},
+			},
+		})
+	})
+
+	t.Run("skip optional", func(t *testing.T) {
+		runTests(t, []test[byte]{
+			{
+				comb: Skip(
+					Optional(Try(Eq("expected 'a'", 'a')), 'x'),
+					Eq("expected 'b'", 'b'),
+				),
+				cases: []testCase[byte]{
+					{
+						input:  []byte{},
+						output: 0,
+						err:    common.NewParseError(0, "expected 'b'"),
+					},
+					{
+						input:  []byte("abc"),
+						output: byte('b'),
+					},
+					{
+						input:  []byte("b"),
+						output: 'b',
+					},
+					{
+						input:  []byte("bbb"),
+						output: 'b',
+					},
+					{
+						input:  []byte("ac"),
+						output: 0,
+						err:    common.NewParseError(1, "expected 'b'"),
+					},
+				},
+			},
+		})
+	})
+}
+
+func TestSkipMany(t *testing.T) {
+	t.Parallel()
+
+	runTestsSlice(t, []test[[]byte]{
+		{
+			comb: common.SkipMany(
+				NoneOf("expected not a, b or c", 'a', 'b', 'c'),
+				SequenceOf("expected abc", 'a', 'b', 'c'),
+			),
+			cases: []testCase[[]byte]{
+				{
+					input:  []byte{},
+					output: nil,
+					err:    common.NewParseError(0, "expected abc"),
+				},
+				{
+					input:  []byte("abc"),
+					output: []byte("abc"),
+				},
+				{
+					input:  []byte("ab"),
+					output: nil,
+					err:    common.NewParseError(0, "expected abc"),
+				},
+				{
+					input:  []byte("xab"),
+					output: nil,
+					err:    common.NewParseError(1, "expected abc"),
+				},
+				{
+					input:  []byte("123abc"),
+					output: []byte("abc"),
+				},
+				{
+					input:  []byte("bcabc"),
+					output: nil,
+					err:    common.NewParseError(0, "expected abc"),
+				},
+				{
+					input:  []byte("abcabc"),
+					output: []byte("abc"),
+				},
+				{
+					input:  []byte("123abc123"),
+					output: []byte("abc"),
+				},
+				{
+					input:  []byte("123abcabc"),
+					output: []byte("abc"),
+				},
+				{
+					input:  []byte("123"),
+					output: nil,
+					err:    common.NewParseError(3, "expected abc"),
+				},
+			},
+		},
+	})
+}
+
+func TestSkipAfter(t *testing.T) {
+	t.Parallel()
+
+	runTests(t, []test[byte]{
+		{
+			comb: SkipAfter(
+				Eq("expected 'b'", 'b'),
+				Eq("expected 'a'", 'a'),
+			),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected 'a'"),
+				},
+				{
+					input:  []byte("abc"),
+					output: 'a',
+				},
+				{
+					input:  []byte("ab"),
+					output: 'a',
+				},
+				{
+					input: []byte("a"),
+					err:   common.NewParseError(1, "expected 'b'"),
+				},
+				{
+					input: []byte("ac"),
+					err:   common.NewParseError(1, "expected 'b'"),
+				},
+				{
+					input: []byte("b"),
+					err:   common.NewParseError(0, "expected 'a'"),
+				},
+				{
+					input: []byte("bc"),
+					err:   common.NewParseError(0, "expected 'a'"),
+				},
+				{
+					input: []byte("bb"),
+					err:   common.NewParseError(0, "expected 'a'"),
+				},
+			},
+		},
+	})
+}
+
+func TestPadded(t *testing.T) {
+	t.Parallel()
+
+	runTests(t, []test[byte]{
+		{
+			comb: Padded(
+				Eq("expected dot", '.'),
+				Range("expected digit", '0', '9'),
+			),
+			cases: []testCase[byte]{
+				{
+					input:  []byte{},
+					output: 0,
+					err:    common.NewParseError(0, "expected digit"),
+				},
+				{
+					input:  []byte("1"),
+					output: '1',
+				},
+				{
+					input:  []byte(".1"),
+					output: '1',
+				},
+				{
+					input:  []byte(".1."),
+					output: '1',
+				},
+				{
+					input:  []byte("...1.."),
+					output: '1',
+				},
+				{
+					input:  []byte("x...1.."),
+					output: 0,
+					err:    common.NewParseError(0, "expected digit"),
+				},
+				{
+					input:  []byte("...1..x"),
+					output: '1',
+				},
+			},
+		},
+	})
+}

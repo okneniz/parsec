@@ -274,65 +274,6 @@ func TestBetween(t *testing.T) {
 	})
 }
 
-func TestPadded(t *testing.T) {
-	t.Parallel()
-
-	runTests(t, []test[rune]{
-		{
-			comb: Padded(
-				Eq("expected dot", '.'),
-				Range("expected digit", '0', '9'),
-			),
-			cases: []testCase[rune]{
-				{
-					input:  "",
-					output: 0,
-					err: common.NewParseError(
-						Position{
-							line:   0,
-							column: 0,
-							index:  0,
-						},
-						"expected digit",
-					),
-				},
-				{
-					input:  "1",
-					output: '1',
-				},
-				{
-					input:  ".1",
-					output: '1',
-				},
-				{
-					input:  ".1.",
-					output: '1',
-				},
-				{
-					input:  "...1..",
-					output: '1',
-				},
-				{
-					input:  "x...1..",
-					output: 0,
-					err: common.NewParseError(
-						Position{
-							line:   0,
-							column: 0,
-							index:  0,
-						},
-						"expected digit",
-					),
-				},
-				{
-					input:  "...1..x",
-					output: '1',
-				},
-			},
-		},
-	})
-}
-
 func TestEOF(t *testing.T) {
 	t.Parallel()
 
