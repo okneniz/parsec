@@ -15,7 +15,7 @@ func Satisfy[T any, P any](
 
 		token, err := buffer.Read(greedy)
 		if err != nil {
-			return *new(T), NewParseError(pos, errMessage)
+			return null, NewParseError(pos, errMessage)
 		}
 
 		if f(token) {

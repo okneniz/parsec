@@ -1,50 +1,91 @@
 package cards
 
 import (
+	"maps"
+	"math/rand/v2"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
+	ohsnap "github.com/okneniz/oh-snap"
 	. "github.com/okneniz/parsec/strings"
-	. "github.com/okneniz/parsec/testing"
 )
 
 func TestCards(t *testing.T) {
-	visa := Trace(t, "visa", Visa())
-	master := Trace(t, "master", Master())
-	americanExpress := Trace(t, "american express", AmericanExpress())
-
-	cards := Choice(
-		Try(visa),
-		Try(master),
-		Try(americanExpress),
-	)
-
-	noice := Many(10, Try(NotRange("expected char no between '0' and '9'", '0', '9')))
-	comb := Skip(noice, SepEndBy(4, cards, noice))
-
-	cardNums := []string{
-		"4111111111111111",
-		"4012888888881881",
-		"4222222222222",
-		"5555555555554444",
-		"5105105105105100",
-		"378282246310005",
-		"371449635398431",
-		"378734493671000",
-	}
+	t.Parallel()
 
 	seed := time.Now().UnixNano()
-	shuffle := Shuffler[string](seed)
-	input := JoinBy(
-		Noicer(seed, '0', '9'),
-		shuffle(cardNums)...,
+	t.Logf("seed: %v", seed)
+	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
+
+	cards := Choice(
+		Try(Master()),
+		Try(Visa()),
+		Try(AmericanExpress()),
 	)
 
-	t.Log("seed: ", seed)
-	t.Log("input:")
-	t.Logf("%#v", input)
+	noice := Many(10, Try(NotRange("expected not digit", '0', '9')))
+	parse := Skip(noice, SepEndBy(0, cards, noice))
 
-	result, err := ParseString(input, comb)
-	Check(t, err)
-	AssertSlice(t, Sorted(result...), Sorted(cardNums...))
+	arbNoice := ohsnap.ArbitrarySlice(
+		rnd,
+		ohsnap.ArbitraryString(rnd, "abcdefghijklmnopqrstuvwxyz", 1, 100),
+		10,
+		20,
+	)
+
+	cardsNums := map[string]struct{}{
+		"4111111111111111": {},
+		"4012888888881881": {},
+		"5555555555554444": {},
+		"5105105105105100": {},
+		"378282246310005":  {},
+		"371449635398431":  {},
+		"378734493671000":  {},
+	}
+
+	const expectedSize = 4
+
+	arbCard := ohsnap.OneOfValue(rnd, slices.Collect(maps.Keys(cardsNums))...)
+	arbCards := ohsnap.ArbitrarySlice(rnd, arbCard, expectedSize, expectedSize)
+
+	arb := ohsnap.Map(
+		ohsnap.Combine(arbNoice, arbCards),
+		func(x ohsnap.Pair[[]string, []string]) string {
+			data := append(x.First, x.Second...)
+
+			rnd.Shuffle(len(data), func(i, j int) {
+				data[i], data[j] = data[j], data[i]
+			})
+
+			return strings.Join(data, "")
+		},
+	)
+
+	ohsnap.Check(t, 100_000, arb, func(input string) bool {
+		output, err := ParseString(input, parse)
+		if err != nil {
+			t.Log("input:", input)
+			t.Log("output:", output)
+			t.Error(err)
+			return false
+		}
+
+		if len(output) != expectedSize {
+			t.Log("input:", input)
+			t.Log("output:", output)
+			t.Error("unexpected len of result", len(output), expectedSize)
+			return false
+		}
+
+		for _, x := range output {
+			if _, exists := cardsNums[x]; !exists {
+				t.Error("invalid card number", x)
+				return false
+			}
+		}
+
+		return true
+	})
 }

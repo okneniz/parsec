@@ -84,7 +84,7 @@ func Chainr[T any, P any, S any](
 	}
 }
 
-// Chainr - read one or more occurrences of data readed by c combinator,
+// Chainr1 - read one or more occurrences of data readed by c combinator,
 // separated by op combinator.
 // Returns a value obtained by a right associative application
 // of all functions returned by op to the values returned by c combinator.
