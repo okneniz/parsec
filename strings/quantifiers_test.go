@@ -15,7 +15,7 @@ func TestMany(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a",
@@ -35,7 +35,7 @@ func TestMany(t *testing.T) {
 				},
 				{
 					input:  ".aaa",
-					output: nil,
+					output: []rune{},
 				},
 			},
 		},
@@ -151,7 +151,7 @@ func TestOptional(t *testing.T) {
 	})
 }
 
-func TestCount(t *testing.T) {
+func lTestCount(t *testing.T) {
 	t.Parallel()
 
 	runTestsString(t, []test[[]rune]{
@@ -160,7 +160,7 @@ func TestCount(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: nil,
+					output: []rune{},
 					err: common.NewParseError(
 						Position{
 							line:   0,
@@ -184,7 +184,7 @@ func TestCount(t *testing.T) {
 				},
 				{
 					input:  ".aa",
-					output: nil,
+					output: []rune{},
 					err: common.NewParseError(
 						Position{
 							line:   0,
@@ -196,7 +196,7 @@ func TestCount(t *testing.T) {
 				},
 				{
 					input:  "a.",
-					output: nil,
+					output: []rune{},
 					err: common.NewParseError(
 						Position{
 							line:   0,

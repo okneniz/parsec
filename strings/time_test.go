@@ -5,7 +5,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
-	. "github.com/okneniz/parsec/testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTimeZone(t *testing.T) {
@@ -19,9 +19,9 @@ func TestTimeZone(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(zone, comb)
-			Check(t, err)
-			Assert(t, result != nil, "expected pointer to time zone")
-			AssertEq(t, result.String(), zone)
+			assert.NoError(t, err)
+			assert.NotNil(t, result, "expected pointer to time zone")
+			assert.Equal(t, result.String(), zone)
 		}
 	})
 
@@ -33,8 +33,8 @@ func TestTimeZone(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(zone, comb)
-			AssertError(t, err)
-			AssertEq(t, result, nil)
+			assert.Error(t, err)
+			assert.Nil(t, result, nil)
 		}
 	})
 }
@@ -60,9 +60,9 @@ func TestTimeZoneByNames(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(zone, comb)
-			Check(t, err)
-			Assert(t, result != nil, "expected pointer to time zone")
-			AssertEq(t, result.String(), zone)
+			assert.NoError(t, err)
+			assert.NotNil(t, result, "expected pointer to time zone")
+			assert.Equal(t, result.String(), zone)
 		}
 	})
 
@@ -76,8 +76,8 @@ func TestTimeZoneByNames(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(zone, comb)
-			AssertError(t, err)
-			AssertEq(t, result, nil)
+			assert.Error(t, err)
+			assert.Nil(t, result)
 		}
 	})
 }

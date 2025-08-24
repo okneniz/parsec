@@ -15,7 +15,7 @@ func TestMany(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a"),
@@ -35,7 +35,7 @@ func TestMany(t *testing.T) {
 				},
 				{
 					input:  []byte(".aaa"),
-					output: nil,
+					output: []byte{},
 				},
 			},
 		},
@@ -145,9 +145,8 @@ func TestCount(t *testing.T) {
 			comb: Count(2, "expected 'aa'", Eq("expected 'a'", 'a')),
 			cases: []testCase[[]byte]{
 				{
-					input:  []byte{},
-					output: nil,
-					err:    common.NewParseError(0, "expected 'aa'"),
+					input: []byte{},
+					err:   common.NewParseError(0, "expected 'aa'"),
 				},
 				{
 					input:  []byte("aa"),
@@ -162,14 +161,12 @@ func TestCount(t *testing.T) {
 					output: []byte{'a', 'a'},
 				},
 				{
-					input:  []byte(".aa"),
-					output: nil,
-					err:    common.NewParseError(0, "expected 'a'"),
+					input: []byte(".aa"),
+					err:   common.NewParseError(0, "expected 'a'"),
 				},
 				{
-					input:  []byte("a."),
-					output: nil,
-					err:    common.NewParseError(1, "expected 'a'"),
+					input: []byte("a."),
+					err:   common.NewParseError(1, "expected 'a'"),
 				},
 			},
 		},

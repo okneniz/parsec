@@ -336,7 +336,7 @@ func TestSepBy(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,b,c",
@@ -344,11 +344,11 @@ func TestSepBy(t *testing.T) {
 				},
 				{
 					input:  ",",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  ",a,b,c",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,b,c,",
@@ -449,7 +449,7 @@ func TestEndBy(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,b,c",
@@ -461,11 +461,11 @@ func TestEndBy(t *testing.T) {
 				},
 				{
 					input:  ",",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  ",a,b,c",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,b,c,",
@@ -473,7 +473,7 @@ func TestEndBy(t *testing.T) {
 				},
 				{
 					input:  "a",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,",
@@ -481,11 +481,11 @@ func TestEndBy(t *testing.T) {
 				},
 				{
 					input:  ",a",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  ",a,",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,,",
@@ -618,7 +618,7 @@ func TestSepEndBy(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "a,b,c",
@@ -702,7 +702,8 @@ func TestSepEndBy1(t *testing.T) {
 					),
 				},
 				{
-					input: ",a,b,c",
+					input:  ",a,b,c",
+					output: nil,
 					err: common.NewParseError(
 						Position{
 							line:   0,
@@ -731,7 +732,7 @@ func TestManyTill(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: nil,
+					output: []rune{},
 				},
 				{
 					input:  "123.",
@@ -750,8 +751,8 @@ func TestManyTill(t *testing.T) {
 					output: []rune{'1'},
 				},
 				{
-					input: ".1",
-					err:   nil,
+					input:  ".1",
+					output: []rune{},
 				},
 				{
 					input: "a",

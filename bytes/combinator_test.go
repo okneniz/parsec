@@ -8,8 +8,9 @@ import (
 	"time"
 
 	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/testing"
 )
 
 type (
@@ -45,13 +46,13 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 					result, err := Parse(testCase.input, test.comb)
 
 					if testCase.err != nil {
-						AssertError(t, err)
-						AssertEq(t, err.Error(), testCase.err.Error())
+						assert.Error(t, err)
+						assert.Equal(t, err.Error(), testCase.err.Error())
 					} else {
-						Check(t, err)
+						assert.NoError(t, err)
 					}
 
-					AssertEq(t, result, testCase.output)
+					assert.Equal(t, result, testCase.output)
 				})
 			}
 		})
@@ -78,13 +79,13 @@ func runTestsSlice[T comparable](t *testing.T, tests []test[[]T]) {
 					result, err := Parse(testCase.input, test.comb)
 
 					if testCase.err != nil {
-						AssertError(t, err)
-						AssertEq(t, err.Error(), testCase.err.Error())
+						assert.Error(t, err)
+						assert.EqualError(t, err, testCase.err.Error())
 					} else {
-						Check(t, err)
+						assert.NoError(t, err)
 					}
 
-					AssertSlice(t, result, testCase.output)
+					assert.EqualValues(t, result, testCase.output)
 				})
 			}
 		})

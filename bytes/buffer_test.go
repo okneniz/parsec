@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/okneniz/parsec/common"
-	. "github.com/okneniz/parsec/testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBuffer(t *testing.T) {
@@ -256,8 +256,8 @@ func TestBuffer(t *testing.T) {
 
 			b := Buffer(test.input)
 
-			AssertEq(t, b.Position(), example.beforePosition)
-			AssertEq(t, b.IsEOF(), example.beforeIsEOF)
+			assert.Equal(t, b.Position(), example.beforePosition)
+			assert.Equal(t, b.IsEOF(), example.beforeIsEOF)
 
 			for i, call := range test.calls {
 				t.Logf("call %d", i)
@@ -266,28 +266,28 @@ func TestBuffer(t *testing.T) {
 					result, err := b.Read(call.read.greedy)
 
 					if call.read.err == nil {
-						Check(t, err)
+						assert.NoError(t, err)
 					} else {
-						AssertError(t, err)
-						AssertEq(t, err.Error(), call.read.err.Error())
+						assert.Error(t, err)
+						assert.EqualError(t, err, call.read.err.Error())
 					}
 
-					AssertEq(t, result, call.read.output)
+					assert.Equal(t, result, call.read.output)
 				} else if call.seek != nil {
 					err := b.Seek(call.seek.pos)
 
 					if call.seek.err == nil {
-						Check(t, err)
+						assert.NoError(t, err)
 					} else {
-						AssertError(t, err)
-						AssertEq(t, err.Error(), call.seek.err.Error())
+						assert.Error(t, err)
+						assert.EqualError(t, err, call.seek.err.Error())
 					}
 				} else {
 					t.Fatal("invalid test")
 				}
 
-				AssertEq(t, b.Position(), call.afterPosition)
-				AssertEq(t, b.IsEOF(), call.afterIsEOF)
+				assert.Equal(t, b.Position(), call.afterPosition)
+				assert.Equal(t, b.IsEOF(), call.afterIsEOF)
 			}
 		})
 	}

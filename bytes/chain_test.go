@@ -322,7 +322,7 @@ func TestSepBy(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -330,11 +330,11 @@ func TestSepBy(t *testing.T) {
 				},
 				{
 					input:  []byte(","),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte(",a,b,c"),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,b,c,"),
@@ -414,7 +414,7 @@ func TestEndBy(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -426,11 +426,11 @@ func TestEndBy(t *testing.T) {
 				},
 				{
 					input:  []byte(","),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte(",a,b,c"),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,b,c,"),
@@ -438,7 +438,7 @@ func TestEndBy(t *testing.T) {
 				},
 				{
 					input:  []byte("a"),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,"),
@@ -446,11 +446,11 @@ func TestEndBy(t *testing.T) {
 				},
 				{
 					input:  []byte(",a"),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte(",a,"),
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,,"),
@@ -474,9 +474,8 @@ func TestEndBy1(t *testing.T) {
 			),
 			cases: []testCase[[]byte]{
 				{
-					input:  []byte{},
-					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					input: []byte{},
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -487,37 +486,32 @@ func TestEndBy1(t *testing.T) {
 					output: []byte{'a', 'b', 'c'},
 				},
 				{
-					input:  []byte(","),
-					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					input: []byte(","),
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
-					input:  []byte(",a,b,c"),
-					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					input: []byte(",a,b,c"),
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,b,c,"),
 					output: []byte{'a', 'b', 'c'},
 				},
 				{
-					input:  []byte("a"),
-					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					input: []byte("a"),
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,"),
 					output: []byte{'a'},
 				},
 				{
-					input:  []byte(",a"),
-					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					input: []byte(",a"),
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
-					input:  []byte(",a,"),
-					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					input: []byte(",a,"),
+					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,,"),
@@ -541,7 +535,7 @@ func TestSepEndBy(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -633,7 +627,7 @@ func TestManyTill(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
-					output: nil,
+					output: []byte{},
 				},
 				{
 					input:  []byte("123."),
@@ -652,8 +646,8 @@ func TestManyTill(t *testing.T) {
 					output: []byte{'1'},
 				},
 				{
-					input: []byte(".1"),
-					err:   nil,
+					input:  []byte(".1"),
+					output: []byte{},
 				},
 				{
 					input: []byte("a"),
