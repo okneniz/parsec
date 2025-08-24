@@ -83,3 +83,14 @@ func Title(errMessage string) common.Combinator[rune, Position, rune] {
 func Upper(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsUpper)
 }
+
+// RangeTable - parse UTF-8 character in upper case.
+// Read more about utf characters tables - https://pkg.go.dev/unicode
+func RangeTable(
+	errMessage string,
+	tbl *unicode.RangeTable,
+) common.Combinator[rune, Position, rune] {
+	return common.Satisfy[rune, Position](errMessage, true, func(x rune) bool {
+		return unicode.Is(tbl, x)
+	})
+}

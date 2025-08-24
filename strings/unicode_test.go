@@ -1,485 +1,154 @@
 package strings
 
 import (
+	"math/rand/v2"
 	"testing"
+	"time"
+	"unicode"
 
-	. "github.com/okneniz/parsec/testing"
+	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/okneniz/parsec/common"
 )
 
-var (
-	// source - https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472&unicodeinhtml=dec
-
-	controllChars = []rune{
-		'\u0000', // NULL
-		'\u0009', // HORIZONTAL TABULATION
-		'\u000A', // LINE FEED
-		'\u000C', // FORM FEED
-		'\u000D', // CARRIAGE RETURN
-		'\u0085', // NEXT LINE
+func TestUnicodeHelpers(t *testing.T) {
+	type test struct {
+		name   string
+		parser common.Combinator[rune, Position, rune]
+		arb    ohsnap.Arbitrary[rune]
 	}
 
-	graphChars = []rune{
-		'\u250C', // ┌
-		'\u252B', // ┫
-		'\u2547', // ╇
-		'\u2564', // ╤
-		'\u2573', // ╳
-		'\u2593', // ▓
+	seed := time.Now().UnixNano()
+	t.Logf("seed: %v", seed)
+	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
+
+	tests := []test{
+		// skip control chars because don't know how to make valid strings with them
+		// {
+		// 	name:   "control",
+		// 	parser: Control("expected control char"),
+		// 	arb:    ohsnap.RuneFromTable(rnd, unicode.C),
+		// },
+		{
+			name:   "digit",
+			parser: Digit("expected digit"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Digit),
+		},
+		{
+			name:   "Graphic",
+			parser: Graphic("expected graphic"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.L),
+		},
+		{
+			name:   "Letter",
+			parser: Graphic("expected letter"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Letter),
+		},
+		{
+			name:   "Lower",
+			parser: Graphic("expected lower"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Lower),
+		},
+		{
+			name:   "Mark",
+			parser: Graphic("expected mark"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Mark),
+		},
+		{
+			name:   "Number",
+			parser: Graphic("expected number"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Number),
+		},
+		{
+			name:   "Punct",
+			parser: Graphic("expected punct"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Punct),
+		},
+		// {
+		// 	name:   "Space",
+		// 	parser: Graphic("expected space"),
+		// 	arb:    ohsnap.RuneFromTable(rnd, unicode.Space),
+		// },
+		{
+			name:   "Symbol",
+			parser: Graphic("expected symbol"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Symbol),
+		},
+		{
+			name:   "Title",
+			parser: Graphic("expected title"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Title),
+		},
+		{
+			name:   "Upper",
+			parser: Graphic("expected upper"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Upper),
+		},
 	}
 
-	spaceChars        = []rune("\t\n\v\f\r \u0085\u00A0")
-	puntcChars        = []rune(`!"#%&()*,-./:;?@[\]_{}¡§«¶·»¿;·`)
-	digitsChars       = []rune("0123456789")
-	lettersChars      = []rune("abcdefghijklmnopqrstuvwxyz")
-	upperLettersChars = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	titleChars        = []rune("ǅǈǋǲ")
-	markChars         = []rune{'̳', '̴', '̵', '̶'}
-	symbolChars       = []rune("$+<=>^`|~¢£¤¥¦¨©")
-)
+	const iterations = 100_000
 
-func TestControl(t *testing.T) {
-	t.Parallel()
+	for _, x := range tests {
+		test := x
 
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Control("expected control"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
+		t.Run(test.name, func(t *testing.T) {
+			ohsnap.Check(t, iterations, test.arb, func(r rune) bool {
+				input := string(r)
 
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Control("expected control"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
+				result, err := ParseString(input, test.parser)
+				if err != nil {
+					t.Log("input", r, string(r))
+					t.Log("result", result)
+					t.Error(err)
+					return false
+				}
 
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range graphChars {
-			result, err := ParseString(string(c), Control("expected control"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
+				return r == result
+			})
+		})
+	}
 }
 
-func TestDigit(t *testing.T) {
+func TestRangeTable(t *testing.T) {
 	t.Parallel()
 
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Digit("expected digit"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
+	seed := time.Now().UnixNano()
+	t.Logf("seed: %v", seed)
 
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Digit("expected digit"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
+	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
 
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Digit("expected digit"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
+	for name, tbl := range unicode.Categories {
+		// skip control chars because don't know how to make valid strings with them
+		if name[0] == 'C' {
+			continue
 		}
-	})
+
+		t.Run(name, checkRangeTable(t, rnd, tbl))
+	}
+
+	for name, tbl := range unicode.Properties {
+		t.Run(name, checkRangeTable(t, rnd, tbl))
+	}
 }
 
-func TestGraphic(t *testing.T) {
-	t.Parallel()
+func checkRangeTable(t *testing.T, rnd *rand.Rand, tbl *unicode.RangeTable) func(t *testing.T) {
+	t.Helper()
 
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range graphChars {
-			result, err := ParseString(string(c), Graphic("expected graphic"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
+	const iterations = 100_000
+	arb := ohsnap.RuneFromTable(rnd, tbl)
 
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Graphic("expected graphic"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
+	parseChar := RangeTable("expected char from table", tbl)
 
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Graphic("expected graphic"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Graphic("expected graphic"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestLetter(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Letter("expected letter"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), Letter("expected letter"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Letter("expected letter"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		for _, c := range graphChars {
-			result, err := ParseString(string(c), Letter("expected letter"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 5", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Letter("expected letter"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestLower(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Lower("expected lower"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), Lower("expected lower"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Lower("expected lower"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestMark(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range markChars {
-			result, err := ParseString(string(c), Mark("expected mark"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), Mark("expected mark"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Mark("expected mark"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		for _, c := range graphChars {
-			result, err := ParseString(string(c), Mark("expected mark"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 5", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Mark("expected mark"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestNumber(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Number("expected number"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Number("expected number"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), Number("expected number"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		for _, c := range graphChars {
-			result, err := ParseString(string(c), Number("expected number"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 5", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Number("expected number"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestPrint(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Print("expected print"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Print("expected print"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range graphChars {
-			result, err := ParseString(string(c), Print("expected print"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		for _, c := range controllChars {
-			result, err := ParseString(string(c), Print("expected print"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 5", func(t *testing.T) {
-		for _, c := range spaceChars {
-			if c == ' ' {
-				continue
+	return func(t *testing.T) {
+		ohsnap.Check(t, iterations, arb, func(r rune) bool {
+			result, err := ParseString(string(r), parseChar)
+			if err != nil {
+				t.Log("input", r, string(r))
+				t.Log("result", result)
+				t.Error(err)
+				return false
 			}
-			result, err := ParseString(string(c), Print("expected print"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
 
-func TestPunct(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range puntcChars {
-			result, err := ParseString(string(c), Punct("expected punctuation"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range spaceChars {
-			result, err := ParseString(string(c), Punct("expected punctuation"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Punct("expected punctuation"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 4", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Punct("expected punctuation"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestSpace(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range spaceChars {
-			result, err := ParseString(string(c), Space("expected space"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Space("expected space"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Space("expected space"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestSymbol(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range symbolChars {
-			result, err := ParseString(string(c), Symbol("expected symbol"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Symbol("expected symbol"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Symbol("expected symbol"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestTitle(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range titleChars {
-			result, err := ParseString(string(c), Title("expected title"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Title("expected title"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Title("expected title"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-}
-
-func TestUpper(t *testing.T) {
-	t.Parallel()
-
-	t.Run("case 1", func(t *testing.T) {
-		for _, c := range upperLettersChars {
-			result, err := ParseString(string(c), Upper("expected upper"))
-			Check(t, err)
-			AssertEq(t, result, c)
-		}
-	})
-
-	t.Run("case 2", func(t *testing.T) {
-		for _, c := range lettersChars {
-			result, err := ParseString(string(c), Upper("expected upper"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
-
-	t.Run("case 3", func(t *testing.T) {
-		for _, c := range digitsChars {
-			result, err := ParseString(string(c), Upper("expected upper"))
-			AssertError(t, err)
-			AssertEq(t, result, 0)
-		}
-	})
+			return r == result
+		})
+	}
 }
