@@ -14,7 +14,7 @@ import (
 func TestJSONParsing(t *testing.T) {
 	t.Parallel()
 
-	const iterations = 10
+	const iterations = 1000
 
 	seed := time.Now().UnixNano()
 	t.Logf("seed: %v", seed)

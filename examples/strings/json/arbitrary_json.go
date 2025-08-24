@@ -30,7 +30,7 @@ func newArbitraryJSON(
 		arbBool:        ohsnap.ArbitraryBool(rnd),
 		arbInt:         ohsnap.ArbitraryInt(rnd, 0, math.MaxInt),
 		arbString:      ohsnap.ArbitraryString(rnd, "abcdefghijklmnopqrstuvwxyz", 3, 15),
-		arbComplexSize: ohsnap.ArbitraryInt(rnd, 0, 10),
+		arbComplexSize: ohsnap.ArbitraryInt(rnd, 0, 5),
 		arbType:        ohsnap.ArbitraryInt(rnd, 0, 5),
 
 		maxDeep: 5,
