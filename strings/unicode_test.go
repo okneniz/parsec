@@ -40,47 +40,52 @@ func TestUnicodeHelpers(t *testing.T) {
 		},
 		{
 			name:   "Letter",
-			parser: Graphic("expected letter"),
+			parser: Letter("expected letter"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Letter),
 		},
 		{
 			name:   "Lower",
-			parser: Graphic("expected lower"),
+			parser: Lower("expected lower"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Lower),
 		},
 		{
 			name:   "Mark",
-			parser: Graphic("expected mark"),
+			parser: Mark("expected mark"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Mark),
 		},
 		{
 			name:   "Number",
-			parser: Graphic("expected number"),
+			parser: Number("expected number"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Number),
 		},
 		{
 			name:   "Punct",
-			parser: Graphic("expected punct"),
+			parser: Punct("expected punct"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Punct),
 		},
-		// {
-		// 	name:   "Space",
-		// 	parser: Graphic("expected space"),
-		// 	arb:    ohsnap.RuneFromTable(rnd, unicode.Space),
-		// },
+		{
+			name:   "Space",
+			parser: Space("expected space"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Space),
+		},
+		{
+			name:   "Print",
+			parser: Print("expected print"),
+			arb:    ohsnap.RuneFromTable(rnd, unicode.Title),
+		},
 		{
 			name:   "Symbol",
-			parser: Graphic("expected symbol"),
+			parser: Symbol("expected symbol"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Symbol),
 		},
 		{
 			name:   "Title",
-			parser: Graphic("expected title"),
+			parser: Title("expected title"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Title),
 		},
 		{
 			name:   "Upper",
-			parser: Graphic("expected upper"),
+			parser: Upper("expected upper"),
 			arb:    ohsnap.RuneFromTable(rnd, unicode.Upper),
 		},
 	}
