@@ -151,7 +151,7 @@ func TestOptional(t *testing.T) {
 	})
 }
 
-func lTestCount(t *testing.T) {
+func TestCount(t *testing.T) {
 	t.Parallel()
 
 	runTestsString(t, []test[[]rune]{
@@ -160,7 +160,7 @@ func lTestCount(t *testing.T) {
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
-					output: []rune{},
+					output: nil,
 					err: common.NewParseError(
 						Position{
 							line:   0,
@@ -184,7 +184,7 @@ func lTestCount(t *testing.T) {
 				},
 				{
 					input:  ".aa",
-					output: []rune{},
+					output: nil,
 					err: common.NewParseError(
 						Position{
 							line:   0,
@@ -196,7 +196,7 @@ func lTestCount(t *testing.T) {
 				},
 				{
 					input:  "a.",
-					output: []rune{},
+					output: nil,
 					err: common.NewParseError(
 						Position{
 							line:   0,

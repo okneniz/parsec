@@ -1,6 +1,8 @@
 package bytes
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math"
 	"math/rand/v2"
@@ -355,5 +357,258 @@ func TestCast(t *testing.T) {
 				},
 			},
 		},
+	})
+}
+
+func TestReadAs(t *testing.T) {
+	t.Parallel()
+
+	seed := time.Now().UnixNano()
+	t.Logf("seed: %v", seed)
+	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
+
+	t.Run("uint8", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint8(),
+				binary.BigEndian,
+				ReadAs[uint8](1, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint8(),
+				binary.LittleEndian,
+				ReadAs[uint8](1, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("uint16", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint16(),
+				binary.BigEndian,
+				ReadAs[uint16](2, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint16(),
+				binary.LittleEndian,
+				ReadAs[uint16](2, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("uint32", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint32(),
+				binary.BigEndian,
+				ReadAs[uint32](4, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint32(),
+				binary.LittleEndian,
+				ReadAs[uint32](4, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("uint64", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint64(),
+				binary.BigEndian,
+				ReadAs[uint64](8, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Uint64(),
+				binary.LittleEndian,
+				ReadAs[uint64](8, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("int8", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int8(),
+				binary.BigEndian,
+				ReadAs[int8](1, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int8(),
+				binary.LittleEndian,
+				ReadAs[int8](1, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("int16", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int16(),
+				binary.BigEndian,
+				ReadAs[int16](2, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int16(),
+				binary.LittleEndian,
+				ReadAs[int16](2, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("int32", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int32(),
+				binary.BigEndian,
+				ReadAs[int32](4, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int32(),
+				binary.LittleEndian,
+				ReadAs[int32](4, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("int64", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int64(),
+				binary.BigEndian,
+				ReadAs[int64](8, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Int64(),
+				binary.LittleEndian,
+				ReadAs[int64](8, "E", binary.LittleEndian),
+			)
+		})
+	})
+}
+
+func checkReadAs[T comparable](
+	t *testing.T,
+	arbT ohsnap.Arbitrary[T],
+	order binary.ByteOrder,
+	comb common.Combinator[byte, int, T],
+) {
+	t.Helper()
+
+	const iterations = 100_000
+
+	arb := ohsnap.Map(arbT, func(input T) ohsnap.Pair[T, []byte] {
+		buf := new(bytes.Buffer)
+		_ = binary.Write(buf, order, &input)
+
+		return ohsnap.Pair[T, []byte]{
+			First:  input,
+			Second: buf.Bytes(),
+		}
+	},
+	)
+
+	ohsnap.Check(t, iterations, arb, func(data ohsnap.Pair[T, []byte]) bool {
+		expected := data.First
+		input := data.Second
+
+		actual, err := Parse(input, comb)
+		if err != nil {
+			t.Logf("input: %v", input)
+			t.Logf("output: %v", actual)
+			t.Error(err)
+			return false
+		}
+
+		return assert.EqualValues(t, expected, actual)
 	})
 }
