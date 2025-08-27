@@ -574,6 +574,58 @@ func TestReadAs(t *testing.T) {
 			)
 		})
 	})
+
+	t.Run("float32", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Float32(),
+				binary.BigEndian,
+				ReadAs[float32](4, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Float32(),
+				binary.LittleEndian,
+				ReadAs[float32](4, "E", binary.LittleEndian),
+			)
+		})
+	})
+
+	t.Run("float64", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("big endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Float64(),
+				binary.BigEndian,
+				ReadAs[float64](8, "E", binary.BigEndian),
+			)
+		})
+
+		t.Run("little endian", func(t *testing.T) {
+			t.Parallel()
+
+			checkReadAs(
+				t,
+				ohsnap.NewBuilder(rnd).Float64(),
+				binary.LittleEndian,
+				ReadAs[float64](8, "E", binary.LittleEndian),
+			)
+		})
+	})
 }
 
 func checkReadAs[T comparable](
