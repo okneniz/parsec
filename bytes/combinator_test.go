@@ -122,7 +122,7 @@ func TestSatisfy(t *testing.T) {
 			},
 		},
 		{
-			comb: Satisfy("error explanation", true, func(x byte) bool { return false }),
+			comb: Satisfy("error explanation", true, common.Nothing),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},

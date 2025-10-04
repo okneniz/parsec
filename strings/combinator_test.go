@@ -52,7 +52,7 @@ func TestSatisfy(t *testing.T) {
 			},
 		},
 		{
-			comb: Satisfy("error explanation", true, func(x rune) bool { return false }),
+			comb: Satisfy("error explanation", true, common.Nothing),
 			cases: []testCase[rune]{
 				{
 					input:  "",
