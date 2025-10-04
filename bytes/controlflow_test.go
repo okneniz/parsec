@@ -132,6 +132,7 @@ func TestChoice(t *testing.T) {
 	runTests(t, []test[byte]{
 		{
 			comb: Choice(
+				"expected a, b or c",
 				Try(Eq("expected a", 'a')),
 				Try(Eq("expected b", 'b')),
 				Eq("expected c", 'c'),
@@ -140,7 +141,7 @@ func TestChoice(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected a"),
+					err:    common.NewParseError(0, "expected a, b or c"),
 				},
 				{
 					input:  []byte("a"),
@@ -157,7 +158,7 @@ func TestChoice(t *testing.T) {
 				{
 					input:  []byte("x"),
 					output: 0,
-					err:    common.NewParseError(0, "expected a"),
+					err:    common.NewParseError(0, "expected a, b or c"),
 				},
 			},
 		},

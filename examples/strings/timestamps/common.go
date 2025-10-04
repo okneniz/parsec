@@ -58,6 +58,7 @@ func paddedDayNum() common.Combinator[rune, Position, int] {
 	return strings.Padded(
 		strings.Try(strings.Space("space")),
 		strings.Choice(
+			"expected day number",
 			strings.Try(UnsignedN[int](2, "expected day number")),
 			UnsignedN[int](1, "expected day number"),
 		),

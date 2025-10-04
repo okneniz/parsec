@@ -21,9 +21,7 @@ func Or[T any, P any, S any](
 			return result, nil
 		}
 
-		// add xErr and yErr to final error?
-
-		return null, NewParseError(pos, errMessage)
+		return null, NewParseError(pos, errMessage, xErr, yErr)
 	}
 }
 

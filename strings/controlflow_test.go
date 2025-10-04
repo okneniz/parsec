@@ -230,6 +230,7 @@ func TestChoice(t *testing.T) {
 	runTests(t, []test[rune]{
 		{
 			comb: Choice(
+				"expected a, b or c",
 				Try(Eq("expected a", 'a')),
 				Try(Eq("expected b", 'b')),
 				Eq("expected c", 'c'),
@@ -244,7 +245,7 @@ func TestChoice(t *testing.T) {
 							column: 0,
 							index:  0,
 						},
-						"expected c",
+						"expected a, b or c",
 					),
 				},
 				{
@@ -268,7 +269,7 @@ func TestChoice(t *testing.T) {
 							column: 0,
 							index:  0,
 						},
-						"expected c",
+						"expected a, b or c",
 					),
 				},
 			},

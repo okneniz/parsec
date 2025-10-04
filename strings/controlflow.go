@@ -25,31 +25,10 @@ func Sequence[T any](
 // Choice - searches for a combinator that works successfully on the input data.
 // if one is not found, it returns an ParseError error.
 func Choice[T any](
+	errMessage string,
 	cs ...common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
-	var null T
-
-	return func(buffer common.Buffer[rune, Position]) (T, common.Error[Position]) {
-		var deepestErr common.Error[Position]
-
-		for _, c := range cs {
-			result, err := c(buffer)
-			if err == nil {
-				return result, err
-			}
-
-			if deepestErr == nil {
-				deepestErr = err
-				continue
-			}
-
-			if err.Position().Deeper(deepestErr.Position()) {
-				deepestErr = err
-			}
-		}
-
-		return null, deepestErr
-	}
+	return common.Choice(errMessage, cs...)
 }
 
 // Skip - ignores the result of the first combinator

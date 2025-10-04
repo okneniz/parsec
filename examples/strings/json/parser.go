@@ -197,6 +197,7 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 	value = strings.Padded(
 		whitespace,
 		strings.Choice(
+			"expected JSON value",
 			strings.Try(bool),
 			strings.Try(null),
 			strings.Try(num),

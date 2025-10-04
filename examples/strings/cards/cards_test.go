@@ -20,6 +20,7 @@ func TestCards(t *testing.T) {
 	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
 
 	cards := Choice(
+		"expected card number",
 		Try(Master()),
 		Try(Visa()),
 		Try(AmericanExpress()),

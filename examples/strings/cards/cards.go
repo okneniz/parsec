@@ -39,6 +39,7 @@ func Master() common.Combinator[rune, Position, string] {
 		Concat(
 			16,
 			Choice(
+				"expected master card",
 				Concat(
 					4,
 					Count(

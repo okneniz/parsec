@@ -47,12 +47,13 @@ func Sequence[T any, P any, S any](
 // Choice - searches for a combinator that works successfully on the input data.
 // if one is not found, it returns an ParseError error.
 func Choice[T any, P any, S any](
-	errMesssage string,
+	errMessage string,
 	cs ...Combinator[T, P, S],
 ) Combinator[T, P, S] {
 	var null S
 
 	return func(buffer Buffer[T, P]) (S, Error[P]) {
+		previous := make([]Error[P], 0)
 		pos := buffer.Position()
 
 		for _, c := range cs {
@@ -60,9 +61,11 @@ func Choice[T any, P any, S any](
 			if err == nil {
 				return result, err
 			}
+
+			previous = append(previous, err)
 		}
 
-		return null, NewParseError(pos, errMesssage)
+		return null, NewParseError(pos, errMessage, previous...)
 	}
 }
 

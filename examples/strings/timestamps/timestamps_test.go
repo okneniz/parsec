@@ -34,6 +34,7 @@ func TestTimstapsParsing(t *testing.T) {
 	arb := ohsnap.Combine(arbTime, arbLayout)
 
 	parser := strings.Choice(
+		"expected date",
 		strings.Try(ansic()),
 		strings.Try(unixDate()),
 		strings.Try(rfc1123()),
