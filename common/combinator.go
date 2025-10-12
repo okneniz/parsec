@@ -52,7 +52,11 @@ func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
 		result, err := c(buffer)
 		if err != nil {
 			if seekErr := buffer.Seek(pos); seekErr != nil {
-				return null, NewParseError(buffer.Position(), seekErr.Error())
+				return null, NewParseError(
+					buffer.Position(),
+					seekErr.Error(),
+					err,
+				)
 			}
 
 			return null, err
