@@ -147,3 +147,33 @@ func MapAs[T any, P any, K comparable, V any](
 		return parseValue(buffer)
 	}
 }
+
+// MapTree - Reads element from the input buffer using the combinator and
+// match it in on the fly by cases map passed by second argument.
+// Try to parse longest prefix.
+// If the value is not found then it returns ParseError error.
+// This combinator use special trie-like structure for text matching.
+func MapTree[T comparable, P any, K comparable, V any](
+	errMessage string,
+	cases map[T]Combinator[K, P, V],
+	split func(T) []K,
+) Combinator[K, P, V] {
+	tree := NewLongestPrefixTree(cases, split)
+
+	var null V
+
+	return func(buf Buffer[K, P]) (V, Error[P]) {
+		pos := buf.Position()
+
+		parse, err := tree.Lookup(buf)
+		if err != nil {
+			return null, NewParseError(pos, err.Error())
+		}
+
+		if parse != nil {
+			return parse(buf)
+		}
+
+		return null, NewParseError(pos, errMessage)
+	}
+}

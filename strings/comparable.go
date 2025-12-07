@@ -104,7 +104,7 @@ func MapStrings[V any](
 	return MapTree(errMessage, combCases)
 }
 
-// MapTree - Reads text from the input buffer using the combinator and
+// MapTree - Reads rune from the input buffer using the combinator and
 // match it in on the fly by cases map passed by first argument.
 // Try to parse longest prefix.
 // If the value is not found then it returns ParseError error.
@@ -113,25 +113,9 @@ func MapTree[T any](
 	errMessage string,
 	cases map[string]common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
-	tree := common.NewLongestPrefixTree(
+	return common.MapTree(
+		errMessage,
 		cases,
 		func(s string) []rune { return []rune(s) },
 	)
-
-	var null T
-
-	return func(buf common.Buffer[rune, Position]) (T, common.Error[Position]) {
-		pos := buf.Position()
-
-		parse, err := tree.Lookup(buf)
-		if err != nil {
-			return null, common.NewParseError(pos, err.Error())
-		}
-
-		if parse != nil {
-			return parse(buf)
-		}
-
-		return null, common.NewParseError(pos, errMessage)
-	}
 }
