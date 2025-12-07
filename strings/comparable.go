@@ -113,84 +113,25 @@ func MapTree[T any](
 	errMessage string,
 	cases map[string]common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
-	type branch struct {
-		parser   common.Combinator[rune, Position, T]
-		children map[rune]*branch
-	}
-
-	root := new(branch)
-	root.children = make(map[rune]*branch, 0)
-
-	for cs, parser := range cases {
-		current := root
-
-		for _, r := range cs {
-			// TODO : check and handle conflicts
-
-			child, exists := current.children[r]
-			if !exists {
-				child = &branch{
-					children: make(map[rune]*branch),
-				}
-
-				current.children[r] = child
-			}
-
-			current = child
-		}
-
-		current.parser = parser
-	}
+	tree := common.NewLongestPrefixTree(
+		cases,
+		func(s string) []rune { return []rune(s) },
+	)
 
 	var null T
 
 	return func(buf common.Buffer[rune, Position]) (T, common.Error[Position]) {
-		current := root.children
-		start := buf.Position()
+		pos := buf.Position()
 
-		var parserWithLongestPrefix common.Combinator[rune, Position, T]
-
-		for len(current) > 0 {
-			pos := buf.Position()
-
-			r, err := buf.Read(true)
-			if err != nil {
-				if seekErr := buf.Seek(pos); seekErr != nil {
-					return null, common.NewParseError(
-						pos,
-						err.Error(),
-					)
-				}
-
-				break
-			}
-
-			next, exists := current[r]
-			if !exists {
-				if seekErr := buf.Seek(pos); seekErr != nil {
-					return null, common.NewParseError(
-						pos,
-						err.Error(),
-					)
-				}
-
-				break
-			}
-
-			if next.parser != nil {
-				parserWithLongestPrefix = next.parser
-			}
-
-			current = next.children
+		parse, err := tree.Lookup(buf)
+		if err != nil {
+			return null, common.NewParseError(pos, err.Error())
 		}
 
-		if parserWithLongestPrefix != nil {
-			return parserWithLongestPrefix(buf)
+		if parse != nil {
+			return parse(buf)
 		}
 
-		return null, common.NewParseError(
-			start,
-			errMessage,
-		)
+		return null, common.NewParseError(pos, errMessage)
 	}
 }
