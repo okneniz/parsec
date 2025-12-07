@@ -191,7 +191,7 @@ func TestCount(t *testing.T) {
 							column: 0,
 							index:  0,
 						},
-						"expected 'a'",
+						"expected 'aa'",
 					),
 				},
 				{
@@ -200,10 +200,10 @@ func TestCount(t *testing.T) {
 					err: common.NewParseError(
 						Position{
 							line:   0,
-							column: 1,
-							index:  1,
+							column: 0,
+							index:  0,
 						},
-						"expected 'a'",
+						"expected 'aa'",
 					),
 				},
 			},

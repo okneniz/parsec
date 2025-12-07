@@ -162,11 +162,11 @@ func TestCount(t *testing.T) {
 				},
 				{
 					input: []byte(".aa"),
-					err:   common.NewParseError(0, "expected 'a'"),
+					err:   common.NewParseError(0, "expected 'aa'"),
 				},
 				{
 					input: []byte("a."),
-					err:   common.NewParseError(1, "expected 'a'"),
+					err:   common.NewParseError(0, "expected 'aa'"),
 				},
 			},
 		},

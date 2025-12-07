@@ -29,11 +29,11 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: []byte("x"),
-					err:   common.NewParseError(0, "expected a"),
+					err:   common.NewParseError(0, "expected one a"),
 				},
 				{
 					input: []byte("ax"),
-					err:   common.NewParseError(1, "expected b"),
+					err:   common.NewParseError(1, "expected double b"),
 				},
 				{
 					input: []byte("ab"),

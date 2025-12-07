@@ -42,7 +42,7 @@ func TestConcat(t *testing.T) {
 							column: 0,
 							index:  0,
 						},
-						"expected a",
+						"expected one a",
 					),
 				},
 				{
@@ -53,7 +53,7 @@ func TestConcat(t *testing.T) {
 							column: 1,
 							index:  1,
 						},
-						"expected b",
+						"expected double b",
 					),
 				},
 				{

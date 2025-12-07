@@ -54,7 +54,7 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 						assert.NoError(t, err)
 					}
 
-					assert.Equal(t, result, testCase.output)
+					assert.Equal(t, testCase.output, result)
 				})
 			}
 		})
@@ -87,7 +87,7 @@ func runTestsSlice[T comparable](t *testing.T, tests []test[[]T]) {
 						assert.NoError(t, err)
 					}
 
-					assert.EqualValues(t, result, testCase.output)
+					assert.EqualValues(t, testCase.output, result)
 				})
 			}
 		})
