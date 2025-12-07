@@ -66,54 +66,6 @@ func Map[K comparable, V any](
 	return common.Map(errMessage, cases, c)
 }
 
-// MapStrings - Reads text from the input buffer using the combinator and
-// match it in on the fly by cases map passed by first argument.
-// If the value is not found then it returns ParseError error.
-// This combinator use special trie-like structure for text matching.
-func MapStrings[V any](
-	errMessage string,
-	cases map[string]V,
-) common.Combinator[rune, Position, V] {
-	tr := stringTrie(cases)
-	var null V
-
-	return func(buffer common.Buffer[rune, Position]) (V, common.Error[Position]) {
-		current := tr.children
-		pos := buffer.Position()
-
-		var result *V
-
-		for {
-			r, err := buffer.Read(true)
-			if err != nil {
-				break
-			}
-
-			next, exists := current[r]
-			if !exists {
-				break
-			}
-
-			if next.end {
-				result = &next.value
-				pos = buffer.Position()
-			}
-
-			current = next.children
-		}
-
-		if seekErr := buffer.Seek(pos); seekErr != nil {
-			return null, common.NewParseError(buffer.Position(), seekErr.Error())
-		}
-
-		if result == nil {
-			return null, common.NewParseError(pos, errMessage)
-		}
-
-		return *result, nil
-	}
-}
-
 // String - read input text and match with string passed by first argument.
 // If the text not matched then it returns ParseError error.
 func String(errMessage, str string) common.Combinator[rune, Position, string] {
@@ -132,5 +84,113 @@ func String(errMessage, str string) common.Combinator[rune, Position, string] {
 		}
 
 		return str, nil
+	}
+}
+
+// MapStrings - Reads text from the input buffer using the combinator and
+// match it in on the fly by cases map passed by first argument.
+// Try to parse longest string if some of then have them have the same prefix.
+// If the value is not found then it returns ParseError error.
+// This combinator use special trie-like structure for text matching.
+func MapStrings[V any](
+	errMessage string,
+	cases map[string]V,
+) common.Combinator[rune, Position, V] {
+	combCases := make(map[string]common.Combinator[rune, Position, V])
+	for k, v := range cases {
+		combCases[k] = common.Const[rune, Position, V](v)
+	}
+
+	return MapTree(errMessage, combCases)
+}
+
+// MapTree - Reads text from the input buffer using the combinator and
+// match it in on the fly by cases map passed by first argument.
+// Try to parse longest prefix.
+// If the value is not found then it returns ParseError error.
+// This combinator use special trie-like structure for text matching.
+func MapTree[T any](
+	errMessage string,
+	cases map[string]common.Combinator[rune, Position, T],
+) common.Combinator[rune, Position, T] {
+	type branch struct {
+		parser   common.Combinator[rune, Position, T]
+		children map[rune]*branch
+	}
+
+	root := new(branch)
+	root.children = make(map[rune]*branch, 0)
+
+	for cs, parser := range cases {
+		current := root
+
+		for _, r := range cs {
+			// TODO : check and handle conflicts
+
+			child, exists := current.children[r]
+			if !exists {
+				child = &branch{
+					children: make(map[rune]*branch),
+				}
+
+				current.children[r] = child
+			}
+
+			current = child
+		}
+
+		current.parser = parser
+	}
+
+	var null T
+
+	return func(buf common.Buffer[rune, Position]) (T, common.Error[Position]) {
+		current := root.children
+		start := buf.Position()
+
+		var parserWithLongestPrefix common.Combinator[rune, Position, T]
+
+		for len(current) > 0 {
+			pos := buf.Position()
+
+			r, err := buf.Read(true)
+			if err != nil {
+				if seekErr := buf.Seek(pos); seekErr != nil {
+					return null, common.NewParseError(
+						pos,
+						err.Error(),
+					)
+				}
+
+				break
+			}
+
+			next, exists := current[r]
+			if !exists {
+				if seekErr := buf.Seek(pos); seekErr != nil {
+					return null, common.NewParseError(
+						pos,
+						err.Error(),
+					)
+				}
+
+				break
+			}
+
+			if next.parser != nil {
+				parserWithLongestPrefix = next.parser
+			}
+
+			current = next.children
+		}
+
+		if parserWithLongestPrefix != nil {
+			return parserWithLongestPrefix(buf)
+		}
+
+		return null, common.NewParseError(
+			start,
+			errMessage,
+		)
 	}
 }
