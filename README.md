@@ -25,6 +25,7 @@ go get github.com/okneniz/parsec
   - [json](https://github.com/okneniz/parsec/tree/master/examples/strings/json)
   - [timestamps](https://github.com/okneniz/parsec/tree/master/examples/strings/timestamps)
   - [credit cards](https://github.com/okneniz/parsec/tree/master/examples/strings/cards)
+  - [math expressions](https://github.com/okneniz/parsec/tree/master/examples/strings/math)
 - binary
   - [message pack](https://github.com/okneniz/parsec/tree/master/examples/bytes/message_pack)
   - [png](https://github.com/okneniz/parsec/tree/master/examples/bytes/png)
