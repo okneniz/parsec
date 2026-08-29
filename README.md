@@ -71,6 +71,11 @@ choice := strings.Choice(
   - [message pack](https://github.com/okneniz/parsec/tree/master/examples/bytes/message_pack)
   - [png](https://github.com/okneniz/parsec/tree/master/examples/bytes/png)
 
+### Projects using parsec
+
+- [assembly](https://github.com/okneniz/assembly) - low-level toolkit to assemble and disassemble machine code (ARM64, RISC-V, LoongArch); its self-contained ELF and Mach-O container parsers are built with parsec.
+- [cliche](https://github.com/okneniz/cliche) - regular expressions engine for batch processing; it compiles many patterns into a shared tree and matches them in a single pass, with regex syntax parsed by parsec.
+
 ## Development
 
 ```bash
