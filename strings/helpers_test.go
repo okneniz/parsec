@@ -8,7 +8,7 @@ import (
 	"time"
 
 	ohsnap "github.com/okneniz/oh-snap"
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestParens(t *testing.T) {
@@ -20,7 +20,7 @@ func TestParens(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -35,7 +35,7 @@ func TestParens(t *testing.T) {
 				},
 				{
 					input: "(x",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,
@@ -46,7 +46,7 @@ func TestParens(t *testing.T) {
 				},
 				{
 					input: "x)",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -57,7 +57,7 @@ func TestParens(t *testing.T) {
 				},
 				{
 					input: "()",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -68,7 +68,7 @@ func TestParens(t *testing.T) {
 				},
 				{
 					input: "(",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -79,7 +79,7 @@ func TestParens(t *testing.T) {
 				},
 				{
 					input: ")",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -102,7 +102,7 @@ func TestBraces(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -117,7 +117,7 @@ func TestBraces(t *testing.T) {
 				},
 				{
 					input: "{x",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,
@@ -128,7 +128,7 @@ func TestBraces(t *testing.T) {
 				},
 				{
 					input: "x}",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -139,7 +139,7 @@ func TestBraces(t *testing.T) {
 				},
 				{
 					input: "{}",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -150,7 +150,7 @@ func TestBraces(t *testing.T) {
 				},
 				{
 					input: "{",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -161,7 +161,7 @@ func TestBraces(t *testing.T) {
 				},
 				{
 					input: "}",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -184,7 +184,7 @@ func TestAngles(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -199,7 +199,7 @@ func TestAngles(t *testing.T) {
 				},
 				{
 					input: "<x",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,
@@ -210,7 +210,7 @@ func TestAngles(t *testing.T) {
 				},
 				{
 					input: "x>",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -221,7 +221,7 @@ func TestAngles(t *testing.T) {
 				},
 				{
 					input: "<>",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -232,7 +232,7 @@ func TestAngles(t *testing.T) {
 				},
 				{
 					input: "<",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -243,7 +243,7 @@ func TestAngles(t *testing.T) {
 				},
 				{
 					input: ">",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -266,7 +266,7 @@ func TestSquares(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -281,7 +281,7 @@ func TestSquares(t *testing.T) {
 				},
 				{
 					input: "[x",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,
@@ -292,7 +292,7 @@ func TestSquares(t *testing.T) {
 				},
 				{
 					input: "x]",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -303,7 +303,7 @@ func TestSquares(t *testing.T) {
 				},
 				{
 					input: "[]",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -314,7 +314,7 @@ func TestSquares(t *testing.T) {
 				},
 				{
 					input: "[",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -325,7 +325,7 @@ func TestSquares(t *testing.T) {
 				},
 				{
 					input: "]",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -348,7 +348,7 @@ func TestSemi(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -367,7 +367,7 @@ func TestSemi(t *testing.T) {
 				},
 				{
 					input: "x;",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -390,7 +390,7 @@ func TestComma(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -409,7 +409,7 @@ func TestComma(t *testing.T) {
 				},
 				{
 					input: "x,",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -432,7 +432,7 @@ func TestColon(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -451,7 +451,7 @@ func TestColon(t *testing.T) {
 				},
 				{
 					input: "x:",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -474,7 +474,7 @@ func TestDot(t *testing.T) {
 			cases: []testCase[rune]{
 				{
 					input: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -493,7 +493,7 @@ func TestDot(t *testing.T) {
 				},
 				{
 					input: "x.",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -775,7 +775,7 @@ func TestUnsigned(t *testing.T) {
 	})
 }
 
-func checkUnsignedN[T common.Integer](t *testing.T, size int, arb ohsnap.Arbitrary[T]) func(t *testing.T) {
+func checkUnsignedN[T parsec.Integer](t *testing.T, size int, arb ohsnap.Arbitrary[T]) func(t *testing.T) {
 	t.Helper()
 
 	return func(t *testing.T) {

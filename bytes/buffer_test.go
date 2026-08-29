@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,7 +51,7 @@ func TestBuffer(t *testing.T) {
 					read: &read{
 						greedy: false,
 						output: 0,
-						err:    common.ErrEndOfFile,
+						err:    parsec.ErrEndOfFile,
 					},
 					afterPosition: 0,
 					afterIsEOF:    true,
@@ -60,7 +60,7 @@ func TestBuffer(t *testing.T) {
 					read: &read{
 						greedy: true,
 						output: 0,
-						err:    common.ErrEndOfFile,
+						err:    parsec.ErrEndOfFile,
 					},
 					afterPosition: 0,
 					afterIsEOF:    true,
@@ -75,7 +75,7 @@ func TestBuffer(t *testing.T) {
 				{
 					seek: &seek{
 						pos: 1,
-						err: common.ErrOutOfBounds,
+						err: parsec.ErrOutOfBounds,
 					},
 					afterPosition: 0,
 					afterIsEOF:    true,
@@ -83,7 +83,7 @@ func TestBuffer(t *testing.T) {
 				{
 					seek: &seek{
 						pos: -1,
-						err: common.ErrOutOfBounds,
+						err: parsec.ErrOutOfBounds,
 					},
 					afterPosition: 0,
 					afterIsEOF:    true,
@@ -213,7 +213,7 @@ func TestBuffer(t *testing.T) {
 				{
 					seek: &seek{
 						pos: 100,
-						err: common.ErrOutOfBounds,
+						err: parsec.ErrOutOfBounds,
 					},
 					afterPosition: 3,
 					afterIsEOF:    true,
@@ -238,7 +238,7 @@ func TestBuffer(t *testing.T) {
 					read: &read{
 						greedy: true,
 						output: 0,
-						err:    common.ErrEndOfFile,
+						err:    parsec.ErrEndOfFile,
 					},
 					afterPosition: 3,
 					afterIsEOF:    true,

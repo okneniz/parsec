@@ -3,7 +3,7 @@ package strings_test
 import (
 	"fmt"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 	. "github.com/okneniz/parsec/strings"
 )
 
@@ -135,7 +135,7 @@ func ExampleChainl1() {
 	number := Padded(Try(Space("whitespace")), Unsigned[int]())
 
 	minus := Padded(Try(Space("whitespace")), Eq("expected '-'", '-'))
-	op := Cast(minus, func(r rune) (common.BinaryOp[int], error) {
+	op := Cast(minus, func(r rune) (parsec.BinaryOp[int], error) {
 		return func(a, b int) int { return a - b }, nil
 	})
 

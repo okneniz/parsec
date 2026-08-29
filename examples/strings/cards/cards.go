@@ -1,13 +1,13 @@
 package cards
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 	. "github.com/okneniz/parsec/strings"
 )
 
 // from https://www.regular-expressions.info/creditcard.html
 
-func Visa() common.Combinator[rune, Position, string] {
+func Visa() parsec.Combinator[rune, Position, string] {
 	return Cast(
 		Concat(
 			16,
@@ -34,7 +34,7 @@ func Visa() common.Combinator[rune, Position, string] {
 	)
 }
 
-func Master() common.Combinator[rune, Position, string] {
+func Master() parsec.Combinator[rune, Position, string] {
 	return Cast(
 		Concat(
 			16,
@@ -148,7 +148,7 @@ func Master() common.Combinator[rune, Position, string] {
 	)
 }
 
-func AmericanExpress() common.Combinator[rune, Position, string] {
+func AmericanExpress() parsec.Combinator[rune, Position, string] {
 	return Cast(
 		Concat(
 			2,

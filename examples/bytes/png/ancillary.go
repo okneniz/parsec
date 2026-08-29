@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 type Ancillary struct {
@@ -46,7 +46,7 @@ func (c *Ancillary) String() string {
 func AncillaryChunk(
 	size uint32,
 	chunkType string,
-) common.Combinator[byte, int, *Ancillary] {
+) parsec.Combinator[byte, int, *Ancillary] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected ancillary chunk (%s)", chunkType),
@@ -59,9 +59,9 @@ func AncillaryChunk(
 		binary.BigEndian,
 	)
 
-	return func(buffer common.Buffer[byte, int]) (*Ancillary, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (*Ancillary, parsec.Error[int]) {
 		var data []byte
-		var err common.Error[int]
+		var err parsec.Error[int]
 
 		if size > 0 {
 			data, err = parseData(buffer)

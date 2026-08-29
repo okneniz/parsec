@@ -1,7 +1,7 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 var (
@@ -14,7 +14,7 @@ type buffer struct {
 	newLineRunes map[rune]struct{}
 }
 
-var _ common.Buffer[rune, Position] = new(buffer)
+var _ parsec.Buffer[rune, Position] = new(buffer)
 
 // Read returns the next rune.
 // If greedy is true, the buffer advances and keeps the new position,
@@ -22,7 +22,7 @@ var _ common.Buffer[rune, Position] = new(buffer)
 // with greedy false the rune is only peeked and the position stays unchanged.
 func (b *buffer) Read(greedy bool) (rune, error) {
 	if b.IsEOF() {
-		return 0, common.ErrEndOfFile
+		return 0, parsec.ErrEndOfFile
 	}
 
 	x := b.data[b.position.index]
@@ -42,7 +42,7 @@ func (b *buffer) Read(greedy bool) (rune, error) {
 }
 
 // Seek moves the buffer to a previously obtained position.
-// It returns common.ErrOutOfBounds when the position is invalid.
+// It returns parsec.ErrOutOfBounds when the position is invalid.
 // Seeking to the current position does nothing.
 func (b *buffer) Seek(x Position) error {
 	if b.position.index == x.index {
@@ -50,11 +50,11 @@ func (b *buffer) Seek(x Position) error {
 	}
 
 	if x.index < 0 {
-		return common.ErrOutOfBounds
+		return parsec.ErrOutOfBounds
 	}
 
 	if x.index >= len(b.data) {
-		return common.ErrOutOfBounds
+		return parsec.ErrOutOfBounds
 	}
 
 	b.position = x

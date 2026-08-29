@@ -3,7 +3,7 @@ package bytes
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestMany(t *testing.T) {
@@ -52,7 +52,7 @@ func TestSome(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one 'a'"),
+					err:    parsec.NewParseError(0, "expected at least one 'a'"),
 				},
 				{
 					input:  []byte("a"),
@@ -73,7 +73,7 @@ func TestSome(t *testing.T) {
 				{
 					input:  []byte(".aa"),
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one 'a'"),
+					err:    parsec.NewParseError(0, "expected at least one 'a'"),
 				},
 			},
 		},
@@ -110,7 +110,7 @@ func TestOptional(t *testing.T) {
 			},
 		},
 		{
-			comb: Optional(Satisfy("never match", true, common.Nothing[byte]), 'x'),
+			comb: Optional(Satisfy("never match", true, parsec.Nothing[byte]), 'x'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -146,7 +146,7 @@ func TestCount(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input: []byte{},
-					err:   common.NewParseError(0, "expected 'aa'"),
+					err:   parsec.NewParseError(0, "expected 'aa'"),
 				},
 				{
 					input:  []byte("aa"),
@@ -162,11 +162,11 @@ func TestCount(t *testing.T) {
 				},
 				{
 					input: []byte(".aa"),
-					err:   common.NewParseError(0, "expected 'aa'"),
+					err:   parsec.NewParseError(0, "expected 'aa'"),
 				},
 				{
 					input: []byte("a."),
-					err:   common.NewParseError(0, "expected 'aa'"),
+					err:   parsec.NewParseError(0, "expected 'aa'"),
 				},
 			},
 		},

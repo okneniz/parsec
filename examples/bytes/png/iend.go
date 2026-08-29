@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/okneniz/parsec"
 	. "github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 type IEND struct {
@@ -39,11 +39,11 @@ func (c *IEND) String() string {
 	return b.String()
 }
 
-func IENDChunk(size uint32) common.Combinator[byte, int, *IEND] {
-	return func(buffer common.Buffer[byte, int]) (*IEND, common.Error[int]) {
+func IENDChunk(size uint32) parsec.Combinator[byte, int, *IEND] {
+	return func(buffer parsec.Buffer[byte, int]) (*IEND, parsec.Error[int]) {
 		pos := buffer.Position()
 		if size > 0 {
-			return nil, common.NewParseError(
+			return nil, parsec.NewParseError(
 				pos, fmt.Sprintf("IEND must be empty chunk, but actual %v", size),
 			)
 		}

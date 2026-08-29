@@ -1,0 +1,53 @@
+(* 09 — Church encoding: booleans and numerals
+ *
+ * Tiny ml already has booleans and numbers, so this program proves a
+ * different point: functions alone are enough to represent data. A
+ * Church boolean is the choice between two branches; a Church numeral
+ * is the n-fold application of a function. The typechecker infers
+ * every type here, with no annotations — the polymorphic schemes
+ * come out exactly as the lambda calculus says they should.
+ *)
+
+(* Booleans as selectors. *)
+val ctrue = fn a => fn b => a
+
+val cfalse = fn a => fn b => b
+
+val cand = fn p => fn q => p q cfalse
+
+val cor = fn p => fn q => p ctrue q
+
+val cnot = fn p => p cfalse ctrue
+
+(* Feeding both branches makes a Church boolean printable. *)
+val notTrue = cnot ctrue 1 2
+
+val orDemo = cor cfalse ctrue 1 2
+
+val andDemo = cand ctrue cfalse 1 2
+
+(* Numerals as iterators: c0 applies f zero times, succ adds one. *)
+val c0 = fn f => fn x => x
+
+val csucc = fn n => fn f => fn x => f (n f x)
+
+val c1 = csucc c0
+
+val c2 = csucc c1
+
+val c3 = csucc c2
+
+val c4 = csucc c3
+
+val cplus = fn m => fn n => fn f => fn x => m f (n f x)
+
+val cmult = fn m => fn n => fn f => m (n f)
+
+(* The interpreter: apply the numeral to increment and zero. *)
+val toInt = fn n => n (fn k => k + 1) 0
+
+val four = toInt (cmult c2 c2)
+
+val seven = toInt (cplus c3 c4)
+
+val eight = toInt (cmult c2 (cplus c2 c2))

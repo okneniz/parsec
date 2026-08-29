@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/strings"
 )
 
 // RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"
-func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
+func rfc1123() parsec.Combinator[rune, strings.Position, *time.Time] {
 	dayOfWeek := dayOfWeekPrefix()
 	comma := strings.Comma()
 	day := paddedDayNum()
@@ -22,8 +22,8 @@ func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 	zone, _ := strings.TimeZoneByNames("UTC", "EST", "GMT")
 
 	return func(
-		buffer common.Buffer[rune, strings.Position],
-	) (*time.Time, common.Error[strings.Position]) {
+		buffer parsec.Buffer[rune, strings.Position],
+	) (*time.Time, parsec.Error[strings.Position]) {
 		dw, err := dayOfWeek(buffer)
 		if err != nil {
 			return nil, err
@@ -81,7 +81,7 @@ func rfc1123() common.Combinator[rune, strings.Position, *time.Time] {
 
 		result := time.Date(y, m, d, h, min, sec, 0, loc)
 		if result.Weekday() != dw {
-			return nil, common.NewParseError(
+			return nil, parsec.NewParseError(
 				buffer.Position(),
 				fmt.Sprintf("unexpected day of week: expected %s, actual %v", dw, result.Weekday()),
 			)

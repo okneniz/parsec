@@ -1,0 +1,29 @@
+(* 03 — higher-order functions and polymorphism
+ *
+ * Functions are values: they can be passed as arguments, returned,
+ * and stored in data. The typechecker infers polymorphic types —
+ * Hindley-Milner with let-polymorphism — without a single annotation.
+ *)
+
+(* The identity works on anything: its inferred type is 'a -> 'a. *)
+val id = fn x => x
+
+(* Using the same id at two different types in one expression is the
+ * classical demonstration of let-polymorphism. *)
+val pair = (id 1, id true)
+
+(* A function taking a function. Its type is
+ * ('a -> 'a) -> 'a -> 'a, inferred, not declared. *)
+fun twice f x = f (f x)
+
+val ten = twice (fn n => n + 3) 4
+
+(* Composition as a value of three nested fn-expressions. *)
+val compose = fn f => fn g => fn x => f (g x)
+
+val inc = fn n => n + 1
+
+val double = fn n => n * 2
+
+(* compose inc double is a function: increment after doubling. *)
+val seven = compose inc double 3

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 type PLTE struct {
@@ -60,7 +60,7 @@ func (c *RGB) String() string {
 	return fmt.Sprintf("#%02x%02x%02x", c.Red, c.Green, c.Blue)
 }
 
-func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
+func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE] {
 	parseRED := bytes.ReadAs[uint8](
 		1,
 		"expected one byte for red color",
@@ -91,7 +91,7 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 		binary.BigEndian,
 	)
 
-	return func(buffer common.Buffer[byte, int]) (*PLTE, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (*PLTE, parsec.Error[int]) {
 		pos := buffer.Position()
 
 		data, err := parseData(buffer)
@@ -100,7 +100,7 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 		}
 
 		if seekErr := buffer.Seek(pos); seekErr != nil {
-			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
+			return nil, parsec.NewParseError(buffer.Position(), seekErr.Error())
 		}
 
 		entries := make([]*RGB, 0, size/3)
@@ -129,7 +129,7 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 		}
 
 		if seekErr := buffer.Seek(pos + int(size)); seekErr != nil {
-			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
+			return nil, parsec.NewParseError(buffer.Position(), seekErr.Error())
 		}
 
 		crc, err := parseCRC(buffer)

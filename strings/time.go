@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // TimeZone parses the current zone name of one of the passed locations,
 // for example "UTC" or "MSK", and returns the matching location.
 func TimeZone(
 	locations ...*time.Location,
-) common.Combinator[rune, Position, *time.Location] {
+) parsec.Combinator[rune, Position, *time.Location] {
 	m := make(map[string]*time.Location, len(locations))
 	names := make([]string, len(locations))
 
@@ -44,7 +44,7 @@ func TimeZone(
 // parsing the current zone name of one of them.
 func TimeZoneByNames(
 	locationNames ...string,
-) (common.Combinator[rune, Position, *time.Location], error) {
+) (parsec.Combinator[rune, Position, *time.Location], error) {
 	locations := make([]*time.Location, 0, len(locationNames))
 
 	for _, locationName := range locationNames {

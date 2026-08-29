@@ -48,6 +48,21 @@ with optional whitespace skipping, `Try` makes backtracking possible, and
 
 [GoDoc documentation](https://pkg.go.dev/github.com/okneniz/parsec)
 
+### Module layout
+
+The root package is the generic core: the `Combinator` function type,
+the `Buffer` input abstraction, parse errors with positions, and every
+combinator implemented once for an arbitrary item type. The satellite
+packages build on it:
+
+| Package | Purpose |
+| --- | --- |
+| [parsec](https://pkg.go.dev/github.com/okneniz/parsec) | generic core: combinators, buffers, errors |
+| [parsec/strings](https://pkg.go.dev/github.com/okneniz/parsec/strings) | rune input, line/column positions, text helpers |
+| [parsec/bytes](https://pkg.go.dev/github.com/okneniz/parsec/bytes) | binary input, big/little-endian readers |
+| [parsec/tokens](https://pkg.go.dev/github.com/okneniz/parsec/tokens) | token streams for two-stage parsers |
+| [parsec/lang](https://pkg.go.dev/github.com/okneniz/parsec/lang) | lexers and expression machinery from a declarative Definition |
+
 ### Backtracking
 
 Greedy combinators (`Satisfy`, `Eq`, `Range`, `OneOf` and others) consume one input item even when they fail. Combinators that try alternatives (`Choice`, `Or`) or repeat parsing in a loop (`Many` and similar) do not restore the buffer position on their own. So whenever a combinator can fail inside such a branch, wrap it in `Try` — it is the backtracking primitive that rewinds the buffer on failure:
@@ -66,10 +81,11 @@ choice := strings.Choice(
   - [json](https://github.com/okneniz/parsec/tree/master/examples/strings/json)
   - [timestamps](https://github.com/okneniz/parsec/tree/master/examples/strings/timestamps)
   - [credit cards](https://github.com/okneniz/parsec/tree/master/examples/strings/cards)
-  - [math expressions](https://github.com/okneniz/parsec/tree/master/examples/strings/math)
 - binary
   - [message pack](https://github.com/okneniz/parsec/tree/master/examples/bytes/message_pack)
   - [png](https://github.com/okneniz/parsec/tree/master/examples/bytes/png)
+- [lang](https://github.com/okneniz/parsec/tree/master/lang)
+  - [tiny ml](https://github.com/okneniz/parsec/tree/master/examples/lang/tml) - a minimal Standard ML dialect (let, recursive functions, if-then-else, numbers and booleans): the two-stage parsing pipeline in miniature, with a Hindley-Milner typechecker and an interpreter on top
 
 ### Projects using parsec
 
@@ -80,8 +96,11 @@ choice := strings.Choice(
 
 ```bash
 make test    # run all tests
-make lint    # format code and run golangci-lint
+make lint    # format code and run golangci-lint + style checks
 make fmt     # format code only
+
+Formatting conventions beyond gofmt, enforced by make lint:
+no one-line function bodies, and a blank line between declarations.
 ```
 
 The linter version is pinned in `go.mod` as a [Go tool dependency](https://go.dev/ref/mod#go-tool), so `make lint` uses exactly the same version locally and in CI. To bump it:

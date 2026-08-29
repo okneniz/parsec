@@ -12,7 +12,7 @@ import (
 	ohsnap "github.com/okneniz/oh-snap"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 type (
@@ -23,7 +23,7 @@ type (
 	}
 
 	test[T any] struct {
-		comb  common.Combinator[byte, int, T]
+		comb  parsec.Combinator[byte, int, T]
 		cases []testCase[T]
 	}
 )
@@ -104,7 +104,7 @@ func TestSatisfy(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected not 'c'"),
+					err:    parsec.NewParseError(0, "expected not 'c'"),
 				},
 				{
 					input:  []byte("a"),
@@ -117,22 +117,22 @@ func TestSatisfy(t *testing.T) {
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected not 'c'"),
+					err:    parsec.NewParseError(0, "expected not 'c'"),
 				},
 			},
 		},
 		{
-			comb: Satisfy("error explanation", true, common.Nothing),
+			comb: Satisfy("error explanation", true, parsec.Nothing),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "error explanation"),
+					err:    parsec.NewParseError(0, "error explanation"),
 				},
 				{
 					input:  []byte("abc"),
 					output: 0,
-					err:    common.NewParseError(0, "error explanation"),
+					err:    parsec.NewParseError(0, "error explanation"),
 				},
 			},
 		},
@@ -149,7 +149,7 @@ func TestAny(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, common.ErrEndOfFile.Error()),
+					err:    parsec.NewParseError(0, parsec.ErrEndOfFile.Error()),
 				},
 				{
 					input:  []byte("a"),
@@ -197,7 +197,7 @@ func TestTry(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "error explanation"),
+					err:    parsec.NewParseError(0, "error explanation"),
 				},
 				{
 					input:  []byte("a"),
@@ -209,7 +209,7 @@ func TestTry(t *testing.T) {
 				},
 				{
 					input: []byte("c"),
-					err:   common.NewParseError(0, "error explanation"),
+					err:   parsec.NewParseError(0, "error explanation"),
 				},
 			},
 		},
@@ -236,7 +236,7 @@ func TestBetween(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected '('"),
+					err:    parsec.NewParseError(0, "expected '('"),
 				},
 				{
 					input:  []byte("(abc)"),
@@ -244,23 +244,23 @@ func TestBetween(t *testing.T) {
 				},
 				{
 					input: []byte("abc"),
-					err:   common.NewParseError(0, "expected '('"),
+					err:   parsec.NewParseError(0, "expected '('"),
 				},
 				{
 					input: []byte("(abc"),
-					err:   common.NewParseError(4, "expected ')'"),
+					err:   parsec.NewParseError(4, "expected ')'"),
 				},
 				{
 					input: []byte(" (abc) "),
-					err:   common.NewParseError(0, "expected '('"),
+					err:   parsec.NewParseError(0, "expected '('"),
 				},
 				{
 					input: []byte("((abc))"),
-					err:   common.NewParseError(1, "expected not ( or ) symbols"),
+					err:   parsec.NewParseError(1, "expected not ( or ) symbols"),
 				},
 				{
 					input: []byte("()"),
-					err:   common.NewParseError(1, "expected not ( or ) symbols"),
+					err:   parsec.NewParseError(1, "expected not ( or ) symbols"),
 				},
 			},
 		},
@@ -297,14 +297,14 @@ func TestCast(t *testing.T) {
 	runTests(t, []test[int]{
 		{
 			comb: Cast(
-				Satisfy("test", true, common.Anything[byte]),
+				Satisfy("test", true, parsec.Anything[byte]),
 				func(x byte) (int, error) { return int(x), nil },
 			),
 			cases: []testCase[int]{
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "test"),
+					err:    parsec.NewParseError(0, "test"),
 				},
 				{
 					input:  []byte{0},
@@ -333,27 +333,27 @@ func TestCast(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, common.ErrEndOfFile.Error()),
+					err:    parsec.NewParseError(0, parsec.ErrEndOfFile.Error()),
 				},
 				{
 					input:  []byte{0},
 					output: -1,
-					err:    common.NewParseError(0, "test error"),
+					err:    parsec.NewParseError(0, "test error"),
 				},
 				{
 					input:  []byte{1},
 					output: -1,
-					err:    common.NewParseError(0, "test error"),
+					err:    parsec.NewParseError(0, "test error"),
 				},
 				{
 					input:  []byte{math.MaxUint8},
 					output: -1,
-					err:    common.NewParseError(0, "test error"),
+					err:    parsec.NewParseError(0, "test error"),
 				},
 				{
 					input:  []byte{math.MaxInt8},
 					output: -1,
-					err:    common.NewParseError(0, "test error"),
+					err:    parsec.NewParseError(0, "test error"),
 				},
 			},
 		},
@@ -632,7 +632,7 @@ func checkReadAs[T comparable](
 	t *testing.T,
 	arbT ohsnap.Arbitrary[T],
 	order binary.ByteOrder,
-	comb common.Combinator[byte, int, T],
+	comb parsec.Combinator[byte, int, T],
 ) {
 	t.Helper()
 

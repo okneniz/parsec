@@ -3,11 +3,11 @@ package timestamp
 import (
 	"time"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 	. "github.com/okneniz/parsec/strings"
 )
 
-func dayOfWeekPrefix() common.Combinator[rune, Position, time.Weekday] {
+func dayOfWeekPrefix() parsec.Combinator[rune, Position, time.Weekday] {
 	dwDict := map[string]time.Weekday{
 		"Mon": time.Monday,
 		"Tue": time.Tuesday,
@@ -24,7 +24,7 @@ func dayOfWeekPrefix() common.Combinator[rune, Position, time.Weekday] {
 	)
 }
 
-func monthPrefix() common.Combinator[rune, Position, time.Month] {
+func monthPrefix() parsec.Combinator[rune, Position, time.Month] {
 	monthDict := map[string]time.Month{
 		"Jan": time.January,
 		"Feb": time.February,
@@ -46,14 +46,14 @@ func monthPrefix() common.Combinator[rune, Position, time.Month] {
 	)
 }
 
-func yearWithCentury() common.Combinator[rune, Position, int] {
+func yearWithCentury() parsec.Combinator[rune, Position, int] {
 	return Padded(
 		Try(Space("space")),
 		UnsignedN[int](4, "expected year with century"),
 	)
 }
 
-func paddedDayNum() common.Combinator[rune, Position, int] {
+func paddedDayNum() parsec.Combinator[rune, Position, int] {
 	return Padded(
 		Try(Space("space")),
 		Choice(
@@ -64,21 +64,21 @@ func paddedDayNum() common.Combinator[rune, Position, int] {
 	)
 }
 
-func paddedHourNum() common.Combinator[rune, Position, int] {
+func paddedHourNum() parsec.Combinator[rune, Position, int] {
 	return Padded(
 		Try(Space("space")),
 		UnsignedN[int](2, "expected hour number"),
 	)
 }
 
-func paddedMinuteNum() common.Combinator[rune, Position, int] {
+func paddedMinuteNum() parsec.Combinator[rune, Position, int] {
 	return Padded(
 		Try(Space("space")),
 		UnsignedN[int](2, "expected minute number"),
 	)
 }
 
-func paddedSecondNum() common.Combinator[rune, Position, int] {
+func paddedSecondNum() parsec.Combinator[rune, Position, int] {
 	return Padded(
 		Try(Space("space")),
 		UnsignedN[int](2, "expected second number"),

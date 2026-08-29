@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestEq(t *testing.T) {
@@ -16,7 +16,7 @@ func TestEq(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -28,7 +28,7 @@ func TestEq(t *testing.T) {
 				{
 					input:  "a",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -48,7 +48,7 @@ func TestEq(t *testing.T) {
 				{
 					input:  "ac",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -72,7 +72,7 @@ func TestNotEq(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -88,7 +88,7 @@ func TestNotEq(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -100,7 +100,7 @@ func TestNotEq(t *testing.T) {
 				{
 					input:  "ca",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -128,7 +128,7 @@ func TestOneOf(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -152,7 +152,7 @@ func TestOneOf(t *testing.T) {
 				{
 					input:  "d",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -175,7 +175,7 @@ func TestOneOf(t *testing.T) {
 				},
 				{
 					input: "fa",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -199,7 +199,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -211,7 +211,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  " ",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -223,7 +223,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  "f",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -235,7 +235,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  "fo",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -255,7 +255,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  ".foo",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -271,7 +271,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  "barfoo",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -293,7 +293,7 @@ func TestMap(t *testing.T) {
 			comb: Some(
 				1,
 				"expected at least one a, b or c",
-				common.SkipMany(
+				parsec.SkipMany(
 					NoneOf("skip not a, b or c", 'a', 'b', 'c'),
 					Map(
 						"expected a, b or c",
@@ -310,7 +310,7 @@ func TestMap(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -343,7 +343,7 @@ func TestMap(t *testing.T) {
 					input:  "xyzsert",
 					output: nil,
 
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -384,7 +384,7 @@ func TestMapStrings(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -420,7 +420,7 @@ func TestMapStrings(t *testing.T) {
 				{
 					input:  "xyzsert",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -444,7 +444,7 @@ func TestString(t *testing.T) {
 				{
 					input:  "",
 					output: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -464,7 +464,7 @@ func TestString(t *testing.T) {
 				{
 					input:  "fo",
 					output: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -476,7 +476,7 @@ func TestString(t *testing.T) {
 				{
 					input:  "f",
 					output: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -488,7 +488,7 @@ func TestString(t *testing.T) {
 				{
 					input:  "bar",
 					output: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,

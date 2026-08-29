@@ -1,7 +1,7 @@
 package bytes
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Range succeeds when the next byte is inside the inclusive
@@ -10,8 +10,8 @@ import (
 func Range(
 	errMessage string,
 	from, to byte,
-) common.Combinator[byte, int, byte] {
-	return common.Range[byte, int](errMessage, from, to)
+) parsec.Combinator[byte, int, byte] {
+	return parsec.Range[byte, int](errMessage, from, to)
 }
 
 // NotRange succeeds when the next byte is outside the inclusive
@@ -20,8 +20,8 @@ func Range(
 func NotRange(
 	errMessage string,
 	from, to byte,
-) common.Combinator[byte, int, byte] {
-	return common.NotRange[byte, int](errMessage, from, to)
+) parsec.Combinator[byte, int, byte] {
+	return parsec.NotRange[byte, int](errMessage, from, to)
 }
 
 // Gt succeeds when the next byte is greater than t and returns it.
@@ -29,8 +29,8 @@ func NotRange(
 func Gt(
 	errMessage string,
 	t byte,
-) common.Combinator[byte, int, byte] {
-	return common.Gt[byte, int](errMessage, t)
+) parsec.Combinator[byte, int, byte] {
+	return parsec.Gt[byte, int](errMessage, t)
 }
 
 // Gte succeeds when the next byte is greater than or equal to t and returns it.
@@ -38,8 +38,8 @@ func Gt(
 func Gte(
 	errMessage string,
 	t byte,
-) common.Combinator[byte, int, byte] {
-	return common.Gte[byte, int](errMessage, t)
+) parsec.Combinator[byte, int, byte] {
+	return parsec.Gte[byte, int](errMessage, t)
 }
 
 // Lt succeeds when the next byte is less than t and returns it.
@@ -47,8 +47,8 @@ func Gte(
 func Lt(
 	errMessage string,
 	t byte,
-) common.Combinator[byte, int, byte] {
-	return common.Lt[byte, int](errMessage, t)
+) parsec.Combinator[byte, int, byte] {
+	return parsec.Lt[byte, int](errMessage, t)
 }
 
 // Lte succeeds when the next byte is less than or equal to t and returns it.
@@ -56,6 +56,6 @@ func Lt(
 func Lte(
 	errMessage string,
 	t byte,
-) common.Combinator[byte, int, byte] {
-	return common.Lte[byte, int](errMessage, t)
+) parsec.Combinator[byte, int, byte] {
+	return parsec.Lte[byte, int](errMessage, t)
 }

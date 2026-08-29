@@ -1,14 +1,14 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Parens parses body between the '(' and ')' characters
 // and returns the result of body.
 func Parens[T any](
-	body common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
+	body parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
 	return Between(
 		Eq("expected '('", '('),
 		body,
@@ -19,8 +19,8 @@ func Parens[T any](
 // Braces parses body between the '{' and '}' characters
 // and returns the result of body.
 func Braces[T any](
-	body common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
+	body parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
 	return Between(
 		Eq("expected '{'", '{'),
 		body,
@@ -31,8 +31,8 @@ func Braces[T any](
 // Angles parses body between the '<' and '>' characters
 // and returns the result of body.
 func Angles[T any](
-	body common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
+	body parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
 	return Between(
 		Eq("expected '<'", '<'),
 		body,
@@ -43,8 +43,8 @@ func Angles[T any](
 // Squares parses body between the '[' and ']' characters
 // and returns the result of body.
 func Squares[T any](
-	body common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
+	body parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
 	return Between(
 		Eq("expected '['", '['),
 		body,
@@ -53,32 +53,32 @@ func Squares[T any](
 }
 
 // Semi parses the ';' character.
-func Semi() common.Combinator[rune, Position, rune] {
+func Semi() parsec.Combinator[rune, Position, rune] {
 	return Eq("expected ';'", ';')
 }
 
 // Comma parses the ',' character.
-func Comma() common.Combinator[rune, Position, rune] {
+func Comma() parsec.Combinator[rune, Position, rune] {
 	return Eq("expected ','", ',')
 }
 
 // Colon parses the ':' character.
-func Colon() common.Combinator[rune, Position, rune] {
+func Colon() parsec.Combinator[rune, Position, rune] {
 	return Eq("expected ':'", ':')
 }
 
 // Dot parses the '.' character.
-func Dot() common.Combinator[rune, Position, rune] {
+func Dot() parsec.Combinator[rune, Position, rune] {
 	return Eq("expected '.'", '.')
 }
 
 // Unsigned parses an unsigned decimal integer of type T
 // (for example int or uint16). Leading zeros are accepted.
-func Unsigned[T common.Integer]() common.Combinator[rune, Position, T] {
+func Unsigned[T parsec.Integer]() parsec.Combinator[rune, Position, T] {
 	digit := Try(Digit("digit"))
 	zero := rune('0')
 
-	return func(buffer common.Buffer[rune, Position]) (T, common.Error[Position]) {
+	return func(buffer parsec.Buffer[rune, Position]) (T, parsec.Error[Position]) {
 		var result T
 
 		token, err := digit(buffer)
@@ -104,11 +104,11 @@ func Unsigned[T common.Integer]() common.Combinator[rune, Position, T] {
 // UnsignedN parses an unsigned decimal integer of type T
 // consisting of exactly n digits, for example a year or a month field
 // of a fixed-width timestamp.
-func UnsignedN[T common.Integer](n int, errMessage string) common.Combinator[rune, Position, T] {
+func UnsignedN[T parsec.Integer](n int, errMessage string) parsec.Combinator[rune, Position, T] {
 	digit := Try(Digit("digit"))
 	zero := rune('0')
 
-	return func(buffer common.Buffer[rune, Position]) (T, common.Error[Position]) {
+	return func(buffer parsec.Buffer[rune, Position]) (T, parsec.Error[Position]) {
 		var result T
 
 		token, err := digit(buffer)

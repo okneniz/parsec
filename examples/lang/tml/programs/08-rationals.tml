@@ -1,0 +1,37 @@
+(* 08 — rational numbers as tuples
+ *
+ * There are no records and no datatypes, but a tuple of numerator and
+ * denominator carries the same information. An invariant — the
+ * denominator positive, the fraction reduced — is maintained by the
+ * constructor rat, exactly as an ML datatype constructor would.
+ *)
+
+fun mod a b = a - a / b * b
+
+fun gcd a b = if b = 0 then a else gcd b (mod a b)
+
+(* rat n d builds the reduced form; a negative denominator flips
+ * both signs, so rat 1 ~2 and rat ~1 2 are the same number. *)
+fun rat n d =
+  let
+    val sign = if d < 0 then 0 - 1 else 1
+    val g = gcd (if n < 0 then 0 - n else n) (if d < 0 then 0 - d else d)
+  in
+    (sign * (n / g), sign * (d / g))
+  end
+
+fun addR (an, ad) (bn, bd) = rat (an * bd + bn * ad) (ad * bd)
+
+fun mulR (an, ad) (bn, bd) = rat (an * bn) (ad * bd)
+
+val half = rat 1 2
+
+val third = rat 1 3
+
+val fiveSixths = addR half third
+
+val reduced = addR (rat 1 3) (rat 1 6)
+
+val normalized = rat 42 ~60
+
+val quarter = mulR half half

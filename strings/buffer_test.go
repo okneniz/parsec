@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestBuffer(t *testing.T) {
@@ -56,7 +56,7 @@ func TestBuffer(t *testing.T) {
 					read: &read{
 						greedy: false,
 						output: 0,
-						err:    common.ErrEndOfFile,
+						err:    parsec.ErrEndOfFile,
 					},
 					afterPosition: Position{
 						line:   0,
@@ -69,7 +69,7 @@ func TestBuffer(t *testing.T) {
 					read: &read{
 						greedy: true,
 						output: 0,
-						err:    common.ErrEndOfFile,
+						err:    parsec.ErrEndOfFile,
 					},
 					afterPosition: Position{
 						line:   0,
@@ -100,7 +100,7 @@ func TestBuffer(t *testing.T) {
 							column: 1,
 							index:  1,
 						},
-						err: common.ErrOutOfBounds,
+						err: parsec.ErrOutOfBounds,
 					},
 					afterPosition: Position{
 						line:   0,
@@ -116,7 +116,7 @@ func TestBuffer(t *testing.T) {
 							column: 0,
 							index:  -1,
 						},
-						err: common.ErrOutOfBounds,
+						err: parsec.ErrOutOfBounds,
 					},
 					afterPosition: Position{
 						line:   0,

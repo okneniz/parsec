@@ -1,7 +1,7 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Satisfy succeeds for any rune for which the supplied function f returns
@@ -12,15 +12,15 @@ import (
 func Satisfy(
 	errMessage string,
 	greedy bool,
-	f common.Condition[rune],
-) common.Combinator[rune, Position, rune] {
-	return common.Satisfy[rune, Position](errMessage, greedy, f)
+	f parsec.Condition[rune],
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Satisfy[rune, Position](errMessage, greedy, f)
 }
 
 // Any reads and returns the next rune from the buffer.
 // It fails only at the end of the buffer.
-func Any() common.Combinator[rune, Position, rune] {
-	return common.Any[rune, Position]()
+func Any() parsec.Combinator[rune, Position, rune] {
+	return parsec.Any[rune, Position]()
 }
 
 // Try applies c and, when it fails, rewinds the buffer to the previous
@@ -29,42 +29,42 @@ func Any() common.Combinator[rune, Position, rune] {
 // combinator which can fail inside an alternative branch (see Choice,
 // Or) or in a loop must be wrapped in Try to make backtracking possible.
 func Try[T any](
-	c common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
-	return common.Try[rune, Position, T](c)
+	c parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
+	return parsec.Try[rune, Position, T](c)
 }
 
 // Between parses open, then body, then close,
 // and returns only the result of body.
 func Between[T any, S any, B any](
-	pre common.Combinator[rune, Position, T],
-	c common.Combinator[rune, Position, S],
-	suf common.Combinator[rune, Position, B],
-) common.Combinator[rune, Position, S] {
-	return common.Between(pre, c, suf)
+	pre parsec.Combinator[rune, Position, T],
+	c parsec.Combinator[rune, Position, S],
+	suf parsec.Combinator[rune, Position, B],
+) parsec.Combinator[rune, Position, S] {
+	return parsec.Between(pre, c, suf)
 }
 
 // EOF reports whether the buffer is fully consumed.
 // It never fails and consumes nothing.
-func EOF() common.Combinator[rune, Position, bool] {
-	return common.EOF[rune, Position]()
+func EOF() parsec.Combinator[rune, Position, bool] {
+	return parsec.EOF[rune, Position]()
 }
 
 // Cast parses the input with c and transforms the result with f.
 // It fails when f returns an error.
 func Cast[T any, S any](
-	c common.Combinator[rune, Position, T],
+	c parsec.Combinator[rune, Position, T],
 	f func(T) (S, error),
-) common.Combinator[rune, Position, S] {
-	return common.Cast(c, f)
+) parsec.Combinator[rune, Position, S] {
+	return parsec.Cast(c, f)
 }
 
 // Const consumes nothing and returns the given value.
-func Const[S any](value S) common.Combinator[rune, Position, S] {
-	return common.Const[rune, Position, S](value)
+func Const[S any](value S) parsec.Combinator[rune, Position, S] {
+	return parsec.Const[rune, Position, S](value)
 }
 
 // Fail consumes nothing and always fails with the given message.
-func Fail[S any](errMessage string) common.Combinator[rune, Position, S] {
-	return common.Fail[rune, Position, S](errMessage)
+func Fail[S any](errMessage string) parsec.Combinator[rune, Position, S] {
+	return parsec.Fail[rune, Position, S](errMessage)
 }

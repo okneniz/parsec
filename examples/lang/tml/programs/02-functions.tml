@@ -1,0 +1,29 @@
+(* 02 — functions and recursion
+ *
+ * A function value is written fn pattern => body. Application is
+ * juxtaposition and binds tighter than any operator, so f x + y means
+ * (f x) + y.
+ *)
+
+val successor = fn n => n + 1
+
+(* Application: successor 5. *)
+val six = successor 5
+
+(* fun declares a named recursive function. Several arguments mean
+ * currying: add is a function returning a function. *)
+fun add x y = x + y
+
+val ten = add 6 4
+
+(* Recursion needs no special form: the function being declared is
+ * visible in its own body. *)
+fun fact n = if n = 0 then 1 else n * fact (n - 1)
+
+(* The classic two-branch recursion: the argument of the recursive
+ * call needs parentheses, because application binds so tight. *)
+val fact5 = fact 5
+
+fun fib n = if n < 2 then n else fib (n - 1) + fib (n - 2)
+
+val fib10 = fib 10

@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestMany(t *testing.T) {
@@ -52,7 +52,7 @@ func TestSome(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -80,7 +80,7 @@ func TestSome(t *testing.T) {
 				{
 					input:  ".aa",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -124,7 +124,7 @@ func TestOptional(t *testing.T) {
 			},
 		},
 		{
-			comb: Optional(Satisfy("never match", true, common.Nothing[rune]), 'x'),
+			comb: Optional(Satisfy("never match", true, parsec.Nothing[rune]), 'x'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -161,7 +161,7 @@ func TestCount(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -185,7 +185,7 @@ func TestCount(t *testing.T) {
 				{
 					input:  ".aa",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -197,7 +197,7 @@ func TestCount(t *testing.T) {
 				{
 					input:  "a.",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,

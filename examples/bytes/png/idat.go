@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 type IDAT struct {
@@ -41,7 +41,7 @@ func (c *IDAT) String() string {
 	return b.String()
 }
 
-func IDATChunk(size uint32) common.Combinator[byte, int, *IDAT] {
+func IDATChunk(size uint32) parsec.Combinator[byte, int, *IDAT] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected %d bytes of IDAT chunk", size),
@@ -50,9 +50,9 @@ func IDATChunk(size uint32) common.Combinator[byte, int, *IDAT] {
 
 	parseCRC := bytes.ReadAs[uint32](4, "expected four bytes of CRC", binary.BigEndian)
 
-	return func(buffer common.Buffer[byte, int]) (*IDAT, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (*IDAT, parsec.Error[int]) {
 		var data []byte
-		var err common.Error[int]
+		var err parsec.Error[int]
 
 		if size > 0 {
 			data, err = parseData(buffer)

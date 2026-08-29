@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/strings"
 )
 
@@ -15,7 +15,7 @@ var (
 	whitespace = strings.Space("space")
 )
 
-func Bool() common.Combinator[rune, strings.Position, JSON] {
+func Bool() parsec.Combinator[rune, strings.Position, JSON] {
 	return strings.MapStrings(
 		"expected bool value",
 		map[string]JSON{
@@ -25,7 +25,7 @@ func Bool() common.Combinator[rune, strings.Position, JSON] {
 	)
 }
 
-func Null() common.Combinator[rune, strings.Position, JSON] {
+func Null() parsec.Combinator[rune, strings.Position, JSON] {
 	return strings.Cast(
 		strings.String("expected null value", "null"),
 		func(_ string) (JSON, error) {
@@ -34,7 +34,7 @@ func Null() common.Combinator[rune, strings.Position, JSON] {
 	)
 }
 
-func Number_() common.Combinator[rune, strings.Position, JSON] {
+func Number_() parsec.Combinator[rune, strings.Position, JSON] {
 	return strings.Cast(
 		strings.Concat(
 			1,
@@ -57,7 +57,7 @@ func Number_() common.Combinator[rune, strings.Position, JSON] {
 	)
 }
 
-func String_() common.Combinator[rune, strings.Position, JSON] {
+func String_() parsec.Combinator[rune, strings.Position, JSON] {
 	leftQuote := strings.Padded(
 		whitespace,
 		strings.Eq(`expecte double quote as start of string literal`, '"'),
@@ -76,8 +76,8 @@ func String_() common.Combinator[rune, strings.Position, JSON] {
 	)
 
 	return func(
-		buffer common.Buffer[rune, strings.Position],
-	) (JSON, common.Error[strings.Position]) {
+		buffer parsec.Buffer[rune, strings.Position],
+	) (JSON, parsec.Error[strings.Position]) {
 		_, err := leftQuote(buffer)
 		if err != nil {
 			return nil, err
@@ -92,8 +92,8 @@ func String_() common.Combinator[rune, strings.Position, JSON] {
 	}
 }
 
-func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
-	var value common.Combinator[rune, strings.Position, JSON]
+func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON] {
+	var value parsec.Combinator[rune, strings.Position, JSON]
 
 	keyComb := strings.Try(strings.Padded(whitespace, String_()))
 
@@ -103,8 +103,8 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 	)
 
 	pair := func(
-		buffer common.Buffer[rune, strings.Position],
-	) (*JSPair, common.Error[strings.Position]) {
+		buffer parsec.Buffer[rune, strings.Position],
+	) (*JSPair, parsec.Error[strings.Position]) {
 		pos := buffer.Position()
 
 		key, err := keyComb(buffer)
@@ -124,7 +124,7 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 
 		ks, ok := key.(JSString)
 		if !ok {
-			return nil, common.NewParseError(pos, fmt.Sprintf("receive %#v as string", key))
+			return nil, parsec.NewParseError(pos, fmt.Sprintf("receive %#v as string", key))
 		}
 
 		return &JSPair{ks, val}, nil
@@ -143,8 +143,8 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 	object := strings.Between(
 		leftBracket,
 		func(
-			buffer common.Buffer[rune, strings.Position],
-		) (JSON, common.Error[strings.Position]) {
+			buffer parsec.Buffer[rune, strings.Position],
+		) (JSON, parsec.Error[strings.Position]) {
 			list, err := listOfPairs(buffer)
 			if err != nil {
 				return nil, err
@@ -166,8 +166,8 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 	array := strings.Between(
 		leftSquare,
 		func(
-			buffer common.Buffer[rune, strings.Position],
-		) (JSON, common.Error[strings.Position]) {
+			buffer parsec.Buffer[rune, strings.Position],
+		) (JSON, parsec.Error[strings.Position]) {
 			listOfValues := strings.SepBy(0, value, comma)
 
 			list, err := listOfValues(buffer)
@@ -180,12 +180,12 @@ func Value(t testing.TB) common.Combinator[rune, strings.Position, JSON] {
 		rightSquare,
 	)
 
-	// bool := common.Trace(t, "bool", Bool())
-	// null := common.Trace(t, "null", Null())
-	// num := common.Trace(t, "number", Number_())
-	// str := common.Trace(t, "string", String_())
-	// obj := common.Trace(t, "object", object)
-	// arr := common.Trace(t, "array", array)
+	// bool := parsec.Trace(t, "bool", Bool())
+	// null := parsec.Trace(t, "null", Null())
+	// num := parsec.Trace(t, "number", Number_())
+	// str := parsec.Trace(t, "string", String_())
+	// obj := parsec.Trace(t, "object", object)
+	// arr := parsec.Trace(t, "array", array)
 
 	bool := Bool()
 	null := Null()

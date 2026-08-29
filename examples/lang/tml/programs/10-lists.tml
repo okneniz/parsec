@@ -1,0 +1,35 @@
+(* 10 — lists as folds: data with no datatype
+ *
+ * The language has no list type, no cons cell, nothing — and still
+ * this program builds lists, measures them, maps over them and
+ * appends them. The trick: a list is represented by its fold, so
+ * cons and the empty list are plain functions, and every list
+ * consumer is written as an application.
+ *)
+
+(* The empty list ignores the step function and returns the seed. *)
+val nil = fn f => fn z => z
+
+(* A cons cell runs the step on the head and the folded tail. *)
+val cons = fn h => fn t => fn f => fn z => f h (t f z)
+
+val oneTwo = cons 1 (cons 2 nil)
+
+(* Consumers pass their own step function and seed. *)
+val sum = fn l => l (fn h => fn acc => h + acc) 0
+
+val length = fn l => l (fn h => fn acc => acc + 1) 0
+
+val sumOneTwo = sum oneTwo
+
+val lenOneTwo = length oneTwo
+
+(* map rebuilds a list with a transformed head at every step. *)
+val map = fn f => fn l => l (fn h => fn acc => cons (f h) acc) nil
+
+val sumDoubled = sum (map (fn n => n * 2) oneTwo)
+
+(* append feeds cons as the step of the first list. *)
+val append = fn l => fn r => l cons r
+
+val sumAppended = sum (append oneTwo (cons 3 nil))

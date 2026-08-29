@@ -3,7 +3,7 @@ package bytes
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestRange(t *testing.T) {
@@ -16,7 +16,7 @@ func TestRange(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("a"),
@@ -33,12 +33,12 @@ func TestRange(t *testing.T) {
 				{
 					input:  []byte("d"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("da"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("ad"),
@@ -59,22 +59,22 @@ func TestNotRange(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte not between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("a"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte not between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("b"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte not between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte not between 'a' and 'c'"),
 				},
 				{
 					input:  []byte("d"),
@@ -86,7 +86,7 @@ func TestNotRange(t *testing.T) {
 				},
 				{
 					input: []byte("ad"),
-					err:   common.NewParseError(0, "expected any byte not between 'a' and 'c'"),
+					err:   parsec.NewParseError(0, "expected any byte not between 'a' and 'c'"),
 				},
 			},
 		},
@@ -103,22 +103,22 @@ func TestGt(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than 'c'"),
 				},
 				{
 					input:  []byte("a"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than 'c'"),
 				},
 				{
 					input:  []byte("b"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than 'c'"),
 				},
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than 'c'"),
 				},
 				{
 					input:  []byte("d"),
@@ -134,7 +134,7 @@ func TestGt(t *testing.T) {
 				},
 				{
 					input: []byte("ad"),
-					err:   common.NewParseError(0, "expected any byte greater than 'c'"),
+					err:   parsec.NewParseError(0, "expected any byte greater than 'c'"),
 				},
 			},
 		},
@@ -151,17 +151,17 @@ func TestGte(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than or equal 'c'"),
 				},
 				{
 					input:  []byte("a"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than or equal 'c'"),
 				},
 				{
 					input:  []byte("b"),
 					output: 0,
-					err:    common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+					err:    parsec.NewParseError(0, "expected any byte greater than or equal 'c'"),
 				},
 				{
 					input:  []byte("c"),
@@ -181,7 +181,7 @@ func TestGte(t *testing.T) {
 				},
 				{
 					input: []byte("ad"),
-					err:   common.NewParseError(0, "expected any byte greater than or equal 'c'"),
+					err:   parsec.NewParseError(0, "expected any byte greater than or equal 'c'"),
 				},
 			},
 		},
@@ -198,7 +198,7 @@ func TestLt(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than 'c'"),
 				},
 				{
 					input:  []byte("a"),
@@ -211,17 +211,17 @@ func TestLt(t *testing.T) {
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than 'c'"),
 				},
 				{
 					input:  []byte("d"),
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than 'c'"),
 				},
 				{
 					input:  []byte("da"),
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than 'c'"),
 				},
 			},
 		},
@@ -238,7 +238,7 @@ func TestLte(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than or equal 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than or equal 'c'"),
 				},
 				{
 					input:  []byte("a"),
@@ -255,12 +255,12 @@ func TestLte(t *testing.T) {
 				{
 					input:  []byte("d"),
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than or equal 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than or equal 'c'"),
 				},
 				{
 					input:  []byte("da"),
 					output: 0,
-					err:    common.NewParseError(0, "expected byte less than or equal 'c'"),
+					err:    parsec.NewParseError(0, "expected byte less than or equal 'c'"),
 				},
 			},
 		},

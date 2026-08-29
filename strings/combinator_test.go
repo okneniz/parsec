@@ -7,7 +7,7 @@ import (
 	"time"
 
 	ohsnap "github.com/okneniz/oh-snap"
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestSatisfy(t *testing.T) {
@@ -20,7 +20,7 @@ func TestSatisfy(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -40,7 +40,7 @@ func TestSatisfy(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -52,12 +52,12 @@ func TestSatisfy(t *testing.T) {
 			},
 		},
 		{
-			comb: Satisfy("error explanation", true, common.Nothing),
+			comb: Satisfy("error explanation", true, parsec.Nothing),
 			cases: []testCase[rune]{
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -69,7 +69,7 @@ func TestSatisfy(t *testing.T) {
 				{
 					input:  "abc",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -93,13 +93,13 @@ func TestAny(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
 							index:  0,
 						},
-						common.ErrEndOfFile.Error(),
+						parsec.ErrEndOfFile.Error(),
 					),
 				},
 				{
@@ -148,7 +148,7 @@ func TestTry(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -167,7 +167,7 @@ func TestTry(t *testing.T) {
 				},
 				{
 					input: "c",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -201,7 +201,7 @@ func TestBetween(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -216,7 +216,7 @@ func TestBetween(t *testing.T) {
 				},
 				{
 					input: "abc",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -227,7 +227,7 @@ func TestBetween(t *testing.T) {
 				},
 				{
 					input: "(abc",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 4,
@@ -238,7 +238,7 @@ func TestBetween(t *testing.T) {
 				},
 				{
 					input: " (abc) ",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -249,7 +249,7 @@ func TestBetween(t *testing.T) {
 				},
 				{
 					input: "((abc))",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -260,7 +260,7 @@ func TestBetween(t *testing.T) {
 				},
 				{
 					input: "()",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -304,14 +304,14 @@ func TestCast(t *testing.T) {
 	runTests(t, []test[int]{
 		{
 			comb: Cast(
-				Satisfy("test", true, common.Anything[rune]),
+				Satisfy("test", true, parsec.Anything[rune]),
 				func(x rune) (int, error) { return int(x), nil },
 			),
 			cases: []testCase[int]{
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -339,19 +339,19 @@ func TestCast(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
 							index:  0,
 						},
-						common.ErrEndOfFile.Error(),
+						parsec.ErrEndOfFile.Error(),
 					),
 				},
 				{
 					input:  "something",
 					output: -1,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,

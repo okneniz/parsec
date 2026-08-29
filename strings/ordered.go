@@ -1,7 +1,7 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Range succeeds when the next rune is inside the inclusive
@@ -10,8 +10,8 @@ import (
 func Range(
 	errMessage string,
 	from, to rune,
-) common.Combinator[rune, Position, rune] {
-	return common.Range[rune, Position](errMessage, from, to)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Range[rune, Position](errMessage, from, to)
 }
 
 // NotRange succeeds when the next rune is outside the inclusive
@@ -20,8 +20,8 @@ func Range(
 func NotRange(
 	errMessage string,
 	from, to rune,
-) common.Combinator[rune, Position, rune] {
-	return common.NotRange[rune, Position](errMessage, from, to)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.NotRange[rune, Position](errMessage, from, to)
 }
 
 // Gt succeeds when the next rune is greater than t and returns it.
@@ -29,8 +29,8 @@ func NotRange(
 func Gt(
 	errMessage string,
 	t rune,
-) common.Combinator[rune, Position, rune] {
-	return common.Gt[rune, Position](errMessage, t)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Gt[rune, Position](errMessage, t)
 }
 
 // Gte succeeds when the next rune is greater than or equal to t and returns it.
@@ -38,8 +38,8 @@ func Gt(
 func Gte(
 	errMessage string,
 	t rune,
-) common.Combinator[rune, Position, rune] {
-	return common.Gte[rune, Position](errMessage, t)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Gte[rune, Position](errMessage, t)
 }
 
 // Lt succeeds when the next rune is less than t and returns it.
@@ -47,8 +47,8 @@ func Gte(
 func Lt(
 	errMessage string,
 	t rune,
-) common.Combinator[rune, Position, rune] {
-	return common.Lt[rune, Position](errMessage, t)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Lt[rune, Position](errMessage, t)
 }
 
 // Lte succeeds when the next rune is less than or equal to t and returns it.
@@ -56,6 +56,6 @@ func Lt(
 func Lte(
 	errMessage string,
 	t rune,
-) common.Combinator[rune, Position, rune] {
-	return common.Lte[rune, Position](errMessage, t)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Lte[rune, Position](errMessage, t)
 }

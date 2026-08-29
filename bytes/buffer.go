@@ -3,7 +3,7 @@ package bytes
 import (
 	"os"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 type buffer struct {
@@ -11,7 +11,7 @@ type buffer struct {
 	position int
 }
 
-var _ common.Buffer[byte, int] = new(buffer)
+var _ parsec.Buffer[byte, int] = new(buffer)
 
 // Read returns the next byte.
 // If greedy is true, the buffer advances and keeps the new position,
@@ -19,7 +19,7 @@ var _ common.Buffer[byte, int] = new(buffer)
 // with greedy false the byte is only peeked and the position stays unchanged.
 func (s *buffer) Read(greedy bool) (byte, error) {
 	if s.position >= len(s.data) {
-		return 0, common.ErrEndOfFile
+		return 0, parsec.ErrEndOfFile
 	}
 
 	b := s.data[s.position]
@@ -31,7 +31,7 @@ func (s *buffer) Read(greedy bool) (byte, error) {
 }
 
 // Seek moves the buffer to a previously obtained position.
-// It returns common.ErrOutOfBounds when the position is invalid.
+// It returns parsec.ErrOutOfBounds when the position is invalid.
 // Seeking to the current position does nothing.
 func (s *buffer) Seek(x int) error {
 	if s.position == x {
@@ -39,11 +39,11 @@ func (s *buffer) Seek(x int) error {
 	}
 
 	if x < 0 {
-		return common.ErrOutOfBounds
+		return parsec.ErrOutOfBounds
 	}
 
 	if x >= len(s.data) {
-		return common.ErrOutOfBounds
+		return parsec.ErrOutOfBounds
 	}
 
 	s.position = x

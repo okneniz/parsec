@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestChainl(t *testing.T) {
@@ -18,12 +18,12 @@ func TestChainl(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+	parseOp := func(buf parsec.Buffer[byte, int]) (parsec.BinaryOp[string], parsec.Error[int]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -93,12 +93,12 @@ func TestChainl1(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+	parseOp := func(buf parsec.Buffer[byte, int]) (parsec.BinaryOp[string], parsec.Error[int]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -119,7 +119,7 @@ func TestChainl1(t *testing.T) {
 				{
 					input:  []byte{},
 					output: "",
-					err:    common.NewParseError(0, "end of file"),
+					err:    parsec.NewParseError(0, "end of file"),
 				},
 				{
 					input:  []byte{1, '+', 2, '*', 3, '?', 4},
@@ -169,12 +169,12 @@ func TestChainr(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+	parseOp := func(buf parsec.Buffer[byte, int]) (parsec.BinaryOp[string], parsec.Error[int]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -244,12 +244,12 @@ func TestChainr1(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[byte, int]) (common.BinaryOp[string], common.Error[int]) {
+	parseOp := func(buf parsec.Buffer[byte, int]) (parsec.BinaryOp[string], parsec.Error[int]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -270,7 +270,7 @@ func TestChainr1(t *testing.T) {
 				{
 					input:  []byte{},
 					output: "",
-					err:    common.NewParseError(0, "end of file"),
+					err:    parsec.NewParseError(0, "end of file"),
 				},
 				{
 					input:  []byte{1, '+', 2, '*', 3, '?', 4},
@@ -368,7 +368,7 @@ func TestSepBy1(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated by ','"),
+					err:    parsec.NewParseError(0, "expected at least one item separated by ','"),
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -377,12 +377,12 @@ func TestSepBy1(t *testing.T) {
 				{
 					input:  []byte(","),
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated by ','"),
+					err:    parsec.NewParseError(0, "expected at least one item separated by ','"),
 				},
 				{
 					input:  []byte(",a,b,c"),
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated by ','"),
+					err:    parsec.NewParseError(0, "expected at least one item separated by ','"),
 				},
 				{
 					input:  []byte("a,b,c,"),
@@ -475,7 +475,7 @@ func TestEndBy1(t *testing.T) {
 			cases: []testCase[[]byte]{
 				{
 					input: []byte{},
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -487,11 +487,11 @@ func TestEndBy1(t *testing.T) {
 				},
 				{
 					input: []byte(","),
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input: []byte(",a,b,c"),
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,b,c,"),
@@ -499,7 +499,7 @@ func TestEndBy1(t *testing.T) {
 				},
 				{
 					input: []byte("a"),
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,"),
@@ -507,11 +507,11 @@ func TestEndBy1(t *testing.T) {
 				},
 				{
 					input: []byte(",a"),
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input: []byte(",a,"),
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,,"),
@@ -581,7 +581,7 @@ func TestSepEndBy1(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:    parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input:  []byte("a,b,c"),
@@ -602,11 +602,11 @@ func TestSepEndBy1(t *testing.T) {
 				{
 					input:  []byte(","),
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:    parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 				{
 					input: []byte(",a,b,c"),
-					err:   common.NewParseError(0, "expected at least one item separated and ended by ','"),
+					err:   parsec.NewParseError(0, "expected at least one item separated and ended by ','"),
 				},
 			},
 		},
@@ -651,11 +651,11 @@ func TestManyTill(t *testing.T) {
 				},
 				{
 					input: []byte("a"),
-					err:   common.NewParseError(0, "expected sequence of digits ended by dot"),
+					err:   parsec.NewParseError(0, "expected sequence of digits ended by dot"),
 				},
 				{
 					input: []byte("123a."),
-					err:   common.NewParseError(3, "expected sequence of digits ended by dot"),
+					err:   parsec.NewParseError(3, "expected sequence of digits ended by dot"),
 				},
 				{
 					input:  []byte("123.a"),
@@ -663,11 +663,11 @@ func TestManyTill(t *testing.T) {
 				},
 				{
 					input: []byte("a123."),
-					err:   common.NewParseError(0, "expected sequence of digits ended by dot"),
+					err:   parsec.NewParseError(0, "expected sequence of digits ended by dot"),
 				},
 				{
 					input: []byte("12a3"),
-					err:   common.NewParseError(2, "expected sequence of digits ended by dot"),
+					err:   parsec.NewParseError(2, "expected sequence of digits ended by dot"),
 				},
 			},
 		},

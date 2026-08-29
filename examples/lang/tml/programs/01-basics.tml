@@ -1,0 +1,26 @@
+(* 01 — literals and arithmetic
+ *
+ * A tiny ml program is a sequence of val and fun declarations.
+ * Values are integers and booleans; there is nothing else.
+ * Comments nest: (* like this (* really *) *) and run to the closing
+ * marker, so a whole block of dead code can be switched off.
+ *)
+
+val answer = 42
+
+(* Multiplication binds tighter than addition, as in school arithmetic:
+ * 1 + 2 * 3 is 1 + (2 * 3), not (1 + 2) * 3. *)
+val precedence = 1 + 2 * 3
+
+(* Parentheses override the precedence. *)
+val grouped = (1 + 2) * 3
+
+(* Negation is the ~ operator glued to the literal. *)
+val negative = ~5 + 10
+
+(* Comparisons produce booleans. *)
+val comparison = 1 < 2
+
+(* andalso and orelse are the boolean connectives; andalso binds
+ * tighter, and both evaluate their right side only when needed. *)
+val logic = (1 < 2) andalso (2 < 1) orelse true

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 var (
@@ -14,8 +14,8 @@ var (
 )
 
 // https://github.com/msgpack/msgpack/blob/master/spec.md
-func MessagePack() common.Combinator[byte, int, Type] {
-	cases := map[byte]common.Combinator[byte, int, Type]{
+func MessagePack() parsec.Combinator[byte, int, Type] {
+	cases := map[byte]parsec.Combinator[byte, int, Type]{
 		0xc0: bytes.Const[Type](Nil{}),
 
 		0xc1: bytes.Fail[Type]("impossible data type (0xc1)"),
@@ -133,7 +133,7 @@ func MessagePack() common.Combinator[byte, int, Type] {
 		}
 	}
 
-	valuesParser := common.MapAs[byte, int, byte, Type](
+	valuesParser := parsec.MapAs[byte, int, byte, Type](
 		"expected positive fixint, fixstring or negative fixint",
 		cases,
 		bytes.Any(),
@@ -183,9 +183,9 @@ func MessagePack() common.Combinator[byte, int, Type] {
 }
 
 func stringParser[T bytes.Number](
-	parseSize common.Combinator[byte, int, T],
-) common.Combinator[byte, int, Type] {
-	return func(buffer common.Buffer[byte, int]) (Type, common.Error[int]) {
+	parseSize parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, Type] {
+	return func(buffer parsec.Buffer[byte, int]) (Type, parsec.Error[int]) {
 		size, err := parseSize(buffer)
 		if err != nil {
 			return String(""), err
@@ -197,7 +197,7 @@ func stringParser[T bytes.Number](
 		for i := 0; i < int(size); i++ {
 			x, err := buffer.Read(true)
 			if err != nil {
-				return String(""), common.NewParseError(
+				return String(""), parsec.NewParseError(
 					pos,
 					fmt.Sprintf("expected %d bytes of string data", int(size)),
 				)
@@ -210,14 +210,14 @@ func stringParser[T bytes.Number](
 	}
 }
 
-func binaryParser[T bytes.Number](size int) common.Combinator[byte, int, Type] {
+func binaryParser[T bytes.Number](size int) parsec.Combinator[byte, int, Type] {
 	comb := bytes.ReadAs[T](
 		size,
 		fmt.Sprintf("expected %d bytes of 'binary' data type", size),
 		binary.BigEndian,
 	)
 
-	return func(buffer common.Buffer[byte, int]) (Type, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (Type, parsec.Error[int]) {
 		size, err := comb(buffer)
 		if err != nil {
 			return nil, err
@@ -229,7 +229,7 @@ func binaryParser[T bytes.Number](size int) common.Combinator[byte, int, Type] {
 		for i := 0; i < int(size); i++ {
 			x, err := buffer.Read(true)
 			if err != nil {
-				return nil, common.NewParseError(
+				return nil, parsec.NewParseError(
 					pos,
 					fmt.Sprintf("expecte %d bytes of `binary` data type", int(size)),
 				)
@@ -243,10 +243,10 @@ func binaryParser[T bytes.Number](size int) common.Combinator[byte, int, Type] {
 }
 
 func arrayParser[T bytes.Number](
-	parseSize common.Combinator[byte, int, T],
-	parseValue common.Combinator[byte, int, Type],
-) common.Combinator[byte, int, Type] {
-	return func(buffer common.Buffer[byte, int]) (Type, common.Error[int]) {
+	parseSize parsec.Combinator[byte, int, T],
+	parseValue parsec.Combinator[byte, int, Type],
+) parsec.Combinator[byte, int, Type] {
+	return func(buffer parsec.Buffer[byte, int]) (Type, parsec.Error[int]) {
 		size, err := parseSize(buffer)
 		if err != nil {
 			return nil, err
@@ -267,10 +267,10 @@ func arrayParser[T bytes.Number](
 }
 
 func mapParser[T bytes.Number](
-	parseSize common.Combinator[byte, int, T],
-	parseValue common.Combinator[byte, int, Type],
-) common.Combinator[byte, int, Type] {
-	return func(buffer common.Buffer[byte, int]) (Type, common.Error[int]) {
+	parseSize parsec.Combinator[byte, int, T],
+	parseValue parsec.Combinator[byte, int, Type],
+) parsec.Combinator[byte, int, Type] {
+	return func(buffer parsec.Buffer[byte, int]) (Type, parsec.Error[int]) {
 		size, err := parseSize(buffer)
 		if err != nil {
 			return nil, err
@@ -301,11 +301,11 @@ func mapParser[T bytes.Number](
 
 func extParser[T bytes.Number](
 	errMessage string,
-	parseSize common.Combinator[byte, int, T],
-) common.Combinator[byte, int, Type] {
+	parseSize parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, Type] {
 	nameParser := bytes.ReadAs[int8](1, "name of ext type", binary.BigEndian)
 
-	return func(buffer common.Buffer[byte, int]) (Type, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (Type, parsec.Error[int]) {
 		pos := buffer.Position()
 
 		size, err := parseSize(buffer)
@@ -322,7 +322,7 @@ func extParser[T bytes.Number](
 		for i := 0; i < int(size); i++ {
 			x, err := buffer.Read(true)
 			if err != nil {
-				return nil, common.NewParseError(pos, errMessage)
+				return nil, parsec.NewParseError(pos, errMessage)
 			}
 
 			data[i] = x

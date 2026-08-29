@@ -1,7 +1,7 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Or returns the result of the first combinator;
@@ -10,18 +10,18 @@ import (
 // wrap both arguments in Try if they can fail after consuming input.
 func Or[T any](
 	errMessage string,
-	x common.Combinator[rune, Position, T],
-	y common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
-	return common.Or[rune, Position, T](errMessage, x, y)
+	x parsec.Combinator[rune, Position, T],
+	y parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
+	return parsec.Or[rune, Position, T](errMessage, x, y)
 }
 
 // And parses x, then y, and combines their results
 // with the compose function.
 func And[S any, B any, M any](
-	x common.Combinator[rune, Position, S],
-	y common.Combinator[rune, Position, B],
-	compose common.Composer[S, B, M],
-) common.Combinator[rune, Position, M] {
-	return common.And[rune, Position, S, B, M](x, y, compose)
+	x parsec.Combinator[rune, Position, S],
+	y parsec.Combinator[rune, Position, B],
+	compose parsec.Composer[S, B, M],
+) parsec.Combinator[rune, Position, M] {
+	return parsec.And[rune, Position, S, B, M](x, y, compose)
 }

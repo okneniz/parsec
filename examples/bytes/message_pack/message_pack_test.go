@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 	mpack "github.com/vmihailenco/msgpack/v5"
 )
 
@@ -205,7 +205,7 @@ func TestMain_MessagePack(t *testing.T) {
 	})
 }
 
-func rnd[T common.Integer](min, max float64) T {
+func rnd[T parsec.Integer](min, max float64) T {
 	return T(rand.Intn(int(max - min + 1 + min)))
 }
 

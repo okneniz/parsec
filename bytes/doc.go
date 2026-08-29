@@ -1,7 +1,7 @@
 // Package bytes provides parser combinators for binary input:
 // a byte Buffer (also constructible from a file), fixed-size
 // big/little-endian readers, and thin typed wrappers around
-// the generic combinators of [github.com/okneniz/parsec/common].
+// the generic combinators of [github.com/okneniz/parsec].
 //
 // Parsing starts from [Parse] (or [ParseFile]) and a combinator:
 //

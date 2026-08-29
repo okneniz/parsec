@@ -3,7 +3,7 @@ package bytes
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestConcat(t *testing.T) {
@@ -21,7 +21,7 @@ func TestConcat(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected one a"),
+					err:    parsec.NewParseError(0, "expected one a"),
 				},
 				{
 					input:  []byte("abbcde"),
@@ -29,27 +29,27 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: []byte("x"),
-					err:   common.NewParseError(0, "expected one a"),
+					err:   parsec.NewParseError(0, "expected one a"),
 				},
 				{
 					input: []byte("ax"),
-					err:   common.NewParseError(1, "expected double b"),
+					err:   parsec.NewParseError(1, "expected double b"),
 				},
 				{
 					input: []byte("ab"),
-					err:   common.NewParseError(1, "expected double b"),
+					err:   parsec.NewParseError(1, "expected double b"),
 				},
 				{
 					input: []byte("abb"),
-					err:   common.NewParseError(3, "expected three not z"),
+					err:   parsec.NewParseError(3, "expected three not z"),
 				},
 				{
 					input: []byte("abbc"),
-					err:   common.NewParseError(3, "expected three not z"),
+					err:   parsec.NewParseError(3, "expected three not z"),
 				},
 				{
 					input: []byte("abbcd"),
-					err:   common.NewParseError(3, "expected three not z"),
+					err:   parsec.NewParseError(3, "expected three not z"),
 				},
 				{
 					input:  []byte("abbcde"),
@@ -83,7 +83,7 @@ func TestSequence(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected a"),
+					err:    parsec.NewParseError(0, "expected a"),
 				},
 				{
 					input:  []byte("abc"),
@@ -95,15 +95,15 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: []byte(".abcd"),
-					err:   common.NewParseError(0, "expected a"),
+					err:   parsec.NewParseError(0, "expected a"),
 				},
 				{
 					input: []byte("a.bcd"),
-					err:   common.NewParseError(1, "expected b"),
+					err:   parsec.NewParseError(1, "expected b"),
 				},
 				{
 					input: []byte("abzcd"),
-					err:   common.NewParseError(2, "expected not z"),
+					err:   parsec.NewParseError(2, "expected not z"),
 				},
 				{
 					input:  []byte("abcz"),
@@ -111,15 +111,15 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: []byte("ab"),
-					err:   common.NewParseError(2, "expected not z"),
+					err:   parsec.NewParseError(2, "expected not z"),
 				},
 				{
 					input: []byte("a"),
-					err:   common.NewParseError(1, "expected b"),
+					err:   parsec.NewParseError(1, "expected b"),
 				},
 				{
 					input: []byte("z"),
-					err:   common.NewParseError(0, "expected a"),
+					err:   parsec.NewParseError(0, "expected a"),
 				},
 			},
 		},
@@ -141,7 +141,7 @@ func TestChoice(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected a, b or c"),
+					err:    parsec.NewParseError(0, "expected a, b or c"),
 				},
 				{
 					input:  []byte("a"),
@@ -158,7 +158,7 @@ func TestChoice(t *testing.T) {
 				{
 					input:  []byte("x"),
 					output: 0,
-					err:    common.NewParseError(0, "expected a, b or c"),
+					err:    parsec.NewParseError(0, "expected a, b or c"),
 				},
 			},
 		},
@@ -179,7 +179,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  []byte{},
 						output: 0,
-						err:    common.NewParseError(0, "expected 'a'"),
+						err:    parsec.NewParseError(0, "expected 'a'"),
 					},
 					{
 						input:  []byte("abc"),
@@ -188,16 +188,16 @@ func TestSkip(t *testing.T) {
 					{
 						input:  []byte("b"),
 						output: 0,
-						err:    common.NewParseError(0, "expected 'a'"),
+						err:    parsec.NewParseError(0, "expected 'a'"),
 					},
 					{
 						input: []byte("bbb"),
-						err:   common.NewParseError(0, "expected 'a'"),
+						err:   parsec.NewParseError(0, "expected 'a'"),
 					},
 					{
 						input:  []byte("ac"),
 						output: 0,
-						err:    common.NewParseError(1, "expected 'b'"),
+						err:    parsec.NewParseError(1, "expected 'b'"),
 					},
 				},
 			},
@@ -215,7 +215,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  []byte{},
 						output: 0,
-						err:    common.NewParseError(0, "expected 'b'"),
+						err:    parsec.NewParseError(0, "expected 'b'"),
 					},
 					{
 						input:  []byte("abc"),
@@ -232,7 +232,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  []byte("ac"),
 						output: 0,
-						err:    common.NewParseError(1, "expected 'b'"),
+						err:    parsec.NewParseError(1, "expected 'b'"),
 					},
 				},
 			},
@@ -245,7 +245,7 @@ func TestSkipMany(t *testing.T) {
 
 	runTestsSlice(t, []test[[]byte]{
 		{
-			comb: common.SkipMany(
+			comb: parsec.SkipMany(
 				NoneOf("expected not a, b or c", 'a', 'b', 'c'),
 				SequenceOf("expected abc", 'a', 'b', 'c'),
 			),
@@ -253,7 +253,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected abc"),
+					err:    parsec.NewParseError(0, "expected abc"),
 				},
 				{
 					input:  []byte("abc"),
@@ -262,12 +262,12 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  []byte("ab"),
 					output: nil,
-					err:    common.NewParseError(0, "expected abc"),
+					err:    parsec.NewParseError(0, "expected abc"),
 				},
 				{
 					input:  []byte("xab"),
 					output: nil,
-					err:    common.NewParseError(1, "expected abc"),
+					err:    parsec.NewParseError(1, "expected abc"),
 				},
 				{
 					input:  []byte("123abc"),
@@ -276,7 +276,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  []byte("bcabc"),
 					output: nil,
-					err:    common.NewParseError(0, "expected abc"),
+					err:    parsec.NewParseError(0, "expected abc"),
 				},
 				{
 					input:  []byte("abcabc"),
@@ -293,7 +293,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  []byte("123"),
 					output: nil,
-					err:    common.NewParseError(3, "expected abc"),
+					err:    parsec.NewParseError(3, "expected abc"),
 				},
 			},
 		},
@@ -313,7 +313,7 @@ func TestSkipAfter(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected 'a'"),
+					err:    parsec.NewParseError(0, "expected 'a'"),
 				},
 				{
 					input:  []byte("abc"),
@@ -325,23 +325,23 @@ func TestSkipAfter(t *testing.T) {
 				},
 				{
 					input: []byte("a"),
-					err:   common.NewParseError(1, "expected 'b'"),
+					err:   parsec.NewParseError(1, "expected 'b'"),
 				},
 				{
 					input: []byte("ac"),
-					err:   common.NewParseError(1, "expected 'b'"),
+					err:   parsec.NewParseError(1, "expected 'b'"),
 				},
 				{
 					input: []byte("b"),
-					err:   common.NewParseError(0, "expected 'a'"),
+					err:   parsec.NewParseError(0, "expected 'a'"),
 				},
 				{
 					input: []byte("bc"),
-					err:   common.NewParseError(0, "expected 'a'"),
+					err:   parsec.NewParseError(0, "expected 'a'"),
 				},
 				{
 					input: []byte("bb"),
-					err:   common.NewParseError(0, "expected 'a'"),
+					err:   parsec.NewParseError(0, "expected 'a'"),
 				},
 			},
 		},
@@ -361,7 +361,7 @@ func TestPadded(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected digit"),
+					err:    parsec.NewParseError(0, "expected digit"),
 				},
 				{
 					input:  []byte("1"),
@@ -382,7 +382,7 @@ func TestPadded(t *testing.T) {
 				{
 					input:  []byte("x...1.."),
 					output: 0,
-					err:    common.NewParseError(0, "expected digit"),
+					err:    parsec.NewParseError(0, "expected digit"),
 				},
 				{
 					input:  []byte("...1..x"),

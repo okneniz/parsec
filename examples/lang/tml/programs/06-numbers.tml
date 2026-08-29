@@ -1,0 +1,60 @@
+(* 06 — numbers: remainder, gcd, powers, primes, square roots
+ *
+ * The only arithmetic is + - * / with truncating division, but that
+ * is enough for the classical number theory toolkit. Everything is
+ * plain recursion over if-then-else.
+ *)
+
+(* a mod b, spelled out: division with subtraction of the product. *)
+fun mod a b = a - a / b * b
+
+(* Euclid: the greatest common divisor. *)
+fun gcd a b = if b = 0 then a else gcd b (mod a b)
+
+val gcdDemo = gcd 252 105
+
+(* Exponentiation by repeated multiplication, and the
+ * square-and-multiply version halving the exponent each step. *)
+fun power b e = if e = 0 then 1 else b * power b (e - 1)
+
+fun fastpow b e =
+  if e = 0 then 1
+  else if mod e 2 = 0 then fastpow (b * b) (e / 2)
+  else b * fastpow (b * b) (e / 2)
+
+val powers = (power 2 10, fastpow 2 10)
+
+(* Trial division: the inner search loop is a recursive function
+ * declared in a let, visible only to isPrime. *)
+fun isPrime n =
+  let
+    fun search d =
+      if d * d > n then true
+      else if mod n d = 0 then false
+      else search (d + 1)
+  in
+    if n < 2 then false else search 2
+  end
+
+val primality = (isPrime 97, isPrime 91)
+
+(* Integer square root: a binary search for the largest g with
+ * g * g <= n. The invariant is that the answer always lies between
+ * lo - 1 and hi, so when the range empties, hi is the answer. *)
+fun isqrt n =
+  let
+    fun go lo hi =
+      if lo > hi then hi
+      else
+        let
+          val mid = (lo + hi) / 2
+        in
+          if mid * mid <= n then go (mid + 1) hi else go lo (mid - 1)
+        end
+  in
+    go 0 n
+  end
+
+val root997 = isqrt 997
+
+val root1024 = isqrt 1024

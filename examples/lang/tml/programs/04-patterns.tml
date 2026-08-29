@@ -1,0 +1,41 @@
+(* 04 — patterns and local bindings
+ *
+ * A pattern appears where a value is bound: in val, in the argument
+ * of fn and fun. Patterns are first-order: variables, the wildcard _,
+ * literals and tuples of those.
+ *)
+
+(* A tuple pattern splits a pair into two names. *)
+val (x, y) = (3, 4)
+
+(* let ... in ... end scopes declarations to one expression. *)
+val sum = let
+  val (a, b) = (x, y)
+in
+  a + b
+end
+
+(* The wildcard _ matches anything and binds nothing. *)
+fun fst pair = let val (p, _) = pair in p end
+
+val first = fst (10, true)
+
+(* A fun argument is itself a pattern: a tuple argument is
+ * destructured right in the declaration, uncurried style. *)
+fun add (a, b) = a + b
+
+val sum2 = add (x, y)
+
+(* Tuple arguments combine with currying: dist takes two points. *)
+fun dist (ax, ay) (bx, by) =
+  (bx - ax) * (bx - ax) + (by - ay) * (by - ay)
+
+val fiveSquared = dist (0, 0) (3, 4)
+
+(* Chained if-then-else reads best with one branch per line. *)
+fun sign n =
+  if n < 0 then ~1
+  else if n = 0 then 0
+  else 1
+
+val signs = (sign ~7, sign 0, sign 7)

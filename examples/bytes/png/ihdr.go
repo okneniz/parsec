@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 type IHDR struct {
@@ -52,7 +52,7 @@ func (c *IHDR) String() string {
 	return b.String()
 }
 
-func IHDRChunk(size uint32) common.Combinator[byte, int, *IHDR] {
+func IHDRChunk(size uint32) parsec.Combinator[byte, int, *IHDR] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected %d bytes of IHDR data", size),
@@ -61,14 +61,14 @@ func IHDRChunk(size uint32) common.Combinator[byte, int, *IHDR] {
 
 	parseWidth := bytes.ReadAs[uint32](4, "expected 4 bytes of IHDR width", binary.BigEndian)
 	parseHeight := bytes.ReadAs[uint32](4, "expected 4 bytes of IHDR height", binary.BigEndian)
-	parseBitDepth := bytes.Satisfy("expected 1 byte of IHDR bit depth", true, common.Anything[byte])
-	parseColorType := bytes.Satisfy("expected 1 byte of color type", true, common.Anything[byte])
-	parseCompressionMethod := bytes.Satisfy("expected 1 byte of compression method", true, common.Anything[byte])
-	parseFilterMethod := bytes.Satisfy("expected 1 byte of filter method", true, common.Anything[byte])
-	parseInterfaceMethod := bytes.Satisfy("expected 1 byte of interface method", true, common.Anything[byte])
+	parseBitDepth := bytes.Satisfy("expected 1 byte of IHDR bit depth", true, parsec.Anything[byte])
+	parseColorType := bytes.Satisfy("expected 1 byte of color type", true, parsec.Anything[byte])
+	parseCompressionMethod := bytes.Satisfy("expected 1 byte of compression method", true, parsec.Anything[byte])
+	parseFilterMethod := bytes.Satisfy("expected 1 byte of filter method", true, parsec.Anything[byte])
+	parseInterfaceMethod := bytes.Satisfy("expected 1 byte of interface method", true, parsec.Anything[byte])
 	parseCRC := bytes.ReadAs[uint32](4, "expecte 4 bytes of CRC", binary.BigEndian)
 
-	return func(buffer common.Buffer[byte, int]) (*IHDR, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (*IHDR, parsec.Error[int]) {
 		pos := buffer.Position()
 
 		data, err := parseData(buffer)
@@ -77,7 +77,7 @@ func IHDRChunk(size uint32) common.Combinator[byte, int, *IHDR] {
 		}
 
 		if seekErr := buffer.Seek(pos); seekErr != nil {
-			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
+			return nil, parsec.NewParseError(buffer.Position(), seekErr.Error())
 		}
 
 		width, err := parseWidth(buffer)

@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestOr(t *testing.T) {
@@ -20,7 +20,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -44,7 +44,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -65,7 +65,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -81,7 +81,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "3",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -93,7 +93,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "5",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -109,7 +109,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "xz",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -121,7 +121,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -149,7 +149,7 @@ func TestAnd(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -169,7 +169,7 @@ func TestAnd(t *testing.T) {
 				{
 					input:  "a",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -181,7 +181,7 @@ func TestAnd(t *testing.T) {
 				{
 					input:  "ac",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -193,7 +193,7 @@ func TestAnd(t *testing.T) {
 				{
 					input:  ".ab",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,

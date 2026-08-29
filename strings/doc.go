@@ -2,7 +2,7 @@
 // a rune Buffer with line/column positions, text-specific helpers
 // such as Parens or Unsigned, unicode character classes, and thin
 // typed wrappers around the generic combinators of
-// [github.com/okneniz/parsec/common].
+// [github.com/okneniz/parsec].
 //
 // Parsing starts from [ParseString] (or [Parse]) and a combinator:
 //

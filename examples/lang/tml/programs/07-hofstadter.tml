@@ -1,0 +1,27 @@
+(* 07 — Hofstadter's nested recursions
+ *
+ * The Female and Male sequences are defined through each other, and
+ * each call uses the other function applied to the result of its own
+ * recursive call — recursion nested inside recursion. The Q sequence
+ * is even wilder: both arguments of the recursive calls are results
+ * of recursive calls.
+ *
+ * No special form is needed: plain fun, if-then-else and the
+ * top-level mutual visibility the typechecker gives all functions.
+ *)
+
+fun female n =
+  if n = 0 then 1
+  else n - male (female (n - 1))
+
+fun male n =
+  if n = 0 then 0
+  else n - female (male (n - 1))
+
+val pair10 = (female 10, male 10)
+
+fun q n =
+  if n <= 2 then 1
+  else q (n - q (n - 1)) + q (n - q (n - 2))
+
+val q10 = q 10

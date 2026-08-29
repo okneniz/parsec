@@ -1,7 +1,7 @@
 package bytes
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Or returns the result of the first combinator;
@@ -10,18 +10,18 @@ import (
 // wrap both arguments in Try if they can fail after consuming input.
 func Or[T any](
 	errMessage string,
-	x common.Combinator[byte, int, T],
-	y common.Combinator[byte, int, T],
-) common.Combinator[byte, int, T] {
-	return common.Or[byte, int, T](errMessage, x, y)
+	x parsec.Combinator[byte, int, T],
+	y parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, T] {
+	return parsec.Or[byte, int, T](errMessage, x, y)
 }
 
 // And parses x, then y, and combines their results
 // with the compose function.
 func And[S any, B any, M any](
-	x common.Combinator[byte, int, S],
-	y common.Combinator[byte, int, B],
-	compose common.Composer[S, B, M],
-) common.Combinator[byte, int, M] {
-	return common.And[byte, int, S, B, M](x, y, compose)
+	x parsec.Combinator[byte, int, S],
+	y parsec.Combinator[byte, int, B],
+	compose parsec.Composer[S, B, M],
+) parsec.Combinator[byte, int, M] {
+	return parsec.And[byte, int, S, B, M](x, y, compose)
 }

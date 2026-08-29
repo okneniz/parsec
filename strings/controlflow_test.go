@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestConcat(t *testing.T) {
@@ -21,7 +21,7 @@ func TestConcat(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -36,7 +36,7 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: "x",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -47,7 +47,7 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: "ax",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -58,7 +58,7 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: "ab",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -69,7 +69,7 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: "abb",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 3,
@@ -80,7 +80,7 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: "abbc",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 3,
@@ -91,7 +91,7 @@ func TestConcat(t *testing.T) {
 				},
 				{
 					input: "abbcd",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 3,
@@ -132,7 +132,7 @@ func TestSequence(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -151,7 +151,7 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: ".abcd",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -162,7 +162,7 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: "a.bcd",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -173,7 +173,7 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: "abzcd",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,
@@ -188,7 +188,7 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: "ab",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,
@@ -199,7 +199,7 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: "a",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -210,7 +210,7 @@ func TestSequence(t *testing.T) {
 				},
 				{
 					input: "z",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -239,7 +239,7 @@ func TestChoice(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -263,7 +263,7 @@ func TestChoice(t *testing.T) {
 				{
 					input:  "x",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -291,7 +291,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  "",
 						output: 0,
-						err: common.NewParseError(
+						err: parsec.NewParseError(
 							Position{
 								line:   0,
 								column: 0,
@@ -307,7 +307,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  "b",
 						output: 0,
-						err: common.NewParseError(
+						err: parsec.NewParseError(
 							Position{
 								line:   0,
 								column: 0,
@@ -318,7 +318,7 @@ func TestSkip(t *testing.T) {
 					},
 					{
 						input: "bbb",
-						err: common.NewParseError(
+						err: parsec.NewParseError(
 							Position{
 								line:   0,
 								column: 0,
@@ -330,7 +330,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  "ac",
 						output: 0,
-						err: common.NewParseError(
+						err: parsec.NewParseError(
 							Position{
 								line:   0,
 								column: 1,
@@ -355,7 +355,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  "",
 						output: 0,
-						err: common.NewParseError(
+						err: parsec.NewParseError(
 							Position{
 								line:   0,
 								column: 0,
@@ -379,7 +379,7 @@ func TestSkip(t *testing.T) {
 					{
 						input:  "ac",
 						output: 0,
-						err: common.NewParseError(
+						err: parsec.NewParseError(
 							Position{
 								line:   0,
 								column: 1,
@@ -399,7 +399,7 @@ func TestSkipMany(t *testing.T) {
 
 	runTestsString(t, []test[[]rune]{
 		{
-			comb: common.SkipMany(
+			comb: parsec.SkipMany(
 				NoneOf("expected not a, b or c", 'a', 'b', 'c'),
 				SequenceOf("expected abc", 'a', 'b', 'c'),
 			),
@@ -407,7 +407,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -423,7 +423,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  "ab",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -435,7 +435,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  "xab",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -451,7 +451,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  "bcabc",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -475,7 +475,7 @@ func TestSkipMany(t *testing.T) {
 				{
 					input:  "123",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 3,
@@ -502,7 +502,7 @@ func TestSkipAfter(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -521,7 +521,7 @@ func TestSkipAfter(t *testing.T) {
 				},
 				{
 					input: "a",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -532,7 +532,7 @@ func TestSkipAfter(t *testing.T) {
 				},
 				{
 					input: "ac",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 1,
@@ -543,7 +543,7 @@ func TestSkipAfter(t *testing.T) {
 				},
 				{
 					input: "b",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -554,7 +554,7 @@ func TestSkipAfter(t *testing.T) {
 				},
 				{
 					input: "bc",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -565,7 +565,7 @@ func TestSkipAfter(t *testing.T) {
 				},
 				{
 					input: "bb",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -592,7 +592,7 @@ func TestPadded(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -620,7 +620,7 @@ func TestPadded(t *testing.T) {
 				{
 					input:  "x...1..",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,

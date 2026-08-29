@@ -3,7 +3,7 @@ package bytes
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestOr(t *testing.T) {
@@ -20,7 +20,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 				{
 					input:  []byte("a"),
@@ -37,7 +37,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 			},
 		},
@@ -51,7 +51,7 @@ func TestOr(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 				{
 					input:  []byte("a"),
@@ -60,12 +60,12 @@ func TestOr(t *testing.T) {
 				{
 					input:  []byte("3"),
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 				{
 					input:  []byte("5"),
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 				{
 					input:  []byte("x3"),
@@ -74,12 +74,12 @@ func TestOr(t *testing.T) {
 				{
 					input:  []byte("xz"),
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected symbol 'a' or digit"),
+					err:    parsec.NewParseError(0, "expected symbol 'a' or digit"),
 				},
 			},
 		},
@@ -100,7 +100,7 @@ func TestAnd(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected 'a'"),
+					err:    parsec.NewParseError(0, "expected 'a'"),
 				},
 				{
 					input:  []byte("ab"),
@@ -113,17 +113,17 @@ func TestAnd(t *testing.T) {
 				{
 					input:  []byte("a"),
 					output: nil,
-					err:    common.NewParseError(1, "expected 'b'"),
+					err:    parsec.NewParseError(1, "expected 'b'"),
 				},
 				{
 					input:  []byte("ac"),
 					output: nil,
-					err:    common.NewParseError(1, "expected 'b'"),
+					err:    parsec.NewParseError(1, "expected 'b'"),
 				},
 				{
 					input:  []byte(".ab"),
 					output: nil,
-					err:    common.NewParseError(0, "expected 'a'"),
+					err:    parsec.NewParseError(0, "expected 'a'"),
 				},
 			},
 		},

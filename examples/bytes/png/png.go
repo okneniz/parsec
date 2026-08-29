@@ -3,14 +3,14 @@ package png
 import (
 	"encoding/binary"
 
+	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/bytes"
-	"github.com/okneniz/parsec/common"
 )
 
 // https://www.w3.org/TR/png
 
-func PNG() common.Combinator[byte, int, *File] {
-	parseHeader := common.SkipSequenceOf[byte, int, byte](
+func PNG() parsec.Combinator[byte, int, *File] {
+	parseHeader := parsec.SkipSequenceOf[byte, int, byte](
 		"expected PNG header",
 		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
 	)
@@ -21,7 +21,7 @@ func PNG() common.Combinator[byte, int, *File] {
 		bytes.Try(parseChunk()),
 	)
 
-	return func(buffer common.Buffer[byte, int]) (*File, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (*File, parsec.Error[int]) {
 		_, err := parseHeader(buffer)
 		if err != nil {
 			return nil, err
@@ -36,7 +36,7 @@ func PNG() common.Combinator[byte, int, *File] {
 	}
 }
 
-func parseChunk() common.Combinator[byte, int, Chunk] {
+func parseChunk() parsec.Combinator[byte, int, Chunk] {
 	lenghtOfChunk := bytes.ReadAs[uint32](
 		4,
 		"expected 4 bytes (uint32) of chunk length",
@@ -49,7 +49,7 @@ func parseChunk() common.Combinator[byte, int, Chunk] {
 		bytes.Any(),
 	)
 
-	return func(buffer common.Buffer[byte, int]) (Chunk, common.Error[int]) {
+	return func(buffer parsec.Buffer[byte, int]) (Chunk, parsec.Error[int]) {
 		length, err := lenghtOfChunk(buffer)
 		if err != nil {
 			return nil, err

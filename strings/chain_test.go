@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestChainl(t *testing.T) {
@@ -18,12 +18,12 @@ func TestChainl(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[rune, Position]) (common.BinaryOp[string], common.Error[Position]) {
+	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -93,12 +93,12 @@ func TestChainl1(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[rune, Position]) (common.BinaryOp[string], common.Error[Position]) {
+	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -119,7 +119,7 @@ func TestChainl1(t *testing.T) {
 				{
 					input:  "",
 					output: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -176,12 +176,12 @@ func TestChainr(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[rune, Position]) (common.BinaryOp[string], common.Error[Position]) {
+	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -251,12 +251,12 @@ func TestChainr1(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf common.Buffer[rune, Position]) (common.BinaryOp[string], common.Error[Position]) {
+	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
 		if err != nil {
-			return nil, common.NewParseError(pos, err.Error())
+			return nil, parsec.NewParseError(pos, err.Error())
 		}
 
 		if symbol == '+' {
@@ -277,7 +277,7 @@ func TestChainr1(t *testing.T) {
 				{
 					input:  "",
 					output: "",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -382,7 +382,7 @@ func TestSepBy1(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -398,7 +398,7 @@ func TestSepBy1(t *testing.T) {
 				{
 					input:  ",",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -410,7 +410,7 @@ func TestSepBy1(t *testing.T) {
 				{
 					input:  ",a,b,c",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -511,7 +511,7 @@ func TestEndBy1(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -531,7 +531,7 @@ func TestEndBy1(t *testing.T) {
 				{
 					input:  ",",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -543,7 +543,7 @@ func TestEndBy1(t *testing.T) {
 				{
 					input:  ",a,b,c",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -559,7 +559,7 @@ func TestEndBy1(t *testing.T) {
 				{
 					input:  "a",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -575,7 +575,7 @@ func TestEndBy1(t *testing.T) {
 				{
 					input:  ",a",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -587,7 +587,7 @@ func TestEndBy1(t *testing.T) {
 				{
 					input:  ",a,",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -664,7 +664,7 @@ func TestSepEndBy1(t *testing.T) {
 				{
 					input:  "",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -692,7 +692,7 @@ func TestSepEndBy1(t *testing.T) {
 				{
 					input:  ",",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -704,7 +704,7 @@ func TestSepEndBy1(t *testing.T) {
 				{
 					input:  ",a,b,c",
 					output: nil,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -756,7 +756,7 @@ func TestManyTill(t *testing.T) {
 				},
 				{
 					input: "a",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -767,7 +767,7 @@ func TestManyTill(t *testing.T) {
 				},
 				{
 					input: "123a.",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 3,
@@ -782,7 +782,7 @@ func TestManyTill(t *testing.T) {
 				},
 				{
 					input: "a123.",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -793,7 +793,7 @@ func TestManyTill(t *testing.T) {
 				},
 				{
 					input: "12a3",
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 2,

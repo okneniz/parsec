@@ -7,13 +7,13 @@ import (
 	"unicode"
 
 	ohsnap "github.com/okneniz/oh-snap"
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestUnicodeHelpers(t *testing.T) {
 	type test struct {
 		name   string
-		parser common.Combinator[rune, Position, rune]
+		parser parsec.Combinator[rune, Position, rune]
 		arb    ohsnap.Arbitrary[rune]
 	}
 

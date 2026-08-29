@@ -1,7 +1,7 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Eq succeeds when the next rune is equal to t and returns it.
@@ -9,8 +9,8 @@ import (
 func Eq(
 	errMessage string,
 	t rune,
-) common.Combinator[rune, Position, rune] {
-	return common.Eq[rune, Position](errMessage, t)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.Eq[rune, Position](errMessage, t)
 }
 
 // NotEq succeeds when the next rune is not equal to t and returns it.
@@ -18,8 +18,8 @@ func Eq(
 func NotEq(
 	errMessage string,
 	r rune,
-) common.Combinator[rune, Position, rune] {
-	return common.NotEq[rune, Position](errMessage, r)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.NotEq[rune, Position](errMessage, r)
 }
 
 // OneOf succeeds when the next rune is one of data and returns it.
@@ -27,8 +27,8 @@ func NotEq(
 func OneOf(
 	errMessage string,
 	data ...rune,
-) common.Combinator[rune, Position, rune] {
-	return common.OneOf[rune, Position](errMessage, data...)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.OneOf[rune, Position](errMessage, data...)
 }
 
 // NoneOf succeeds when the next rune is none of data and returns it.
@@ -36,8 +36,8 @@ func OneOf(
 func NoneOf(
 	errMessage string,
 	data ...rune,
-) common.Combinator[rune, Position, rune] {
-	return common.NoneOf[rune, Position](errMessage, data...)
+) parsec.Combinator[rune, Position, rune] {
+	return parsec.NoneOf[rune, Position](errMessage, data...)
 }
 
 // SequenceOf expects the next runes to be equal to data in the same order
@@ -45,8 +45,8 @@ func NoneOf(
 func SequenceOf(
 	errMessage string,
 	data ...rune,
-) common.Combinator[rune, Position, []rune] {
-	return common.SequenceOf[rune, Position](errMessage, data...)
+) parsec.Combinator[rune, Position, []rune] {
+	return parsec.SequenceOf[rune, Position](errMessage, data...)
 }
 
 // Map parses a key with the c combinator, looks the key up in cases
@@ -55,24 +55,24 @@ func SequenceOf(
 func Map[K comparable, V any](
 	errMessage string,
 	cases map[K]V,
-	c common.Combinator[rune, Position, K],
-) common.Combinator[rune, Position, V] {
-	return common.Map(errMessage, cases, c)
+	c parsec.Combinator[rune, Position, K],
+) parsec.Combinator[rune, Position, V] {
+	return parsec.Map(errMessage, cases, c)
 }
 
 // String expects the next runes to spell exactly str and returns it.
-func String(errMessage, str string) common.Combinator[rune, Position, string] {
-	return func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
+func String(errMessage, str string) parsec.Combinator[rune, Position, string] {
+	return func(buffer parsec.Buffer[rune, Position]) (string, parsec.Error[Position]) {
 		pos := buffer.Position()
 
 		for _, r := range str {
 			c, err := buffer.Read(true)
 			if err != nil {
-				return "", common.NewParseError(pos, errMessage)
+				return "", parsec.NewParseError(pos, errMessage)
 			}
 
 			if r != c {
-				return "", common.NewParseError(pos, errMessage)
+				return "", parsec.NewParseError(pos, errMessage)
 			}
 		}
 
@@ -88,10 +88,10 @@ func String(errMessage, str string) common.Combinator[rune, Position, string] {
 func MapStrings[V any](
 	errMessage string,
 	cases map[string]V,
-) common.Combinator[rune, Position, V] {
-	combCases := make(map[string]common.Combinator[rune, Position, V])
+) parsec.Combinator[rune, Position, V] {
+	combCases := make(map[string]parsec.Combinator[rune, Position, V])
 	for k, v := range cases {
-		combCases[k] = common.Const[rune, Position, V](v)
+		combCases[k] = parsec.Const[rune, Position, V](v)
 	}
 
 	return MapTree(errMessage, combCases)
@@ -104,9 +104,9 @@ func MapStrings[V any](
 // a trie-like structure, so the input is scanned only once.
 func MapTree[T any](
 	errMessage string,
-	cases map[string]common.Combinator[rune, Position, T],
-) common.Combinator[rune, Position, T] {
-	return common.MapTree(
+	cases map[string]parsec.Combinator[rune, Position, T],
+) parsec.Combinator[rune, Position, T] {
+	return parsec.MapTree(
 		errMessage,
 		cases,
 		func(s string) []rune { return []rune(s) },

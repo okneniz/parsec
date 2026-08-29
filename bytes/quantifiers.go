@@ -1,16 +1,16 @@
 package bytes
 
 import (
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 // Optional applies c and returns its result,
 // or the def value when c fails. It never fails.
 func Optional[T any](
-	c common.Combinator[byte, int, T],
+	c parsec.Combinator[byte, int, T],
 	def T,
-) common.Combinator[byte, int, T] {
-	return common.Optional[byte, int, T](c, def)
+) parsec.Combinator[byte, int, T] {
+	return parsec.Optional[byte, int, T](c, def)
 }
 
 // Many applies c as many times as possible and collects the results.
@@ -19,9 +19,9 @@ func Optional[T any](
 // Wrap c in Try to stop without consuming input.
 func Many[T any](
 	cap int,
-	c common.Combinator[byte, int, T],
-) common.Combinator[byte, int, []T] {
-	return common.Many[byte, int, T](cap, c)
+	c parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, []T] {
+	return parsec.Many[byte, int, T](cap, c)
 }
 
 // Some is like Many but requires at least one item:
@@ -29,9 +29,9 @@ func Many[T any](
 func Some[T any](
 	cap int,
 	errMessage string,
-	c common.Combinator[byte, int, T],
-) common.Combinator[byte, int, []T] {
-	return common.Some[byte, int, T](cap, errMessage, c)
+	c parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, []T] {
+	return parsec.Some[byte, int, T](cap, errMessage, c)
 }
 
 // Count applies c exactly cap times and collects the results.
@@ -39,7 +39,7 @@ func Some[T any](
 func Count[T any](
 	cap int,
 	errMessage string,
-	c common.Combinator[byte, int, T],
-) common.Combinator[byte, int, []T] {
-	return common.Count[byte, int, T](cap, errMessage, c)
+	c parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, []T] {
+	return parsec.Count[byte, int, T](cap, errMessage, c)
 }

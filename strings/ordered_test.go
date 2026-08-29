@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 type (
@@ -17,7 +17,7 @@ type (
 	}
 
 	test[T any] struct {
-		comb  common.Combinator[rune, Position, T]
+		comb  parsec.Combinator[rune, Position, T]
 		cases []testCase[T]
 	}
 )
@@ -96,7 +96,7 @@ func TestRange(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -120,7 +120,7 @@ func TestRange(t *testing.T) {
 				{
 					input:  "d",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -136,7 +136,7 @@ func TestRange(t *testing.T) {
 				{
 					input:  "da",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -160,7 +160,7 @@ func TestNotRange(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -172,7 +172,7 @@ func TestNotRange(t *testing.T) {
 				{
 					input:  "a",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -184,7 +184,7 @@ func TestNotRange(t *testing.T) {
 				{
 					input:  "b",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -196,7 +196,7 @@ func TestNotRange(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -212,7 +212,7 @@ func TestNotRange(t *testing.T) {
 				{
 					input:  "ad",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -240,7 +240,7 @@ func TestGt(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -252,7 +252,7 @@ func TestGt(t *testing.T) {
 				{
 					input:  "a",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -264,7 +264,7 @@ func TestGt(t *testing.T) {
 				{
 					input:  "b",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -276,7 +276,7 @@ func TestGt(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -296,7 +296,7 @@ func TestGt(t *testing.T) {
 				{
 					input:  "ad",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -324,7 +324,7 @@ func TestGte(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -336,7 +336,7 @@ func TestGte(t *testing.T) {
 				{
 					input:  "a",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -348,7 +348,7 @@ func TestGte(t *testing.T) {
 				{
 					input:  "b",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -372,7 +372,7 @@ func TestGte(t *testing.T) {
 				{
 					input:  "ad",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -400,7 +400,7 @@ func TestLt(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -420,7 +420,7 @@ func TestLt(t *testing.T) {
 				{
 					input:  "c",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -432,7 +432,7 @@ func TestLt(t *testing.T) {
 				{
 					input:  "d",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -444,7 +444,7 @@ func TestLt(t *testing.T) {
 				{
 					input:  "e",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -460,7 +460,7 @@ func TestLt(t *testing.T) {
 				{
 					input:  "da",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -484,7 +484,7 @@ func TestLte(t *testing.T) {
 				{
 					input:  "",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -508,7 +508,7 @@ func TestLte(t *testing.T) {
 				{
 					input:  "d",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -520,7 +520,7 @@ func TestLte(t *testing.T) {
 				{
 					input:  "e",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,
@@ -536,7 +536,7 @@ func TestLte(t *testing.T) {
 				{
 					input:  "da",
 					output: 0,
-					err: common.NewParseError(
+					err: parsec.NewParseError(
 						Position{
 							line:   0,
 							column: 0,

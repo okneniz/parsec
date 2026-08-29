@@ -3,7 +3,7 @@ package bytes
 import (
 	"testing"
 
-	"github.com/okneniz/parsec/common"
+	"github.com/okneniz/parsec"
 )
 
 func TestEq(t *testing.T) {
@@ -16,12 +16,12 @@ func TestEq(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected 'c'"),
+					err:    parsec.NewParseError(0, "expected 'c'"),
 				},
 				{
 					input:  []byte("a"),
 					output: 0,
-					err:    common.NewParseError(0, "expected 'c'"),
+					err:    parsec.NewParseError(0, "expected 'c'"),
 				},
 				{
 					input:  []byte("c"),
@@ -34,7 +34,7 @@ func TestEq(t *testing.T) {
 				{
 					input:  []byte("ac"),
 					output: 0,
-					err:    common.NewParseError(0, "expected 'c'"),
+					err:    parsec.NewParseError(0, "expected 'c'"),
 				},
 			},
 		},
@@ -51,7 +51,7 @@ func TestNotEq(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected not c"),
+					err:    parsec.NewParseError(0, "expected not c"),
 				},
 				{
 					input:  []byte("a"),
@@ -60,12 +60,12 @@ func TestNotEq(t *testing.T) {
 				{
 					input:  []byte("c"),
 					output: 0,
-					err:    common.NewParseError(0, "expected not c"),
+					err:    parsec.NewParseError(0, "expected not c"),
 				},
 				{
 					input:  []byte("ca"),
 					output: 0,
-					err:    common.NewParseError(0, "expected not c"),
+					err:    parsec.NewParseError(0, "expected not c"),
 				},
 				{
 					input:  []byte("ac"),
@@ -86,7 +86,7 @@ func TestOneOf(t *testing.T) {
 				{
 					input:  []byte{},
 					output: 0,
-					err:    common.NewParseError(0, "expected 'a', 'b' or 'c'"),
+					err:    parsec.NewParseError(0, "expected 'a', 'b' or 'c'"),
 				},
 				{
 					input:  []byte("a"),
@@ -103,7 +103,7 @@ func TestOneOf(t *testing.T) {
 				{
 					input:  []byte("d"),
 					output: 0,
-					err:    common.NewParseError(0, "expected 'a', 'b' or 'c'"),
+					err:    parsec.NewParseError(0, "expected 'a', 'b' or 'c'"),
 				},
 				{
 					input:  []byte("ca"),
@@ -119,7 +119,7 @@ func TestOneOf(t *testing.T) {
 				},
 				{
 					input: []byte("fa"),
-					err:   common.NewParseError(0, "expected 'a', 'b' or 'c'"),
+					err:   parsec.NewParseError(0, "expected 'a', 'b' or 'c'"),
 				},
 			},
 		},
@@ -136,22 +136,22 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected foo"),
+					err:    parsec.NewParseError(0, "expected foo"),
 				},
 				{
 					input:  []byte{' '},
 					output: nil,
-					err:    common.NewParseError(0, "expected foo"),
+					err:    parsec.NewParseError(0, "expected foo"),
 				},
 				{
 					input:  []byte("f"),
 					output: nil,
-					err:    common.NewParseError(0, "expected foo"),
+					err:    parsec.NewParseError(0, "expected foo"),
 				},
 				{
 					input:  []byte("fo"),
 					output: nil,
-					err:    common.NewParseError(0, "expected foo"),
+					err:    parsec.NewParseError(0, "expected foo"),
 				},
 				{
 					input:  []byte("foo"),
@@ -164,7 +164,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  []byte(".foo"),
 					output: nil,
-					err:    common.NewParseError(0, "expected foo"),
+					err:    parsec.NewParseError(0, "expected foo"),
 				},
 				{
 					input:  []byte("foobar"),
@@ -173,7 +173,7 @@ func TestSequenceOf(t *testing.T) {
 				{
 					input:  []byte("barfoo"),
 					output: nil,
-					err:    common.NewParseError(0, "expected foo"),
+					err:    parsec.NewParseError(0, "expected foo"),
 				},
 			},
 		},
@@ -188,7 +188,7 @@ func TestMap(t *testing.T) {
 			comb: Some(
 				1,
 				"expected at least one 0, 1 or 2",
-				common.SkipMany(
+				parsec.SkipMany(
 					NoneOf("skip not 0, 1 or 2", 0, 1, 2),
 					Map(
 						"expected 0, 1 or 2",
@@ -205,7 +205,7 @@ func TestMap(t *testing.T) {
 				{
 					input:  []byte{},
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one 0, 1 or 2"),
+					err:    parsec.NewParseError(0, "expected at least one 0, 1 or 2"),
 				},
 				{
 					input:  []byte{0},
@@ -230,7 +230,7 @@ func TestMap(t *testing.T) {
 				{
 					input:  []byte{5, 6, 7, 8, 9, 10, 11},
 					output: nil,
-					err:    common.NewParseError(0, "expected at least one 0, 1 or 2"),
+					err:    parsec.NewParseError(0, "expected at least one 0, 1 or 2"),
 				},
 			},
 		},
