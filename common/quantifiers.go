@@ -2,8 +2,8 @@ package common
 
 import "fmt"
 
-// Optional - use c combinator to consume input data from buffer.
-// If it failed, than return def value.
+// Optional applies c and returns its result,
+// or the def value when c fails. It never fails.
 func Optional[T any, P any, S any](c Combinator[T, P, S], def S) Combinator[T, P, S] {
 	return func(buffer Buffer[T, P]) (S, Error[P]) {
 		result, err := c(buffer)
@@ -15,9 +15,10 @@ func Optional[T any, P any, S any](c Combinator[T, P, S], def S) Combinator[T, P
 	}
 }
 
-// Many - accumulate data which returned by c consumer until it possible.
-// Stop on first error or end of buffer.
-// Returns an empty slice even if nothing could be parsed.
+// Many applies c as many times as possible and collects the results.
+// It stops at the first error or at the end of the buffer and returns
+// everything collected so far, possibly an empty slice.
+// Wrap c in Try to stop without consuming input.
 func Many[T any, P any, S any](cap int, c Combinator[T, P, S]) Combinator[T, P, []S] {
 	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
 		result := make([]S, 0, cap)
@@ -35,9 +36,8 @@ func Many[T any, P any, S any](cap int, c Combinator[T, P, S]) Combinator[T, P, 
 	}
 }
 
-// Some - accumulate data which returned by c consumer until it possible.
-// Stop on first error or end of buffer.
-// Returns an error if at least one element could not be read.
+// Some is like Many but requires at least one item:
+// it fails with errMessage when nothing could be parsed.
 func Some[T any, P any, S any](
 	cap int,
 	errMessage string,
@@ -58,8 +58,8 @@ func Some[T any, P any, S any](
 	}
 }
 
-// Count - try to read X item by c combinator.
-// Stop on first error.
+// Count applies c exactly cap times and collects the results.
+// It fails with errMessage as soon as any application fails.
 func Count[T any, P any, S any](
 	cap int,
 	errMessage string,
@@ -73,9 +73,10 @@ func Count[T any, P any, S any](
 	return f
 }
 
-// Quantifier - consume at items by c combinator,
-// more than or equal than second param 'from' but less than or equal 'to'.
-// Stop on first error.
+// Quantifier applies c at least from times but not more than to times.
+// It stops at the first error after collecting from items, restoring
+// the buffer position to the end of the last successful application.
+// It returns a build error when from is greater than to or negative.
 func Quantifier[T any, P any, S any](
 	errMessage string,
 	from, to int,

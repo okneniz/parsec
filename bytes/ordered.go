@@ -4,9 +4,9 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Range - succeeds for any bytes which include in input range.
-// Returns the byte that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Range succeeds when the next byte is inside the inclusive
+// range [from, to] and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func Range(
 	errMessage string,
 	from, to byte,
@@ -14,9 +14,9 @@ func Range(
 	return common.Range[byte, int](errMessage, from, to)
 }
 
-// NotRange - succeeds for any byte which not included in input range.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NotRange succeeds when the next byte is outside the inclusive
+// range [from, to] and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func NotRange(
 	errMessage string,
 	from, to byte,
@@ -24,9 +24,8 @@ func NotRange(
 	return common.NotRange[byte, int](errMessage, from, to)
 }
 
-// Gt - succeeds for any byte which greater than input value.
-// Returns the byte that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Gt succeeds when the next byte is greater than t and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func Gt(
 	errMessage string,
 	t byte,
@@ -34,9 +33,8 @@ func Gt(
 	return common.Gt[byte, int](errMessage, t)
 }
 
-// Gte - succeeds for any byte which greater than or equal input value.
-// Returns the byte that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Gte succeeds when the next byte is greater than or equal to t and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func Gte(
 	errMessage string,
 	t byte,
@@ -44,9 +42,8 @@ func Gte(
 	return common.Gte[byte, int](errMessage, t)
 }
 
-// Lt - succeeds for any byte which less than input value.
-// Returns the byte that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Lt succeeds when the next byte is less than t and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func Lt(
 	errMessage string,
 	t byte,
@@ -54,9 +51,8 @@ func Lt(
 	return common.Lt[byte, int](errMessage, t)
 }
 
-// Lte - succeeds for any byte which less than or equal input byte.
-// Returns the byte that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Lte succeeds when the next byte is less than or equal to t and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func Lte(
 	errMessage string,
 	t byte,

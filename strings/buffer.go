@@ -16,7 +16,10 @@ type buffer struct {
 
 var _ common.Buffer[rune, Position] = new(buffer)
 
-// Read - read next item, if greedy buffer keep position after reading.
+// Read returns the next rune.
+// If greedy is true, the buffer advances and keeps the new position,
+// including the case when the calling combinator later fails on this rune;
+// with greedy false the rune is only peeked and the position stays unchanged.
 func (b *buffer) Read(greedy bool) (rune, error) {
 	if b.IsEOF() {
 		return 0, common.ErrEndOfFile
@@ -38,8 +41,9 @@ func (b *buffer) Read(greedy bool) (rune, error) {
 	return x, nil
 }
 
-// Seek - change buffer position
-// change nothing if you try to seek to the same position
+// Seek moves the buffer to a previously obtained position.
+// It returns common.ErrOutOfBounds when the position is invalid.
+// Seeking to the current position does nothing.
 func (b *buffer) Seek(x Position) error {
 	if b.position.index == x.index {
 		return nil
@@ -57,18 +61,19 @@ func (b *buffer) Seek(x Position) error {
 	return nil
 }
 
-// Position - return current buffer position
+// Position returns the current buffer position.
 func (b *buffer) Position() Position {
 	return b.position
 }
 
-// IsEOF - true if buffer ended.
+// IsEOF reports whether the buffer is fully consumed.
 func (b *buffer) IsEOF() bool {
 	return b.position.index >= len(b.data)
 }
 
-// Buffer - make buffer which can read text on input and use
-// struct for positions.
+// Buffer creates a buffer which reads data and tracks positions
+// as line/column/index. The newLineRunes arguments specify which
+// characters are treated as line breaks; by default it is '\n'.
 func Buffer(data []rune, newLineRunes ...rune) *buffer {
 	b := new(buffer)
 	b.data = data

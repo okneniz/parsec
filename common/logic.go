@@ -27,8 +27,8 @@ func Or[T any, P any, S any](
 	}
 }
 
-// And - use x and y combinators to consume input data.
-// Apply them result to compose function and return result of it.
+// And parses x, then y, and combines their results
+// with the compose function.
 func And[T any, P any, S any, B any, M any](
 	x Combinator[T, P, S],
 	y Combinator[T, P, B],

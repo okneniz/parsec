@@ -4,11 +4,9 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Chainl - read zero or more occurrences of byte readed by c combinator,
-// separated by op combinator.
-// Returns a value obtained by a left associative application of
-// all functions returned by op combinator to the values returned by c combinator.
-// If nothing read, the value def is returned.
+// Chainl parses zero or more values with c separated by op
+// and combines them with left associativity: ((a op b) op c).
+// When nothing is parsed, def is returned.
 func Chainl[T any](
 	def T,
 	c common.Combinator[byte, int, T],
@@ -17,11 +15,9 @@ func Chainl[T any](
 	return common.Chainl[byte, int, T](def, c, op)
 }
 
-// Chainl1 - read one or more occurrences of byte readed by c combinator,
-// separated by data readed by op combinator.
-// Returns a value obtained by a left associative application of
-// all functions returned by op combinator to the values returned by c combinator.
-// If nothing read, the value def is returned.
+// Chainl1 parses one or more values with c separated by op
+// and combines them with left associativity: ((a op b) op c).
+// It fails when the first application of c fails.
 func Chainl1[T any](
 	c common.Combinator[byte, int, T],
 	op common.Combinator[byte, int, common.BinaryOp[T]],
@@ -29,11 +25,9 @@ func Chainl1[T any](
 	return common.Chainl1[byte, int, T](c, op)
 }
 
-// Chainr - read zero or more occurrences of byte readed by c combinator,
-// separated by op combinator.
-// Returns a value obtained by a right associative application
-// of all functions returned by op to the values returned by c combinator.
-// If nothing read, the value def is returned.
+// Chainr parses zero or more values with c separated by op
+// and combines them with right associativity: (a op (b op c)).
+// When nothing is parsed, def is returned.
 func Chainr[T any](
 	def T,
 	c common.Combinator[byte, int, T],
@@ -42,11 +36,9 @@ func Chainr[T any](
 	return common.Chainr[byte, int, T](def, c, op)
 }
 
-// Chainr - read one or more occurrences of byte readed by c combinator,
-// separated by op combinator.
-// Returns a value obtained by a right associative application
-// of all functions returned by op to the values returned by c combinator.
-// If nothing read, the value def is returned.
+// Chainr1 parses one or more values with c separated by op
+// and combines them with right associativity: (a op (b op c)).
+// It fails when the first application of c fails.
 func Chainr1[T any](
 	c common.Combinator[byte, int, T],
 	op common.Combinator[byte, int, common.BinaryOp[T]],
@@ -54,9 +46,8 @@ func Chainr1[T any](
 	return common.Chainr1[byte, int, T](c, op)
 }
 
-// SepBy - read zero or more occurrences of byte readed by c combinator,
-// separated by sep combinator.
-// Returns a slice of values returned by p.
+// SepBy parses zero or more values of body separated by sep
+// and returns them as a slice. A trailing separator is not allowed.
 func SepBy[T any, S any](
 	cap int,
 	body common.Combinator[byte, int, T],
@@ -65,9 +56,8 @@ func SepBy[T any, S any](
 	return common.SepBy[byte, int, T](cap, body, sep)
 }
 
-// SepBy1 - read one or more occurrences of byte readed by c combinator,
-// separated by sep combinator.
-// Returns a slice of values returned by p.
+// SepBy1 is like SepBy but requires at least one value:
+// it fails with errMessage when nothing could be parsed.
 func SepBy1[T any, S any](
 	cap int,
 	errMessage string,
@@ -77,9 +67,8 @@ func SepBy1[T any, S any](
 	return common.SepBy1[byte, int, T](cap, errMessage, body, sep)
 }
 
-// EndBy - read zero or more occurrences of byte readed by c combinator,
-// separated and ended by data readed by sep combinator.
-// Returns a slice of values returned by p.
+// EndBy parses zero or more values of body, each terminated by sep,
+// like statements terminated by a semicolon.
 func EndBy[T any, S any](
 	cap int,
 	body common.Combinator[byte, int, T],
@@ -88,9 +77,8 @@ func EndBy[T any, S any](
 	return common.EndBy[byte, int, T](cap, body, sep)
 }
 
-// EndBy1 - read one or more occurrences of byte readed by c combinator,
-// separated and ended by data readed by sep combinator.
-// Returns a slice of values returned by c combinator.
+// EndBy1 is like EndBy but requires at least one value:
+// it fails with errMessage when nothing could be parsed.
 func EndBy1[T any, S any](
 	cap int,
 	errMessage string,
@@ -100,9 +88,8 @@ func EndBy1[T any, S any](
 	return common.EndBy1[byte, int, T](cap, errMessage, body, sep)
 }
 
-// SepEndBy - read zero or more occurrences of byte readed by body combinator,
-// separated and optionally ended by data readed by sep combinator.
-// Returns a slice of values returned by body combinator.
+// SepEndBy parses zero or more values of body, separated by sep
+// and optionally terminated by a final sep.
 func SepEndBy[T any, S any](
 	cap int,
 	body common.Combinator[byte, int, T],
@@ -111,9 +98,8 @@ func SepEndBy[T any, S any](
 	return common.SepEndBy[byte, int, T](cap, body, sep)
 }
 
-// SepEndBy1 - read one or more occurrences of byte readed by body combinator,
-// separated and optionally ended by data readed by sep combinator.
-// Returns a slice of values returned by body combinator.
+// SepEndBy1 is like SepEndBy but requires at least one value:
+// it fails with errMessage when nothing could be parsed.
 func SepEndBy1[T any, S any](
 	cap int,
 	errMessage string,
@@ -123,8 +109,9 @@ func SepEndBy1[T any, S any](
 	return common.SepEndBy1[byte, int, T](cap, errMessage, body, sep)
 }
 
-// ManyTill - accumulate data readed by c combinator until combinantor end succeeds.
-// Returns a slice of values returned by body combinator.
+// ManyTill collects the results of c until the end combinator succeeds;
+// the end match itself is not included. It fails with errMessage
+// when c fails before end matches.
 func ManyTill[T any, S any](
 	cap int,
 	errMessage string,

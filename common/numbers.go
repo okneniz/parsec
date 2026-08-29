@@ -2,6 +2,10 @@ package common
 
 import "strconv"
 
+// ParseInt parses digits with the parseDigits combinator and converts them
+// to an integer of type S using strconv.ParseInt semantics with the given
+// base and bitSize. It fails with errMessage when the digits are invalid
+// or do not fit into S.
 func ParseInt[T any, P any, S Integer](
 	errMessage string,
 	base, bitSize int,

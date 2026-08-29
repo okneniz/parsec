@@ -13,7 +13,10 @@ type buffer struct {
 
 var _ common.Buffer[byte, int] = new(buffer)
 
-// Read - read next item, if greedy buffer keep position after reading.
+// Read returns the next byte.
+// If greedy is true, the buffer advances and keeps the new position,
+// including the case when the calling combinator later fails on this byte;
+// with greedy false the byte is only peeked and the position stays unchanged.
 func (s *buffer) Read(greedy bool) (byte, error) {
 	if s.position >= len(s.data) {
 		return 0, common.ErrEndOfFile
@@ -27,8 +30,9 @@ func (s *buffer) Read(greedy bool) (byte, error) {
 	return b, nil
 }
 
-// Seek - change buffer position
-// change nothing if you try to seek to the same position
+// Seek moves the buffer to a previously obtained position.
+// It returns common.ErrOutOfBounds when the position is invalid.
+// Seeking to the current position does nothing.
 func (s *buffer) Seek(x int) error {
 	if s.position == x {
 		return nil
@@ -46,18 +50,18 @@ func (s *buffer) Seek(x int) error {
 	return nil
 }
 
-// Position - return current buffer position
+// Position returns the current buffer position.
 func (s *buffer) Position() int {
 	return s.position
 }
 
-// IsEOF - true if buffer ended.
+// IsEOF reports whether the buffer is fully consumed.
 func (s *buffer) IsEOF() bool {
 	return s.position >= len(s.data)
 }
 
-// Buffer - make buffer which can read bytes on input and use
-// integer for positions.
+// Buffer creates a buffer which reads data and uses
+// an integer byte offset as the position.
 func Buffer(data []byte) *buffer {
 	b := new(buffer)
 	b.data = data
@@ -65,8 +69,7 @@ func Buffer(data []byte) *buffer {
 	return b
 }
 
-// Buffer - read file and make buffer which can read bytes on input and use
-// integer for positions.
+// BufferFromFile reads the file and creates a buffer over its content.
 func BufferFromFile(path string) (*buffer, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

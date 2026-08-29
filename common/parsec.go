@@ -1,6 +1,7 @@
 package common
 
-// Parse - parse data from buffer by c combinator.
+// Parse applies the c combinator to the buffer and returns its result.
+// It is a small convenience wrapper: c(buffer) does the same.
 func Parse[T any, P any, S any](
 	buffer Buffer[T, P],
 	c Combinator[T, P, S],

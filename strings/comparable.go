@@ -4,9 +4,8 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Eq - succeeds for any item which equal input t.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Eq succeeds when the next rune is equal to t and returns it.
+// Greedy: consumes the rune even on failure (see Try).
 func Eq(
 	errMessage string,
 	t rune,
@@ -14,9 +13,8 @@ func Eq(
 	return common.Eq[rune, Position](errMessage, t)
 }
 
-// NotEq - succeeds for any item which not equal input t.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NotEq succeeds when the next rune is not equal to t and returns it.
+// Greedy: consumes the rune even on failure (see Try).
 func NotEq(
 	errMessage string,
 	r rune,
@@ -24,9 +22,8 @@ func NotEq(
 	return common.NotEq[rune, Position](errMessage, r)
 }
 
-// OneOf - succeeds for any item which included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// OneOf succeeds when the next rune is one of data and returns it.
+// Greedy: consumes the rune even on failure (see Try).
 func OneOf(
 	errMessage string,
 	data ...rune,
@@ -34,9 +31,8 @@ func OneOf(
 	return common.OneOf[rune, Position](errMessage, data...)
 }
 
-// NoneOf - succeeds for any item which not included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NoneOf succeeds when the next rune is none of data and returns it.
+// Greedy: consumes the rune even on failure (see Try).
 func NoneOf(
 	errMessage string,
 	data ...rune,
@@ -44,9 +40,8 @@ func NoneOf(
 	return common.NoneOf[rune, Position](errMessage, data...)
 }
 
-// SequenceOf - expects a sequence of elements in the buffer
-// equal to the input data sequence. If expectations are not met,
-// returns ParseError error.
+// SequenceOf expects the next runes to be equal to data in the same order
+// and returns them as a slice.
 func SequenceOf(
 	errMessage string,
 	data ...rune,
@@ -54,10 +49,9 @@ func SequenceOf(
 	return common.SequenceOf[rune, Position](errMessage, data...)
 }
 
-// Map - Reads one element from the input buffer using the combinator,
-// then uses the resulting element to obtain a value from the map cases and try to
-// match it in cases map passed by first argument.
-// If the value is not found then it returns ParseError error.
+// Map parses a key with the c combinator, looks the key up in cases
+// and returns the mapped value. It fails with errMessage
+// when the key is not found.
 func Map[K comparable, V any](
 	errMessage string,
 	cases map[K]V,
@@ -66,8 +60,7 @@ func Map[K comparable, V any](
 	return common.Map(errMessage, cases, c)
 }
 
-// String - read input text and match with string passed by first argument.
-// If the text not matched then it returns ParseError error.
+// String expects the next runes to spell exactly str and returns it.
 func String(errMessage, str string) common.Combinator[rune, Position, string] {
 	return func(buffer common.Buffer[rune, Position]) (string, common.Error[Position]) {
 		pos := buffer.Position()
@@ -87,11 +80,11 @@ func String(errMessage, str string) common.Combinator[rune, Position, string] {
 	}
 }
 
-// MapStrings - Reads text from the input buffer using the combinator and
-// match it in on the fly by cases map passed by first argument.
-// Try to parse longest string if some of then have them have the same prefix.
-// If the value is not found then it returns ParseError error.
-// This combinator use special trie-like structure for text matching.
+// MapStrings matches the input text against the cases keys on the fly,
+// trying the longest possible key when some of them share a prefix,
+// and returns the mapped value. It fails with errMessage when no key
+// matches. Matching uses a trie-like structure, so the input is scanned
+// only once.
 func MapStrings[V any](
 	errMessage string,
 	cases map[string]V,
@@ -104,11 +97,11 @@ func MapStrings[V any](
 	return MapTree(errMessage, combCases)
 }
 
-// MapTree - Reads rune from the input buffer using the combinator and
-// match it in on the fly by cases map passed by first argument.
-// Try to parse longest prefix.
-// If the value is not found then it returns ParseError error.
-// This combinator use special trie-like structure for text matching.
+// MapTree matches the input text against the cases keys on the fly,
+// trying the longest possible key when some of them share a prefix,
+// and applies the matched combinator to the rest of the input.
+// It fails with errMessage when no key matches. Matching uses
+// a trie-like structure, so the input is scanned only once.
 func MapTree[T any](
 	errMessage string,
 	cases map[string]common.Combinator[rune, Position, T],

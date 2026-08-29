@@ -4,7 +4,8 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Parens - parse something between parens characters - '(' and ')'.
+// Parens parses body between the '(' and ')' characters
+// and returns the result of body.
 func Parens[T any](
 	body common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
@@ -15,7 +16,8 @@ func Parens[T any](
 	)
 }
 
-// Braces - parse something between braces characters - '{' and '}'.
+// Braces parses body between the '{' and '}' characters
+// and returns the result of body.
 func Braces[T any](
 	body common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
@@ -26,7 +28,8 @@ func Braces[T any](
 	)
 }
 
-// Angles - parse something between angels characters - '<' and '>'.
+// Angles parses body between the '<' and '>' characters
+// and returns the result of body.
 func Angles[T any](
 	body common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
@@ -37,7 +40,8 @@ func Angles[T any](
 	)
 }
 
-// Squares - parse something between squares characters - '[' and ']'.
+// Squares parses body between the '[' and ']' characters
+// and returns the result of body.
 func Squares[T any](
 	body common.Combinator[rune, Position, T],
 ) common.Combinator[rune, Position, T] {
@@ -48,27 +52,28 @@ func Squares[T any](
 	)
 }
 
-// Semi - parse semi character.
+// Semi parses the ';' character.
 func Semi() common.Combinator[rune, Position, rune] {
 	return Eq("expected ';'", ';')
 }
 
-// Comma - parse comma character.
+// Comma parses the ',' character.
 func Comma() common.Combinator[rune, Position, rune] {
 	return Eq("expected ','", ',')
 }
 
-// Colon - parse colon character.
+// Colon parses the ':' character.
 func Colon() common.Combinator[rune, Position, rune] {
 	return Eq("expected ':'", ':')
 }
 
-// Dot - parse dot character.
+// Dot parses the '.' character.
 func Dot() common.Combinator[rune, Position, rune] {
 	return Eq("expected '.'", '.')
 }
 
-// Unsigned - parse unsigned integer.
+// Unsigned parses an unsigned decimal integer of type T
+// (for example int or uint16). Leading zeros are accepted.
 func Unsigned[T common.Integer]() common.Combinator[rune, Position, T] {
 	digit := Try(Digit("digit"))
 	zero := rune('0')
@@ -96,7 +101,9 @@ func Unsigned[T common.Integer]() common.Combinator[rune, Position, T] {
 	}
 }
 
-// UnsignedN - parse unsigned integer with N count of digits.
+// UnsignedN parses an unsigned decimal integer of type T
+// consisting of exactly n digits, for example a year or a month field
+// of a fixed-width timestamp.
 func UnsignedN[T common.Integer](n int, errMessage string) common.Combinator[rune, Position, T] {
 	digit := Try(Digit("digit"))
 	zero := rune('0')

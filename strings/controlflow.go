@@ -4,8 +4,8 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Concat - use cs combinators to parse slices step by step,
-// concatenate all result to one big slice and returns it.
+// Concat applies the cs combinators one by one and concatenates
+// their slice results into a single slice.
 func Concat[T any](
 	cap int,
 	cs ...common.Combinator[rune, Position, []T],
@@ -13,8 +13,9 @@ func Concat[T any](
 	return common.Concat[rune, Position, T](cap, cs...)
 }
 
-// Sequence - reads input elements one by one using cs combinators.
-// If any of them fails, it returns an error.
+// Sequence applies the cs combinators one by one
+// and collects their results into a slice.
+// It fails as soon as any of them fails.
 func Sequence[T any](
 	cap int,
 	cs ...common.Combinator[rune, Position, T],
@@ -23,7 +24,12 @@ func Sequence[T any](
 }
 
 // Choice - searches for a combinator that works successfully on the input data.
-// if one is not found, it returns an ParseError error.
+// If one is not found, it returns an ParseError error.
+//
+// Alternatives are tried one by one without restoring the buffer position
+// between attempts, while greedy combinators consume one item even on failure.
+// Wrap each alternative in Try, otherwise a failed alternative
+// eats input and breaks the following ones.
 func Choice[T any](
 	errMessage string,
 	cs ...common.Combinator[rune, Position, T],
@@ -31,8 +37,8 @@ func Choice[T any](
 	return common.Choice(errMessage, cs...)
 }
 
-// Skip - ignores the result of the first combinator
-// and returns only the result of the second.
+// Skip parses skip, discards its result,
+// then parses body and returns the result of body.
 func Skip[T any, S any](
 	skip common.Combinator[rune, Position, S],
 	body common.Combinator[rune, Position, T],
@@ -40,9 +46,8 @@ func Skip[T any, S any](
 	return common.Skip(skip, body)
 }
 
-// SkipAfter - ignores the result of the first combinator
-// and returns only the result of the second.
-// Use body combinator at first.
+// SkipAfter parses body first, then parses skip and discards its result.
+// It returns the result of body.
 func SkipAfter[T any, S any](
 	skip common.Combinator[rune, Position, S],
 	body common.Combinator[rune, Position, T],
@@ -50,7 +55,9 @@ func SkipAfter[T any, S any](
 	return common.SkipAfter(skip, body)
 }
 
-// SkipMany - skip sequence of items parsed by first combinator before body combinator.
+// SkipMany skips a sequence of items parsed by the skip combinator
+// and then applies body. Unlike Many it allocates nothing for
+// the skipped part.
 func SkipMany[T any, S any](
 	skip common.Combinator[rune, Position, S],
 	body common.Combinator[rune, Position, T],
@@ -58,8 +65,8 @@ func SkipMany[T any, S any](
 	return common.SkipMany(skip, body)
 }
 
-// Padded - skip sequence of items parsed by first combinator
-// before and after body combinator.
+// Padded skips a sequence of items parsed by the skip combinator
+// before and after body.
 func Padded[T any, S any](
 	skip common.Combinator[rune, Position, S],
 	body common.Combinator[rune, Position, T],

@@ -1,8 +1,7 @@
 package common
 
-// Eq - succeeds for any item which equal input t.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Eq succeeds when the next item is equal to t and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func Eq[T comparable, P any](
 	errMessage string,
 	t T,
@@ -12,9 +11,8 @@ func Eq[T comparable, P any](
 	})
 }
 
-// NotEq - succeeds for any item which not equal input t.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NotEq succeeds when the next item is not equal to t and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func NotEq[T comparable, P any](
 	errMessage string,
 	t T,
@@ -24,9 +22,8 @@ func NotEq[T comparable, P any](
 	})
 }
 
-// OneOf - succeeds for any item which included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// OneOf succeeds when the next item is one of data and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func OneOf[T comparable, P any](
 	errMessage string,
 	data ...T,
@@ -42,9 +39,8 @@ func OneOf[T comparable, P any](
 	})
 }
 
-// NoneOf - succeeds for any item which not included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NoneOf succeeds when the next item is none of data and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func NoneOf[T comparable, P any](
 	errMessage string,
 	data ...T,
@@ -60,9 +56,8 @@ func NoneOf[T comparable, P any](
 	})
 }
 
-// SequenceOf - expects a sequence of elements in the buffer
-// equal to the input data sequence. If expectations are not met,
-// returns ParseError error.
+// SequenceOf expects the next items to be equal to data in the same order
+// and returns them as a slice.
 func SequenceOf[T comparable, P any](
 	errMessage string,
 	data ...T,
@@ -89,10 +84,9 @@ func SequenceOf[T comparable, P any](
 	}
 }
 
-// Map - Reads one element from the input buffer using the combinator,
-// then uses the resulting element to obtain a value from the map cases and try to
-// match it in cases map passed by first argument.
-// If the value is not found then it returns ParseError error.
+// Map parses a key with the c combinator, looks the key up in cases
+// and returns the mapped value. It fails with errMessage
+// when the key is not found.
 func Map[T any, P any, K comparable, V any](
 	errMessage string,
 	cases map[K]V,
@@ -117,19 +111,15 @@ func Map[T any, P any, K comparable, V any](
 	}
 }
 
-// MapAs - Read one element from the input buffer using the combinator,
-// then match the resulting item to obtain a value from map cases and try to match it
-// in cases map passed by first argument.
-// If the value it not found then it returns ParseError error.
-// Otherwise try to parse input data by combinator from cases.
+// MapAs parses a key with the comb combinator, looks the key up in cases
+// and applies the matched combinator to the rest of the input.
+// It fails with errMessage when the key is not found.
 func MapAs[T any, P any, K comparable, V any](
 	errMessage string,
 	cases map[K]Combinator[T, P, V],
 	comb Combinator[T, P, K],
 ) Combinator[T, P, V] {
 	var null V
-
-	// TODO : make error message
 
 	return func(buffer Buffer[T, P]) (V, Error[P]) {
 		pos := buffer.Position()
@@ -148,11 +138,10 @@ func MapAs[T any, P any, K comparable, V any](
 	}
 }
 
-// MapTree - Reads element from the input buffer using the combinator and
-// match it in on the fly by cases map passed by second argument.
-// Try to parse longest prefix.
-// If the value is not found then it returns ParseError error.
-// This combinator use special trie-like structure for text matching.
+// MapTree matches the input against the keys of cases using a
+// longest-prefix trie (keys are split into items with split) and applies
+// the combinator stored for the longest matched prefix.
+// It fails with errMessage when no key matches.
 func MapTree[T comparable, P any, K comparable, V any](
 	errMessage string,
 	cases map[T]Combinator[K, P, V],

@@ -4,9 +4,8 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Eq - succeeds for any byte which equal input t.
-// Returns the byte that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Eq succeeds when the next byte is equal to t and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func Eq(
 	errMessage string,
 	t byte,
@@ -14,9 +13,8 @@ func Eq(
 	return common.Eq[byte, int](errMessage, t)
 }
 
-// NotEq - succeeds for any byte which not equal input t.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NotEq succeeds when the next byte is not equal to t and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func NotEq(
 	errMessage string,
 	t byte,
@@ -24,9 +22,8 @@ func NotEq(
 	return common.NotEq[byte, int](errMessage, t)
 }
 
-// OneOf - succeeds for any byte which included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// OneOf succeeds when the next byte is one of data and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func OneOf(
 	errMessage string,
 	data ...byte,
@@ -34,9 +31,8 @@ func OneOf(
 	return common.OneOf[byte, int](errMessage, data...)
 }
 
-// NoneOf - succeeds for any byte which not included in input data.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NoneOf succeeds when the next byte is none of data and returns it.
+// Greedy: consumes the byte even on failure (see Try).
 func NoneOf(
 	errMessage string,
 	data ...byte,
@@ -44,9 +40,8 @@ func NoneOf(
 	return common.NoneOf[byte, int](errMessage, data...)
 }
 
-// SequenceOf - expects a sequence of bytes in the buffer
-// equal to the input data sequence. If expectations are not met,
-// returns ParseError.
+// SequenceOf expects the next bytes to be equal to data in the same order
+// and returns them as a slice.
 func SequenceOf(
 	errMessage string,
 	data ...byte,
@@ -54,9 +49,9 @@ func SequenceOf(
 	return common.SequenceOf[byte, int](errMessage, data...)
 }
 
-// Map - Reads one element from the bytes buffer using the combinator,
-// then uses the resulting element to obtain a value from the map cases and returns it.
-// If the value is not found then it returns ParseError error.
+// Map parses a key with the c combinator, looks the key up in cases
+// and returns the mapped value. It fails with errMessage
+// when the key is not found.
 func Map[K comparable, V any](
 	errMessage string,
 	cases map[K]V,

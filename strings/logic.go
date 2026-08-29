@@ -4,8 +4,10 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Or - returns the result of the first combinator,
-// if it fails, uses the second combinator.
+// Or returns the result of the first combinator;
+// when it fails, the second combinator is used.
+// Like Choice, it does not restore the buffer position between attempts:
+// wrap both arguments in Try if they can fail after consuming input.
 func Or[T any](
 	errMessage string,
 	x common.Combinator[rune, Position, T],
@@ -14,8 +16,8 @@ func Or[T any](
 	return common.Or[rune, Position, T](errMessage, x, y)
 }
 
-// And - use x and y combinators to consume input data.
-// Apply them result to compose function and return result of it.
+// And parses x, then y, and combines their results
+// with the compose function.
 func And[S any, B any, M any](
 	x common.Combinator[rune, Position, S],
 	y common.Combinator[rune, Position, B],

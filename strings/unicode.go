@@ -6,86 +6,73 @@ import (
 	"github.com/okneniz/parsec/common"
 )
 
-// Control - parse control UTF-8 characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Control parses a control character as defined by unicode.IsControl.
 func Control(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsControl)
 }
 
-// Digit - parse decimal digit UTF-8 characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Digit parses a decimal digit character as defined by unicode.IsDigit.
 func Digit(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsDigit)
 }
 
-// Graphic - parse graphic UTF-8 characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Graphic parses a graphic character as defined by unicode.IsGraphic.
 func Graphic(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsGraphic)
 }
 
-// Letter - parse letter UTF-8 characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Letter parses a letter character as defined by unicode.IsLetter.
 func Letter(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsLetter)
 }
 
-// Lower - parse UTF-8 character in lower case.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Lower parses a lower case character as defined by unicode.IsLower.
 func Lower(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsLower)
 }
 
-// Lower - parse mark UTF-8 characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Mark parses a mark character as defined by unicode.IsMark.
 func Mark(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsMark)
 }
 
-// Number - parse UTF-8 number characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Number parses a number character as defined by unicode.IsNumber.
 func Number(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsNumber)
 }
 
-// Print - parse printable UTF-8 characters.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Print parses a printable character as defined by unicode.IsPrint.
 func Print(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsPrint)
 }
 
-// Punct - parse UTF-8 punctuation character.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Punct parses a punctuation character as defined by unicode.IsPunct.
 func Punct(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsPunct)
 }
 
-// Space - parse UTF-8 space character.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Space parses a whitespace character as defined by unicode.IsSpace.
 func Space(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsSpace)
 }
 
-// Space - parse UTF-8 symbolic character.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Symbol parses a symbolic character as defined by unicode.IsSymbol.
 func Symbol(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsSymbol)
 }
 
-// Title - parse UTF-8 character in title case.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Title parses a title case character as defined by unicode.IsTitle.
 func Title(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsTitle)
 }
 
-// Lower - parse UTF-8 character in upper case.
-// Read more about utf characters tables - https://pkg.go.dev/unicode#pkg-constants
+// Upper parses an upper case character as defined by unicode.IsUpper.
 func Upper(errMessage string) common.Combinator[rune, Position, rune] {
 	return common.Satisfy[rune, Position](errMessage, true, unicode.IsUpper)
 }
 
-// RangeTable - parse UTF-8 character in upper case.
-// Read more about utf characters tables - https://pkg.go.dev/unicode
+// RangeTable parses a character from the given unicode.RangeTable,
+// see https://pkg.go.dev/unicode#pkg-constants for the available tables.
 func RangeTable(
 	errMessage string,
 	tbl *unicode.RangeTable,

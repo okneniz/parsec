@@ -1,5 +1,8 @@
 package common
 
+// Tree is a lookup structure which matches the current buffer content
+// against a set of keys and returns the combinator stored for
+// the matched key.
 type Tree[T any, P any, S any] interface {
 	Lookup(Buffer[T, P]) (Combinator[T, P, S], Error[P])
 }
@@ -11,6 +14,11 @@ type tree[T comparable, P any, K comparable, V any] struct {
 
 var _ Tree[rune, int, float32] = new(tree[string, int, rune, float32])
 
+// NewLongestPrefixTree builds a trie from the cases keys, each key split
+// into items with split, with the corresponding combinators stored
+// in the terminal nodes. Lookup consumes input while it matches some key
+// and returns the combinator of the longest matched prefix,
+// or nil when the first item already matches nothing.
 func NewLongestPrefixTree[T comparable, P any, K comparable, V any](
 	cases map[T]Combinator[K, P, V],
 	split func(T) []K,
@@ -23,8 +31,6 @@ func NewLongestPrefixTree[T comparable, P any, K comparable, V any](
 		current := root
 
 		for _, x := range seq {
-			// TODO : check and handle conflicts?
-
 			child, exists := current.children[x]
 			if !exists {
 				child = &tree[T, P, K, V]{

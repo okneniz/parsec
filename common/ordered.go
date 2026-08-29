@@ -4,9 +4,9 @@ import (
 	"cmp"
 )
 
-// Range - succeeds for any item which include in input range.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Range succeeds when the next item is inside the inclusive
+// range [from, to] and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func Range[T cmp.Ordered, P any](
 	errMessage string,
 	from, to T,
@@ -16,9 +16,9 @@ func Range[T cmp.Ordered, P any](
 	})
 }
 
-// NotRange - succeeds for any item which not included in input range.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// NotRange succeeds when the next item is outside the inclusive
+// range [from, to] and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func NotRange[T cmp.Ordered, P any](
 	errMessage string,
 	from, to T,
@@ -28,9 +28,8 @@ func NotRange[T cmp.Ordered, P any](
 	})
 }
 
-// Gt - succeeds for any item which greater than input value.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Gt succeeds when the next item is greater than t and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func Gt[T cmp.Ordered, P any](
 	errMessage string,
 	t T,
@@ -40,9 +39,8 @@ func Gt[T cmp.Ordered, P any](
 	})
 }
 
-// Gte - succeeds for any item which greater than or equal input value.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Gte succeeds when the next item is greater than or equal to t and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func Gte[T cmp.Ordered, P any](
 	errMessage string,
 	t T,
@@ -52,9 +50,8 @@ func Gte[T cmp.Ordered, P any](
 	})
 }
 
-// Lt - succeeds for any item which less than input value.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Lt succeeds when the next item is less than t and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func Lt[T cmp.Ordered, P any](
 	errMessage string,
 	t T,
@@ -64,9 +61,8 @@ func Lt[T cmp.Ordered, P any](
 	})
 }
 
-// Lte - succeeds for any item which less than or equal input value.
-// Returns the item that is actually readed from input buffer.
-// Greedy by default - keep position after reading.
+// Lte succeeds when the next item is less than or equal to t and returns it.
+// Greedy: consumes the item even on failure (see Try).
 func Lte[T cmp.Ordered, P any](
 	errMessage string,
 	t T,
