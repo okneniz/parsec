@@ -1,17 +1,22 @@
 default: test
 
 test:
-	go test -v -timeout 60s -count=1 -coverprofile=coverage.out ./...
+	GOTOOLCHAIN=go1.25.0+auto go test -v -timeout 60s -count=1 -coverprofile=coverage.out ./...
 	# go test -v -count 1 -timeout 60s -coverprofile=coverage.out ./...
 
-intall-linter:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+# Pin the linter version in go.mod as a tool dependency.
+# Requires Go >= 1.24 (GOTOOLCHAIN=auto downloads it if needed).
+install-linter:
+	go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 
+# golangci-lint is pinned in go.mod as a tool dependency,
+# no manual installation needed: https://go.dev/ref/mod#go-tool
+# CGO_ENABLED=0 makes the tool build independent of a local C toolchain.
 lint: fmt
-	golangci-lint run ./...
+	CGO_ENABLED=0 go tool golangci-lint run ./...
 
 fmt:
-	gofmt -w -s .
+	CGO_ENABLED=0 go tool golangci-lint fmt ./...
 
 benchmark:
 	# go test -v -bench=. -benchmem -memprofile memprofile.out -cpuprofile profile.out -count=3 -run=^# ./hash-map/...

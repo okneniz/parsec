@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/okneniz/parsec/common"
-	"github.com/okneniz/parsec/strings"
 	. "github.com/okneniz/parsec/strings"
 )
 
@@ -19,8 +18,8 @@ func dayOfWeekPrefix() common.Combinator[rune, Position, time.Weekday] {
 		"Sun": time.Sunday,
 	}
 
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
+	return Padded(
+		Try(Space("space")),
 		MapStrings("expected day of week", dwDict),
 	)
 }
@@ -41,47 +40,47 @@ func monthPrefix() common.Combinator[rune, Position, time.Month] {
 		"Dec": time.December,
 	}
 
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
+	return Padded(
+		Try(Space("space")),
 		MapStrings("expected name of month", monthDict),
 	)
 }
 
 func yearWithCentury() common.Combinator[rune, Position, int] {
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
+	return Padded(
+		Try(Space("space")),
 		UnsignedN[int](4, "expected year with century"),
 	)
 }
 
 func paddedDayNum() common.Combinator[rune, Position, int] {
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
-		strings.Choice(
+	return Padded(
+		Try(Space("space")),
+		Choice(
 			"expected day number",
-			strings.Try(UnsignedN[int](2, "expected day number")),
+			Try(UnsignedN[int](2, "expected day number")),
 			UnsignedN[int](1, "expected day number"),
 		),
 	)
 }
 
 func paddedHourNum() common.Combinator[rune, Position, int] {
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
+	return Padded(
+		Try(Space("space")),
 		UnsignedN[int](2, "expected hour number"),
 	)
 }
 
 func paddedMinuteNum() common.Combinator[rune, Position, int] {
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
+	return Padded(
+		Try(Space("space")),
 		UnsignedN[int](2, "expected minute number"),
 	)
 }
 
 func paddedSecondNum() common.Combinator[rune, Position, int] {
-	return strings.Padded(
-		strings.Try(strings.Space("space")),
+	return Padded(
+		Try(Space("space")),
 		UnsignedN[int](2, "expected second number"),
 	)
 }

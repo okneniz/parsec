@@ -87,7 +87,7 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 
 	parseCRC := bytes.ReadAs[uint32](
 		4,
-		fmt.Sprintf("expected 4 bytes of CRC"),
+		"expected 4 bytes of CRC",
 		binary.BigEndian,
 	)
 
@@ -103,7 +103,7 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 			return nil, common.NewParseError(buffer.Position(), seekErr.Error())
 		}
 
-		entries := make([]*RGB, 0, uint32(size/3))
+		entries := make([]*RGB, 0, size/3)
 
 		for i := uint32(0); i < size/3; i++ {
 			red, err := parseRED(buffer)
@@ -126,13 +126,6 @@ func PLTEChunk(size uint32) common.Combinator[byte, int, *PLTE] {
 				Green: green,
 				Blue:  blue,
 			})
-		}
-
-		if size < 0 {
-			return nil, common.NewParseError(
-				buffer.Position(),
-				"YOU FOUND A BOMB! Who try to make parsing endless!",
-			)
 		}
 
 		if seekErr := buffer.Seek(pos + int(size)); seekErr != nil {

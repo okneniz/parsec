@@ -2,6 +2,8 @@ package common
 
 // Or - returns the result of the first combinator,
 // if it fails, uses the second combinator.
+// Like Choice, it does not restore the buffer position between attempts:
+// wrap both arguments in Try if they can fail after consuming input.
 func Or[T any, P any, S any](
 	errMessage string,
 	x, y Combinator[T, P, S],

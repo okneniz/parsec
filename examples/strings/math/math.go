@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
 	"fmt"
 	"maps"
 	"slices"
+	"testing"
 
 	"github.com/okneniz/parsec/common"
 	"github.com/okneniz/parsec/strings"
@@ -26,7 +26,7 @@ func parseNumber() common.Combinator[rune, strings.Position, Expr] {
 			return null, err
 		}
 
-		return Number{ Value: val }, nil
+		return Number{Value: val}, nil
 	}
 }
 
@@ -128,7 +128,6 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 				)
 			}
 
-
 			if prevPriority > priority {
 				return nil, common.NewParseError(
 					buf.Position(),
@@ -136,7 +135,7 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 				)
 			}
 
-			nextExpression, exists := priorityParsers[priority + 1]
+			nextExpression, exists := priorityParsers[priority+1]
 			if !exists {
 				nextExpression = parseOperand
 			}
@@ -147,8 +146,8 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 			}
 
 			return BinaryOp{
-				Left: left,
-				Op: operation,
+				Left:  left,
+				Op:    operation,
 				Right: right,
 			}, nil
 		}
@@ -156,7 +155,7 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 		return parse
 	}
 
-	for i := 0; i <=maxPriority; i++ {
+	for i := 0; i <= maxPriority; i++ {
 		priorityParsers[i] = parseBinaryOp(i)
 	}
 
@@ -188,7 +187,7 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 			)
 		}
 
-		nextExpression, exists := priorityParsers[priority + 1]
+		nextExpression, exists := priorityParsers[priority+1]
 		if !exists {
 			nextExpression = parseNum
 		}
@@ -199,8 +198,8 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 		}
 
 		return BinaryOp{
-			Left: left,
-			Op: operation,
+			Left:  left,
+			Op:    operation,
 			Right: right,
 		}, nil
 	}
@@ -221,7 +220,7 @@ func Parser(t testing.TB) common.Combinator[rune, strings.Position, Expr] {
 		if ok, _ := eof(buf); !ok {
 			return nil, common.NewParseError(
 				buf.Position(),
-				fmt.Sprintf("expected end of file"),
+				"expected end of file",
 			)
 		}
 

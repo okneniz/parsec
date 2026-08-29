@@ -148,7 +148,7 @@ func (x String) Type() string {
 }
 
 func (x String) String() string {
-	return fmt.Sprintf("%s", string(x))
+	return string(x)
 }
 
 // Binary extending Raw type represents a byte array

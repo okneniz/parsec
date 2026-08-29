@@ -1,8 +1,6 @@
 package strings
 
 import (
-	"golang.org/x/exp/constraints"
-
 	"github.com/okneniz/parsec/common"
 )
 
@@ -71,7 +69,7 @@ func Dot() common.Combinator[rune, Position, rune] {
 }
 
 // Unsigned - parse unsigned integer.
-func Unsigned[T constraints.Integer]() common.Combinator[rune, Position, T] {
+func Unsigned[T common.Integer]() common.Combinator[rune, Position, T] {
 	digit := Try(Digit("digit"))
 	zero := rune('0')
 
@@ -99,7 +97,7 @@ func Unsigned[T constraints.Integer]() common.Combinator[rune, Position, T] {
 }
 
 // UnsignedN - parse unsigned integer with N count of digits.
-func UnsignedN[T constraints.Integer](n int, errMessage string) common.Combinator[rune, Position, T] {
+func UnsignedN[T common.Integer](n int, errMessage string) common.Combinator[rune, Position, T] {
 	digit := Try(Digit("digit"))
 	zero := rune('0')
 

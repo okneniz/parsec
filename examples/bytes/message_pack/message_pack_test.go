@@ -7,17 +7,11 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/okneniz/parsec/bytes"
-	"golang.org/x/exp/constraints"
-
+	"github.com/okneniz/parsec/common"
 	mpack "github.com/vmihailenco/msgpack/v5"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func TestMain_MessagePack(t *testing.T) {
 	t.Parallel()
@@ -211,7 +205,7 @@ func TestMain_MessagePack(t *testing.T) {
 	})
 }
 
-func rnd[T constraints.Integer](min, max float64) T {
+func rnd[T common.Integer](min, max float64) T {
 	return T(rand.Intn(int(max - min + 1 + min)))
 }
 
@@ -271,7 +265,7 @@ func toBinary(data []byte) string {
 func randBytes(count int) []byte {
 	data := make([]byte, count)
 	for i := 0; i < count; i++ {
-		data[i] = byte(rnd[uint8](0, math.MaxUint8))
+		data[i] = rnd[uint8](0, math.MaxUint8)
 	}
 	return data
 }

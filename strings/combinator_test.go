@@ -185,7 +185,7 @@ func TestBetween(t *testing.T) {
 	t.Parallel()
 
 	notBrackets := Satisfy("test", true, func(x rune) bool {
-		return !(x == ')' || x == '(')
+		return x != ')' && x != '('
 	})
 
 	comb := Between(

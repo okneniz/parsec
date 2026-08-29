@@ -1,6 +1,6 @@
 # Parsec
 
-![Downloads](https://img.shields.io/github/downloads/okneniz/parsec/total) ![Contributors](https://img.shields.io/github/contributors/okneniz/parsec?color=dark-green) ![Forks](https://img.shields.io/github/forks/okneniz/parsec?style=social) ![Stargazers](https://img.shields.io/github/stars/okneniz/parsec?style=social) ![Issues](https://img.shields.io/github/issues/okneniz/parsec) ![License](https://img.shields.io/github/license/okneniz/parsec) 
+![CI](https://github.com/okneniz/parsec/actions/workflows/ci.yml/badge.svg) ![Downloads](https://img.shields.io/github/downloads/okneniz/parsec/total) ![Contributors](https://img.shields.io/github/contributors/okneniz/parsec?color=dark-green) ![Forks](https://img.shields.io/github/forks/okneniz/parsec?style=social) ![Stargazers](https://img.shields.io/github/stars/okneniz/parsec?style=social) ![Issues](https://img.shields.io/github/issues/okneniz/parsec) ![License](https://img.shields.io/github/license/okneniz/parsec) 
 
 Golang parser combinator library inspired by [haskell parsec](https://hackage.haskell.org/package/parsec).
 
@@ -11,13 +11,54 @@ Golang parser combinator library inspired by [haskell parsec](https://hackage.ha
 
 ## Installation
 
+Requires Go 1.26 or newer.
+
 ```bash
 go get github.com/okneniz/parsec
 ```
 
+## Quick start
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/okneniz/parsec/strings"
+)
+
+func main() {
+	// parse an unsigned integer, allowing surrounding whitespaces
+	parser := strings.Padded(
+		strings.Try(strings.Space("whitespace")),
+		strings.Unsigned[int](),
+	)
+
+	result, err := strings.ParseString(" 42 ", parser)
+	fmt.Println(result, err) // 42 <nil>
+}
+```
+
+Small parsing functions are combined into bigger ones: `Padded` wraps `Unsigned`
+with optional whitespace skipping, `Try` makes backtracking possible, and
+`ParseString` feeds the input text through the resulting combinator.
+
 ## Documentation
 
 [GoDoc documentation](https://pkg.go.dev/github.com/okneniz/parsec)
+
+### Backtracking
+
+Greedy combinators (`Satisfy`, `Eq`, `Range`, `OneOf` and others) consume one input item even when they fail. Combinators that try alternatives (`Choice`, `Or`) or repeat parsing in a loop (`Many` and similar) do not restore the buffer position on their own. So whenever a combinator can fail inside such a branch, wrap it in `Try` — it is the backtracking primitive that rewinds the buffer on failure:
+
+```go
+choice := strings.Choice(
+	"expected number or parens",
+	strings.Try(parseNumber()),
+	strings.Try(strings.Parens(parseExpr)),
+)
+```
 
 ### Examples
 
@@ -29,6 +70,20 @@ go get github.com/okneniz/parsec
 - binary
   - [message pack](https://github.com/okneniz/parsec/tree/master/examples/bytes/message_pack)
   - [png](https://github.com/okneniz/parsec/tree/master/examples/bytes/png)
+
+## Development
+
+```bash
+make test    # run all tests
+make lint    # format code and run golangci-lint
+make fmt     # format code only
+```
+
+The linter version is pinned in `go.mod` as a [Go tool dependency](https://go.dev/ref/mod#go-tool), so `make lint` uses exactly the same version locally and in CI. To bump it:
+
+```bash
+make install-linter # or: go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@<version>
+```
 
 ## Roadmap
 

@@ -34,9 +34,9 @@ func (c *IDAT) CRC() uint32 {
 func (c *IDAT) String() string {
 	b := new(strings.Builder)
 
-	b.WriteString(fmt.Sprintf("\t length: %v\n", c.length))
-	// b.WriteString(fmt.Sprintf("\t data: %v\n", c.data))
-	b.WriteString(fmt.Sprintf("\t crc: %v\n", c.crc))
+	fmt.Fprintf(b, "\t length: %v\n", c.length)
+	// fmt.Fprintf(b, "\t data: %v\n", c.data)
+	fmt.Fprintf(b, "\t crc: %v\n", c.crc)
 
 	return b.String()
 }

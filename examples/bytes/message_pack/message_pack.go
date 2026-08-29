@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ImposibleDataType = errors.New("0xc1 - impossible data type")
+	ErrImpossibleDataType = errors.New("0xc1 - impossible data type")
 )
 
 // https://github.com/msgpack/msgpack/blob/master/spec.md

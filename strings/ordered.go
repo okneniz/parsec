@@ -31,9 +31,7 @@ func Gt(
 	errMessage string,
 	t rune,
 ) common.Combinator[rune, Position, rune] {
-	return Satisfy(errMessage, true, func(x rune) bool {
-		return x > t
-	})
+	return common.Gt[rune, Position](errMessage, t)
 }
 
 // Gte - succeeds for any item which greater than or equal input value.
@@ -43,9 +41,7 @@ func Gte(
 	errMessage string,
 	t rune,
 ) common.Combinator[rune, Position, rune] {
-	return Satisfy(errMessage, true, func(x rune) bool {
-		return x >= t
-	})
+	return common.Gte[rune, Position](errMessage, t)
 }
 
 // Lt - succeeds for any item which less than input value.
@@ -55,9 +51,7 @@ func Lt(
 	errMessage string,
 	t rune,
 ) common.Combinator[rune, Position, rune] {
-	return Satisfy(errMessage, true, func(x rune) bool {
-		return x < t
-	})
+	return common.Lt[rune, Position](errMessage, t)
 }
 
 // Lte - succeeds for any item which less than or equal input value.
@@ -67,7 +61,5 @@ func Lte(
 	errMessage string,
 	t rune,
 ) common.Combinator[rune, Position, rune] {
-	return Satisfy(errMessage, true, func(x rune) bool {
-		return x <= t
-	})
+	return common.Lte[rune, Position](errMessage, t)
 }

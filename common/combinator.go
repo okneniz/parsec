@@ -2,7 +2,9 @@ package common
 
 // Satisfy - succeeds for any item for which the supplied function f returns true.
 // Returns the item that is actually readed from input buffer.
-// if greedy buffer keep position after reading.
+// If greedy is true, buffer keeps position after reading - even when f fails,
+// so the failed combinator consumes exactly one item.
+// Wrap it in Try if you need the position to be restored on failure.
 func Satisfy[T any, P any](
 	errMessage string,
 	greedy bool,
@@ -43,6 +45,11 @@ func Any[T any, P any]() Combinator[T, P, T] {
 }
 
 // Try - try to use c combinator, if it falls, it returns buffer to the previous position.
+// This is the backtracking primitive of the library: greedy combinators like
+// Satisfy, Eq, Range and others consume input even when they fail,
+// so every combinator which can fail inside an alternative branch
+// (see Choice, Or) or in a loop (see Many and similar) must be wrapped
+// in Try to make backtracking possible.
 func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
 	var null S
 

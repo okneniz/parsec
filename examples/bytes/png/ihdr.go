@@ -42,12 +42,12 @@ func (c *IHDR) CRC() uint32 {
 func (c *IHDR) String() string {
 	b := new(strings.Builder)
 
-	b.WriteString(fmt.Sprintf("\t width: %d\n", c.Width))
-	b.WriteString(fmt.Sprintf("\t height: %d\n", c.Height))
-	b.WriteString(fmt.Sprintf("\t bit depth: %v\n", c.BitDepth))
-	b.WriteString(fmt.Sprintf("\t color type: %v\n", c.ColorType))
-	b.WriteString(fmt.Sprintf("\t compression type: %v\n", c.CompressionMethod))
-	b.WriteString(fmt.Sprintf("\t interface method: %v\n", c.InterfaceMethod))
+	fmt.Fprintf(b, "\t width: %d\n", c.Width)
+	fmt.Fprintf(b, "\t height: %d\n", c.Height)
+	fmt.Fprintf(b, "\t bit depth: %v\n", c.BitDepth)
+	fmt.Fprintf(b, "\t color type: %v\n", c.ColorType)
+	fmt.Fprintf(b, "\t compression type: %v\n", c.CompressionMethod)
+	fmt.Fprintf(b, "\t interface method: %v\n", c.InterfaceMethod)
 
 	return b.String()
 }
@@ -121,7 +121,7 @@ func IHDRChunk(size uint32) common.Combinator[byte, int, *IHDR] {
 		}
 
 		result := &IHDR{
-			length:            uint32(size),
+			length:            size,
 			data:              data,
 			crc:               crc,
 			Width:             width,

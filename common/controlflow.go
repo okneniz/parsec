@@ -45,7 +45,14 @@ func Sequence[T any, P any, S any](
 }
 
 // Choice - searches for a combinator that works successfully on the input data.
-// if one is not found, it returns an ParseError error.
+// If one is not found, it returns an ParseError error.
+//
+// Alternatives are tried one by one without restoring the buffer position
+// between attempts, while greedy combinators consume one item even on failure.
+// Wrap each alternative in Try, otherwise a failed alternative
+// eats input and breaks the following ones:
+//
+//	Choice(errMessage, Try(Eq(...)), Try(OneOf(...)))
 func Choice[T any, P any, S any](
 	errMessage string,
 	cs ...Combinator[T, P, S],

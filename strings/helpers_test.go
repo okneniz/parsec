@@ -9,7 +9,6 @@ import (
 
 	ohsnap "github.com/okneniz/oh-snap"
 	"github.com/okneniz/parsec/common"
-	"golang.org/x/exp/constraints"
 )
 
 func TestParens(t *testing.T) {
@@ -776,7 +775,7 @@ func TestUnsigned(t *testing.T) {
 	})
 }
 
-func checkUnsignedN[T constraints.Integer](t *testing.T, size int, arb ohsnap.Arbitrary[T]) func(t *testing.T) {
+func checkUnsignedN[T common.Integer](t *testing.T, size int, arb ohsnap.Arbitrary[T]) func(t *testing.T) {
 	t.Helper()
 
 	return func(t *testing.T) {

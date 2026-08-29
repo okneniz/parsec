@@ -1,11 +1,11 @@
 package main
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/okneniz/parsec/strings"
+	"github.com/stretchr/testify/require"
 )
 
 type testCase struct {
@@ -20,10 +20,10 @@ func TestMathParser(t *testing.T) {
 		{
 			expr: "1 + 2 * 3",
 			wantAST: BinaryOp{
-				Op: '+',
-				Left:  Number{Value: 1},
+				Op:   '+',
+				Left: Number{Value: 1},
 				Right: BinaryOp{
-					Op:   '*',
+					Op:    '*',
 					Left:  Number{Value: 2},
 					Right: Number{Value: 3},
 				},
@@ -35,7 +35,7 @@ func TestMathParser(t *testing.T) {
 			wantAST: BinaryOp{
 				Op: '*',
 				Left: BinaryOp{
-					Op:   '+',
+					Op:    '+',
 					Left:  Number{Value: 1},
 					Right: Number{Value: 2},
 				},
@@ -46,13 +46,13 @@ func TestMathParser(t *testing.T) {
 		{
 			expr: "4 + 5 * (6 - 7)",
 			wantAST: BinaryOp{
-				Op: '+',
-				Left:  Number{Value: 4},
+				Op:   '+',
+				Left: Number{Value: 4},
 				Right: BinaryOp{
 					Op:   '*',
-					Left:  Number{Value: 5},
+					Left: Number{Value: 5},
 					Right: BinaryOp{
-						Op:   '-',
+						Op:    '-',
 						Left:  Number{Value: 6},
 						Right: Number{Value: 7},
 					},
@@ -65,12 +65,12 @@ func TestMathParser(t *testing.T) {
 			wantAST: BinaryOp{
 				Op: '+',
 				Left: BinaryOp{
-					Op:   '/',
+					Op:    '/',
 					Left:  Number{Value: 10},
 					Right: Number{Value: 2},
 				},
 				Right: BinaryOp{
-					Op:   '*',
+					Op:    '*',
 					Left:  Number{Value: 3},
 					Right: Number{Value: 2},
 				},
@@ -82,7 +82,7 @@ func TestMathParser(t *testing.T) {
 			wantAST: BinaryOp{
 				Op: '*',
 				Left: BinaryOp{
-					Op:   '+',
+					Op:    '+',
 					Left:  Number{Value: 1},
 					Right: Number{Value: 2},
 				},
@@ -91,13 +91,13 @@ func TestMathParser(t *testing.T) {
 			wantEval: 9,
 		},
 		{
-			expr: "  42",
-			wantAST: Number{Value: 42},
+			expr:     "  42",
+			wantAST:  Number{Value: 42},
 			wantEval: 42,
 		},
 		{
-			expr: "(((7)))",
-			wantAST: Number{Value: 7},
+			expr:     "(((7)))",
+			wantAST:  Number{Value: 7},
 			wantEval: 7,
 		},
 		{

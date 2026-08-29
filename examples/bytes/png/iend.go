@@ -33,8 +33,8 @@ func (c *IEND) CRC() uint32 {
 func (c *IEND) String() string {
 	b := new(strings.Builder)
 
-	b.WriteString(fmt.Sprintf("\t length: %v\n", c.length))
-	b.WriteString(fmt.Sprintf("\t crc: %v\n", c.crc))
+	fmt.Fprintf(b, "\t length: %v\n", c.length)
+	fmt.Fprintf(b, "\t crc: %v\n", c.crc)
 
 	return b.String()
 }

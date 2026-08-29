@@ -220,7 +220,7 @@ func TestBetween(t *testing.T) {
 	t.Parallel()
 
 	notBrackets := Satisfy("test", true, func(x byte) bool {
-		return !(x == byte(')') || x == byte('('))
+		return x != byte(')') && x != byte('(')
 	})
 
 	comb := Between(

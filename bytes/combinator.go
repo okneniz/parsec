@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 
 	"github.com/okneniz/parsec/common"
-	"golang.org/x/exp/constraints"
 )
 
 // Satisfy - succeeds for any byte for which the supplied function f returns true.
@@ -63,7 +62,7 @@ func Fail[S any](errMessage string) common.Combinator[byte, int, S] {
 }
 
 type Number interface {
-	constraints.Integer | constraints.Float
+	common.Integer | common.Float
 }
 
 // ReadAs - read n of bytes,

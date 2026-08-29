@@ -31,9 +31,7 @@ func Gt(
 	errMessage string,
 	t byte,
 ) common.Combinator[byte, int, byte] {
-	return Satisfy(errMessage, true, func(x byte) bool {
-		return x > t
-	})
+	return common.Gt[byte, int](errMessage, t)
 }
 
 // Gte - succeeds for any byte which greater than or equal input value.
@@ -43,9 +41,7 @@ func Gte(
 	errMessage string,
 	t byte,
 ) common.Combinator[byte, int, byte] {
-	return Satisfy(errMessage, true, func(x byte) bool {
-		return x >= t
-	})
+	return common.Gte[byte, int](errMessage, t)
 }
 
 // Lt - succeeds for any byte which less than input value.
@@ -55,9 +51,7 @@ func Lt(
 	errMessage string,
 	t byte,
 ) common.Combinator[byte, int, byte] {
-	return Satisfy(errMessage, true, func(x byte) bool {
-		return x < t
-	})
+	return common.Lt[byte, int](errMessage, t)
 }
 
 // Lte - succeeds for any byte which less than or equal input byte.
@@ -67,7 +61,5 @@ func Lte(
 	errMessage string,
 	t byte,
 ) common.Combinator[byte, int, byte] {
-	return Satisfy(errMessage, true, func(x byte) bool {
-		return x <= t
-	})
+	return common.Lte[byte, int](errMessage, t)
 }

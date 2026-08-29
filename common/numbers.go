@@ -1,12 +1,8 @@
 package common
 
-import (
-	"strconv"
+import "strconv"
 
-	"golang.org/x/exp/constraints"
-)
-
-func ParseInt[T any, P any, S constraints.Integer](
+func ParseInt[T any, P any, S Integer](
 	errMessage string,
 	base, bitSize int,
 	parseDigits Combinator[T, P, string],

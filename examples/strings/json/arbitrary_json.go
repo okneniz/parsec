@@ -1,6 +1,7 @@
 package json
 
 import (
+	"iter"
 	"math"
 	"math/rand/v2"
 
@@ -42,15 +43,15 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 		return JSNull{}
 	}
 
-	switch a.arbType.Generate() {
+	switch ohsnap.First(a.arbType.Generate()) {
 	case 0:
-		return JSBool{a.arbBool.Generate()}
+		return JSBool{ohsnap.First(a.arbBool.Generate())}
 	case 1:
-		return JSNumber{a.arbInt.Generate()}
+		return JSNumber{ohsnap.First(a.arbInt.Generate())}
 	case 2:
-		return JSString{a.arbString.Generate()}
+		return JSString{ohsnap.First(a.arbString.Generate())}
 	case 3:
-		size := a.arbComplexSize.Generate()
+		size := ohsnap.First(a.arbComplexSize.Generate())
 		arr := make([]JSON, size)
 
 		for i := 0; i < size; i++ {
@@ -59,11 +60,11 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 
 		return JSArray{arr}
 	case 4:
-		size := a.arbComplexSize.Generate()
+		size := ohsnap.First(a.arbComplexSize.Generate())
 
 		m := make(map[string]JSON, size)
 		for i := 0; i < size; i++ {
-			key := a.arbString.Generate()
+			key := ohsnap.First(a.arbString.Generate())
 			value := a.generate(deep)
 			m[key] = value
 		}
@@ -76,11 +77,14 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 	}
 }
 
-func (a *arbitraryJSON) Generate() JSON {
-	return a.generate(0)
+func (a *arbitraryJSON) Generate() iter.Seq[JSON] {
+	return func(yield func(JSON) bool) {
+		for yield(a.generate(0)) {
+		}
+	}
 }
 
-func (a *arbitraryJSON) Shrink(value JSON) []JSON {
+func (a *arbitraryJSON) Shrink(value JSON) iter.Seq[JSON] {
 	// without shrinking
-	return nil
+	return ohsnap.Empty[JSON]()
 }
