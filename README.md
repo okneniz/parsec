@@ -79,6 +79,7 @@ choice := strings.Choice(
 
 - text
   - [json](https://github.com/okneniz/parsec/tree/master/examples/strings/json)
+  - [xml](https://github.com/okneniz/parsec/tree/master/examples/strings/xml) - a streaming SAX parser: the document is a lazy `iter.Seq2` of events, one combinator step per event, with a shape-checking `Parse` on top
   - [timestamps](https://github.com/okneniz/parsec/tree/master/examples/strings/timestamps)
   - [credit cards](https://github.com/okneniz/parsec/tree/master/examples/strings/cards)
 - binary
