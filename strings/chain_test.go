@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/okneniz/parsec"
+	"github.com/stretchr/testify/require"
 )
 
 func TestChainl(t *testing.T) {
@@ -805,4 +806,120 @@ func TestManyTill(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestSeq(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		input  string
+		output []rune
+		err    parsec.Error[Position]
+	}{
+		{
+			input:  "",
+			output: nil,
+		},
+		{
+			input:  "aa",
+			output: []rune{'a', 'a'},
+		},
+		{
+			input:  "b",
+			output: nil,
+			err: parsec.NewParseError(
+				Position{
+					line:   0,
+					column: 0,
+					index:  0,
+				},
+				"expected a",
+			),
+		},
+		{
+			input:  "aab",
+			output: []rune{'a', 'a'},
+			err: parsec.NewParseError(
+				Position{
+					line:   0,
+					column: 2,
+					index:  2,
+				},
+				"expected a",
+			),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.input, func(t *testing.T) {
+			t.Parallel()
+
+			buf := Buffer([]rune(test.input))
+
+			seq, err := Seq(Try(Eq("expected a", 'a')))(buf)
+			require.NoError(t, err)
+
+			var got []rune
+			var last parsec.Error[Position]
+
+			for r, err := range seq {
+				if err != nil {
+					last = err
+
+					break
+				}
+
+				got = append(got, r)
+			}
+
+			require.Equal(t, test.output, got)
+			require.Equal(t, test.err, last)
+		})
+	}
+}
+
+func TestSeqEarlyStop(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		input string
+		take  int
+		next  rune
+	}{
+		{
+			input: "aab",
+			take:  1,
+			next:  'a',
+		},
+		{
+			input: "aab",
+			take:  2,
+			next:  'b',
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%s take %d", test.input, test.take), func(t *testing.T) {
+			t.Parallel()
+
+			buf := Buffer([]rune(test.input))
+
+			seq, err := Seq(Try(Eq("expected a", 'a')))(buf)
+			require.NoError(t, err)
+
+			taken := 0
+
+			for range seq {
+				taken++
+
+				if taken == test.take {
+					break
+				}
+			}
+
+			next, err := Try(Eq("expected next rune", test.next))(buf)
+			require.NoError(t, err)
+			require.Equal(t, test.next, next)
+		})
+	}
 }

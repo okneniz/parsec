@@ -1,5 +1,7 @@
 package parsec
 
+import "iter"
+
 // BinaryOp is a binary operation used by the Chain* combinators:
 // op takes the previously accumulated value and the next parsed value.
 type BinaryOp[T any] func(T, T) T
@@ -324,5 +326,38 @@ func ManyTill[T any, P any, S any, B any](
 		}
 
 		return result, nil
+	}
+}
+
+// Seq applies c lazily and repeatedly: running the combinator on a
+// buffer returns an iterator over the results of every step. Each
+// successful step yields its value with a nil error; the first
+// failing step is yielded with its error and ends the sequence, and
+// the end of the buffer ends it silently. The iterator advances the
+// shared buffer as the consumer ranges — an early break leaves the
+// buffer right after the last yielded value, ready for the next
+// combinator. Wrap c in Try to keep the buffer intact after the
+// failing step. Like Many, it never ends when c succeeds without
+// consuming input.
+func Seq[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, iter.Seq2[S, Error[P]]] {
+	return func(buffer Buffer[T, P]) (iter.Seq2[S, Error[P]], Error[P]) {
+		seq := func(yield func(S, Error[P]) bool) {
+			var null S
+
+			for !buffer.IsEOF() {
+				result, err := c(buffer)
+				if err != nil {
+					yield(null, err)
+
+					return
+				}
+
+				if !yield(result, nil) {
+					return
+				}
+			}
+		}
+
+		return seq, nil
 	}
 }

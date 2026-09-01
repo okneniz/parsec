@@ -143,3 +143,26 @@ func ExampleChainl1() {
 	fmt.Println(result, err)
 	// Output: 4 <nil>
 }
+
+// Seq runs a combinator as a lazy sequence over the buffer: every
+// successful step yields its value, the first failure yields its
+// error and ends the sequence, and the buffer stays in place for the
+// next combinator.
+func ExampleSeq() {
+	buf := Buffer([]rune("aab"))
+
+	seq, _ := Seq(Try(Eq("expected a", 'a')))(buf)
+
+	for r, err := range seq {
+		fmt.Println(r, err)
+	}
+
+	next, err := Try(Eq("expected b", 'b'))(buf)
+	fmt.Println(next, err)
+
+	// Output:
+	// 97 <nil>
+	// 97 <nil>
+	// 0 Parse error at line=0 column=2 index=2: expected a
+	// 98 <nil>
+}

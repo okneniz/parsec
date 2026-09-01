@@ -1,6 +1,8 @@
 package bytes
 
 import (
+	"iter"
+
 	"github.com/okneniz/parsec"
 )
 
@@ -119,4 +121,20 @@ func ManyTill[T any, S any](
 	end parsec.Combinator[byte, int, S],
 ) parsec.Combinator[byte, int, []T] {
 	return parsec.ManyTill[byte, int, T](cap, errMessage, c, end)
+}
+
+// Seq applies c lazily and repeatedly: running the combinator on a
+// buffer returns an iterator over the results of every step. Each
+// successful step yields its value with a nil error; the first
+// failing step is yielded with its error and ends the sequence, and
+// the end of the buffer ends it silently. The iterator advances the
+// shared buffer as the consumer ranges — an early break leaves the
+// buffer right after the last yielded value, ready for the next
+// combinator. Wrap c in Try to keep the buffer intact after the
+// failing step. Like Many, it never ends when c succeeds without
+// consuming input.
+func Seq[T any](
+	c parsec.Combinator[byte, int, T],
+) parsec.Combinator[byte, int, iter.Seq2[T, parsec.Error[int]]] {
+	return parsec.Seq[byte, int, T](c)
 }

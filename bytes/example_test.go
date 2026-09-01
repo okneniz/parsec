@@ -45,3 +45,26 @@ func ExampleRange() {
 	fmt.Printf("%q %v\n", string(result), err)
 	// Output: "hi!" <nil>
 }
+
+// Seq runs a combinator as a lazy sequence over the buffer: every
+// successful step yields its value, the first failure yields its
+// error and ends the sequence, and the buffer stays in place for the
+// next combinator.
+func ExampleSeq() {
+	buf := Buffer([]byte("aab"))
+
+	seq, _ := Seq(Try(Eq("expected a", 'a')))(buf)
+
+	for b, err := range seq {
+		fmt.Println(b, err)
+	}
+
+	next, err := Try(Eq("expected b", 'b'))(buf)
+	fmt.Println(next, err)
+
+	// Output:
+	// 97 <nil>
+	// 97 <nil>
+	// 0 Parse error at 2: expected a
+	// 98 <nil>
+}
