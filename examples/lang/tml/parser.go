@@ -31,6 +31,12 @@ func defaultFixity() map[Lexeme]fixity {
 	}
 }
 
+// parser holds the fixity table. Every method is a constructor: the
+// combinators it needs are built once, above the returned closure,
+// and the closure captures them. The exception is a reference that
+// would loop the build — back into expr from ifExp, fnExp, parenExp,
+// and letExp, into atpat from tuplePat, into decList from letExp —
+// those stay in the body, built once per invocation.
 type parser struct {
 	fixity map[Lexeme]fixity
 }
@@ -101,9 +107,11 @@ func (p *parser) decList(
 // keyword is already consumed.
 func (p *parser) valDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Decl] {
 	eq := tokens.Exact(lex, KindOperator, "=")
+	atpat := p.atpat(lex)
+	expr := p.expr(lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Decl, parsec.Error[Position]) {
-		pat, perr := p.atpat(lex)(buf)
+		pat, perr := atpat(buf)
 		if perr != nil {
 			return nil, perr
 		}
@@ -112,7 +120,7 @@ func (p *parser) valDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 			return nil, err
 		}
 
-		e, eerr := p.expr(lex)(buf)
+		e, eerr := expr(buf)
 		if eerr != nil {
 			return nil, eerr
 		}
@@ -126,10 +134,12 @@ func (p *parser) valDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 // is already consumed.
 func (p *parser) funDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Decl] {
 	eq := tokens.Exact(lex, KindOperator, "=")
+	ident := tokens.OfKind(lex, KindIdent)
 	args := parsec.Many(0, parsec.Try(p.atpat(lex)))
+	expr := p.expr(lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Decl, parsec.Error[Position]) {
-		name, nerr := tokens.OfKind(lex, KindIdent)(buf)
+		name, nerr := ident(buf)
 		if nerr != nil {
 			return nil, nerr
 		}
@@ -144,7 +154,7 @@ func (p *parser) funDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 			return nil, err
 		}
 
-		body, berr := p.expr(lex)(buf)
+		body, berr := expr(buf)
 		if berr != nil {
 			return nil, berr
 		}
@@ -191,7 +201,11 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 	elseKw := tokens.Exact(lex, KindKeyword, "else")
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		cond, cerr := p.expr(lex)(buf)
+		// expr's table builds this form, so the reference stays in
+		// the body; one build serves all three branches
+		expr := p.expr(lex)
+
+		cond, cerr := expr(buf)
 		if cerr != nil {
 			return nil, cerr
 		}
@@ -200,7 +214,7 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 			return nil, err
 		}
 
-		then, terr := p.expr(lex)(buf)
+		then, terr := expr(buf)
 		if terr != nil {
 			return nil, terr
 		}
@@ -209,7 +223,7 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 			return nil, err
 		}
 
-		els, eerr := p.expr(lex)(buf)
+		els, eerr := expr(buf)
 		if eerr != nil {
 			return nil, eerr
 		}
@@ -222,9 +236,10 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 // keyword is already consumed.
 func (p *parser) fnExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
 	arrow := tokens.Exact(lex, KindOperator, "=>")
+	atpat := p.atpat(lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		arg, aerr := p.atpat(lex)(buf)
+		arg, aerr := atpat(buf)
 		if aerr != nil {
 			return nil, aerr
 		}
@@ -233,6 +248,8 @@ func (p *parser) fnExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 			return nil, err
 		}
 
+		// the reference back into expr's table cannot move above
+		// the closure
 		body, berr := p.expr(lex)(buf)
 		if berr != nil {
 			return nil, berr
@@ -295,9 +312,10 @@ func resolveInfix(items []orItem, fix map[Lexeme]fixity) Expr {
 // operators and resolves it with the fixity table.
 func (p *parser) infexp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
 	op := parsec.Try(tokens.Satisfy(lex, "operator", p.isOpToken))
+	appexp := p.appexp(lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		first, err := p.appexp(lex)(buf)
+		first, err := appexp(buf)
 		if err != nil {
 			return nil, err
 		}
@@ -310,7 +328,7 @@ func (p *parser) infexp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, 
 				break
 			}
 
-			rhs, rerr := p.appexp(lex)(buf)
+			rhs, rerr := appexp(buf)
 			if rerr != nil {
 				return nil, parsec.NewParseError(
 					buf.Position(),
@@ -434,7 +452,12 @@ func (p *parser) parenExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune
 	comma := parsec.Try(tokens.Exact(lex, KindSymbol, ","))
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		first, ferr := p.expr(lex)(buf)
+		// atexp's table builds this form under expr's subtree, so
+		// the reference stays in the body; one build serves the
+		// whole tuple
+		expr := p.expr(lex)
+
+		first, ferr := expr(buf)
 		if ferr != nil {
 			return nil, ferr
 		}
@@ -446,7 +469,7 @@ func (p *parser) parenExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune
 				break
 			}
 
-			e, eerr := p.expr(lex)(buf)
+			e, eerr := expr(buf)
 			if eerr != nil {
 				return nil, eerr
 			}
@@ -473,6 +496,8 @@ func (p *parser) letExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, 
 	endKw := tokens.Exact(lex, KindKeyword, "end")
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
+		// both references sit under atexp's table inside expr's
+		// subtree and cannot move above the closure
 		decls, derr := p.decList(lex)(buf)
 		if derr != nil {
 			return nil, derr
@@ -570,10 +595,14 @@ func (p *parser) tuplePat(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune
 			return nil, err
 		}
 
+		// atpat's Choice builds this form, so the reference stays
+		// in the body; one build serves every element
+		atpat := p.atpat(lex)
+
 		var items []Pat
 
 		for {
-			pat, perr := p.atpat(lex)(buf)
+			pat, perr := atpat(buf)
 			if perr != nil {
 				return nil, perr
 			}
