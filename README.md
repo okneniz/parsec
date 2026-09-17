@@ -61,7 +61,7 @@ packages build on it:
 | [parsec/strings](https://pkg.go.dev/github.com/okneniz/parsec/strings) | rune input, line/column positions, text helpers |
 | [parsec/bytes](https://pkg.go.dev/github.com/okneniz/parsec/bytes) | binary input, big/little-endian readers |
 | [parsec/tokens](https://pkg.go.dev/github.com/okneniz/parsec/tokens) | token streams for two-stage parsers |
-| [parsec/lang](https://pkg.go.dev/github.com/okneniz/parsec/lang) | lexers and expression machinery from a declarative Definition |
+| [parsec/lang](https://pkg.go.dev/github.com/okneniz/parsec/lang) | lexers and expression machinery from a declarative Definition, with the forms of a language declared on its Parser |
 
 ### Backtracking
 

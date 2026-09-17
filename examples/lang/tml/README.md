@@ -28,8 +28,8 @@ pipeline:
 | file | stage | the classic technique inside |
 | --- | --- | --- |
 | `lexer.go` | text → tokens | maximal munch, nested comments; produces `tokens.Token` from the shared [tokens](../../tokens) layer |
-| `parser.go` | tokens → AST | recursive descent with a fixity table and the shunting-yard resolution of infix chains |
-| `ast.go` | AST | s-expression printing, so tests read like trees |
+| `parser.go` | tokens → AST | the expression ladder of [lang](../../../lang): a `lang.Parser` with the operators and the forms — if, fn, let, `~`, `()` — declared on it, and recursive descent around it for declarations and patterns |
+| `ast.go` | AST | s-expression printing, so tests read like trees; the nodes the lang ladder produces — literals, names, applications, infixes — are shared with lang as is |
 | `types.go` | type syntax | mutable type variables, `prune`/`unify` with occurs check, `generalize`/`instantiate` |
 | `infer.go` | AST → types | Hindley-Milner inference with let-polymorphism |
 | `value.go` | runtime values | integers, booleans, tuples, closures |

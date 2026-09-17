@@ -71,9 +71,11 @@ type Fixity struct {
 }
 
 type Parser struct {
-	fixity  map[string]Fixity
-	prefix  map[string]struct{}
-	postfix map[string]struct{}
+	fixity      map[string]Fixity
+	prefix      map[string]struct{}
+	postfix     map[string]struct{}
+	exprForms   []Form
+	prefixForms []Form
 }
 
 // NewParser creates a parser with an empty operator table.
@@ -124,33 +126,114 @@ func (p *Parser) Postfix(ops ...string) *Parser {
 	return p
 }
 
+// ExprForm declares forms of the expression level, tried before the
+// infix chain: the if e then e else e and fn p => e of sml live
+// here, above every operator. An expression form is not an operand —
+// 1 + if e then e else e does not parse — and it consumes its whole
+// rest itself, subexpressions included, through the ladder.
+func (p *Parser) ExprForm(forms ...Form) *Parser {
+	p.exprForms = append(p.exprForms, forms...)
+
+	return p
+}
+
+// PrefixForm declares forms of the operand level, tried among the
+// operands before the built-in ones: a sizeof e reads its operand
+// through the ladder's Atom and so binds tighter than any infix
+// operator, a cast (t) e likewise; a form that owns its
+// subexpressions wholly — a let, a parenthesized tuple — parses them
+// through the ladder's Expr.
+func (p *Parser) PrefixForm(forms ...Form) *Parser {
+	p.prefixForms = append(p.prefixForms, forms...)
+
+	return p
+}
+
+// Ladder hands a form the recursive entry points of the expression
+// machinery, so the form parses its subexpressions with the same
+// parser it is part of. Expr is the full expression, forms included;
+// Atom is one operand, with its prefix and postfix operators — the
+// level a prefix operator applies to. Lex is the lexer the whole
+// ladder reads through.
+type Ladder struct {
+	Lex  tokens.Lexer[Kind, Lexeme]
+	Expr parsec.Combinator[rune, strings.Position, Expr]
+	Atom parsec.Combinator[rune, strings.Position, Expr]
+}
+
+// A Form builds the combinator of a syntactic form that does not
+// reduce to an operator lexeme: a keyword-led form such as sizeof e
+// or if e then e else e, or a form led by a punctuation token, a
+// cast (t) e, a parenthesized tuple. The forms of a Parser are built
+// once, when its Expr runs; everything a form needs besides the
+// ladder it builds above the returned closure.
+type Form func(Ladder) parsec.Combinator[rune, strings.Position, Expr]
+
 type Operand func(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, strings.Position, Expr]
 
 func (p *Parser) Expr(
 	lex tokens.Lexer[Kind, Lexeme],
 	extras ...Operand,
 ) parsec.Combinator[rune, strings.Position, Expr] {
-	steps := make([]parsec.Combinator[rune, strings.Position, Expr], len(extras))
+	steps := make([]parsec.Combinator[rune, strings.Position, Expr], len(extras), len(extras)+len(p.prefixForms))
 
 	for i, extra := range extras {
 		steps[i] = extra(lex)
 	}
 
-	return p.expr(lex, steps)
+	// the forms are part of the ladder they recurse into, so the
+	// ladder hands out closures that read full and atom at call
+	// time, after the whole ladder is built
+	ladder := Ladder{Lex: lex}
+
+	var full parsec.Combinator[rune, strings.Position, Expr]
+	var atom parsec.Combinator[rune, strings.Position, Expr]
+
+	ladder.Expr = func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		return full(buf)
+	}
+
+	ladder.Atom = func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		return atom(buf)
+	}
+
+	for _, form := range p.prefixForms {
+		steps = append(steps, form(ladder))
+	}
+
+	full = p.expr(lex, steps, ladder.Expr)
+
+	if len(p.exprForms) > 0 {
+		alts := make([]parsec.Combinator[rune, strings.Position, Expr], 0, len(p.exprForms)+1)
+
+		for _, form := range p.exprForms {
+			alts = append(alts, parsec.Try(form(ladder)))
+		}
+
+		full = parsec.Choice("expected expression", append(alts, full)...)
+	}
+
+	atom = p.atom(lex, steps, true, ladder.Expr)
+
+	return full
 }
 
 func (p *Parser) expr(
 	lex tokens.Lexer[Kind, Lexeme],
 	steps []parsec.Combinator[rune, strings.Position, Expr],
+	rec parsec.Combinator[rune, strings.Position, Expr],
 ) parsec.Combinator[rune, strings.Position, Expr] {
+	// an operator is a lexeme with fixity status, whatever kind the
+	// lexer gave its token: the reserved words andalso and orelse of
+	// sml are infix operators of their own precedence level
 	op := parsec.Try(tokens.Satisfy(lex, "operator", func(t Token) bool {
 		_, hasFixity := p.fixity[string(t.Lexeme)]
 
-		return t.Kind == KindOperator && hasFixity
+		return hasFixity
 	}))
 
 	return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		first, err := p.appexp(lex, steps)(buf)
+		first, err := p.appexp(lex, steps, rec)(buf)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +246,7 @@ func (p *Parser) expr(
 				break
 			}
 
-			rhs, rerr := p.appexp(lex, steps)(buf)
+			rhs, rerr := p.appexp(lex, steps, rec)(buf)
 			if rerr != nil {
 				return nil, parsec.NewParseError(
 					buf.Position(),
@@ -181,9 +264,10 @@ func (p *Parser) expr(
 func (p *Parser) appexp(
 	lex tokens.Lexer[Kind, Lexeme],
 	steps []parsec.Combinator[rune, strings.Position, Expr],
+	rec parsec.Combinator[rune, strings.Position, Expr],
 ) parsec.Combinator[rune, strings.Position, Expr] {
-	first := p.atom(lex, steps, true)
-	args := parsec.Many(0, parsec.Try(p.atom(lex, steps, false)))
+	first := p.atom(lex, steps, true, rec)
+	args := parsec.Many(0, parsec.Try(p.atom(lex, steps, false, rec)))
 
 	return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
 		e, err := first(buf)
@@ -205,8 +289,9 @@ func (p *Parser) atom(
 	lex tokens.Lexer[Kind, Lexeme],
 	steps []parsec.Combinator[rune, strings.Position, Expr],
 	operandStart bool,
+	rec parsec.Combinator[rune, strings.Position, Expr],
 ) parsec.Combinator[rune, strings.Position, Expr] {
-	primary := p.primary(lex, steps, operandStart)
+	primary := p.primary(lex, steps, operandStart, rec)
 	postfix := parsec.Many(0, parsec.Try(tokens.Satisfy(lex, "postfix operator", func(t Token) bool {
 		_, isPostfix := p.postfix[string(t.Lexeme)]
 
@@ -233,6 +318,7 @@ func (p *Parser) primary(
 	lex tokens.Lexer[Kind, Lexeme],
 	steps []parsec.Combinator[rune, strings.Position, Expr],
 	operandStart bool,
+	rec parsec.Combinator[rune, strings.Position, Expr],
 ) parsec.Combinator[rune, strings.Position, Expr] {
 	intLit := parsec.Cast(tokens.OfKind(lex, KindInt), func(t Token) (Expr, error) {
 		value, _ := strconv.ParseInt(string(t.Lexeme), 10, 64)
@@ -264,12 +350,14 @@ func (p *Parser) primary(
 	open := tokens.Exact(lex, KindSymbol, "(")
 	closeParen := tokens.Exact(lex, KindSymbol, ")")
 
+	// rec is the full expression, the expression forms included: a
+	// parenthesized expression is again a full one
 	paren := func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
 		if _, err := open(buf); err != nil {
 			return nil, err
 		}
 
-		e, err := p.expr(lex, steps)(buf)
+		e, err := rec(buf)
 		if err != nil {
 			return nil, err
 		}
@@ -287,7 +375,7 @@ func (p *Parser) primary(
 			return nil, err
 		}
 
-		sub, serr := p.atom(lex, steps, true)(buf)
+		sub, serr := p.atom(lex, steps, true, rec)(buf)
 		if serr != nil {
 			return nil, serr
 		}

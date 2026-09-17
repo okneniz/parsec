@@ -13,11 +13,16 @@
 // The package is a two-stage pipeline in miniature: a rune-level
 // lexer built with github.com/okneniz/parsec/strings — nested
 // comments and maximal-munch operators included — feeds a lazy
-// github.com/okneniz/parsec/tokens buffer which lexes on demand, and
-// the parser runs over it with the same generic core: a static fixity
-// table and the shunting-yard resolution of infix chains. The rune
-// position doubles as the token position, so the tokens themselves
-// stay coordinate-free.
+// github.com/okneniz/parsec/tokens buffer which lexes on demand. The
+// expression ladder is github.com/okneniz/parsec/lang: tiny ml
+// declares its operators and the reserved words andalso and orelse —
+// infixes of their own precedence level — on a lang.Parser, and its
+// forms with it: if and fn at the expression level, let, the
+// negation ~ and the parenthesis at the operand level, each form
+// parsing its subexpressions through the ladder it is part of.
+// Declarations and patterns are the package's own recursive descent
+// around the ladder. The rune position doubles as the token position,
+// so the tokens themselves stay coordinate-free.
 //
 // On top of the parser sit the two classic semantic passes:
 //

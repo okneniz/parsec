@@ -24,7 +24,17 @@
 // strings.Position, Expr], composable with the rest of the library.
 // The Parser holds a small fixity table; its Expr parses prefix,
 // postfix and infix operator chains with the declared precedences
-// and associativities, and the extras of Parser.Expr are token-level
-// operand combinators for the rest of the syntax: let-expressions,
-// calls, indexing.
+// and associativities. An operator is a lexeme with fixity status,
+// whatever kind the lexer gave its token — the reserved words
+// andalso and orelse of sml are infix operators of their own level.
+//
+// The forms a language has beyond operators — if e then e else e
+// above the infix chain, a sizeof e or a let among the operands —
+// rarely reduce to an operator lexeme. ExprForm declares the ones of
+// the expression level, PrefixForm the ones of the operand level,
+// and the Ladder each form receives hands it the recursion: Expr is
+// the full expression, forms included, Atom one operand, Lex the
+// lexer the ladder reads through. The extras of Parser.Expr remain
+// the plain token-level operand combinators for the rest of the
+// syntax: boolean literals, calls, indexing.
 package lang

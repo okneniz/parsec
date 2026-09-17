@@ -2,47 +2,43 @@ package tml
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/okneniz/parsec"
+	"github.com/okneniz/parsec/lang"
 	"github.com/okneniz/parsec/strings"
 	"github.com/okneniz/parsec/tokens"
 )
 
-// fixity is the infix status of an operator: a precedence level and
-// an associativity. The andalso and orelse keywords live in the same
-// space, below every operator level.
-type fixity struct {
-	prec  int
-	right bool
-}
-
-// defaultFixity is the one and only fixity table of tiny ml: the
-// language has no infix declarations, so the table is static.
-func defaultFixity() map[Lexeme]fixity {
-	return map[Lexeme]fixity{
-		"*": {7, false}, "/": {7, false},
-		"+": {6, false}, "-": {6, false},
-		"=": {4, false}, "<>": {4, false}, ">": {4, false},
-		">=": {4, false}, "<": {4, false}, "<=": {4, false},
-		"andalso": {-1, true},
-		"orelse":  {-2, true},
-	}
-}
-
-// parser holds the fixity table. Every method is a constructor: the
+// parser holds the expression ladder of the language. The ladder
+// itself is a lang.Parser: tiny ml declares its operators and its
+// forms on it — if and fn are forms of the expression level, let,
+// the negation ~ and the parenthesis are forms of the operand
+// level. Every method of this type is a constructor of one part
+// around the ladder, the declarations and the patterns: the
 // combinators it needs are built once, above the returned closure,
-// and the closure captures them. The exception is a reference that
-// would loop the build — back into expr from ifExp, fnExp, parenExp,
-// and letExp, into atpat from tuplePat, into decList from letExp —
-// those stay in the body, built once per invocation.
+// and the references that would loop the build — back into the
+// ladder from a form, into atpat from tuplePat — come with the
+// ladder or stay in the body.
 type parser struct {
-	fixity map[Lexeme]fixity
+	expr parsec.Combinator[rune, Position, Expr]
 }
 
 func newParser() *parser {
-	return &parser{fixity: defaultFixity()}
+	p := &parser{}
+
+	ops := lang.NewParser().
+		Infix(7, "*", "/").
+		Infix(6, "+", "-").
+		Infix(4, "=", "<>", ">", ">=", "<", "<=").
+		InfixRight(-1, "andalso").
+		InfixRight(-2, "orelse").
+		ExprForm(p.ifForm, p.fnForm).
+		PrefixForm(p.letForm, p.negForm, p.parenForm)
+
+	p.expr = ops.Expr(lexer, boolOperand("true", true), boolOperand("false", false))
+
+	return p
 }
 
 // Parse lexes src and parses it as a tiny ml program: a sequence of
@@ -108,7 +104,6 @@ func (p *parser) decList(
 func (p *parser) valDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Decl] {
 	eq := tokens.Exact(lex, KindOperator, "=")
 	atpat := p.atpat(lex)
-	expr := p.expr(lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Decl, parsec.Error[Position]) {
 		pat, perr := atpat(buf)
@@ -120,7 +115,9 @@ func (p *parser) valDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 			return nil, err
 		}
 
-		e, eerr := expr(buf)
+		// the ladder is assigned after the declarations are built —
+		// the field is read here, at call time
+		e, eerr := p.expr(buf)
 		if eerr != nil {
 			return nil, eerr
 		}
@@ -136,7 +133,6 @@ func (p *parser) funDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 	eq := tokens.Exact(lex, KindOperator, "=")
 	ident := tokens.OfKind(lex, KindIdent)
 	args := parsec.Many(0, parsec.Try(p.atpat(lex)))
-	expr := p.expr(lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Decl, parsec.Error[Position]) {
 		name, nerr := ident(buf)
@@ -154,7 +150,9 @@ func (p *parser) funDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 			return nil, err
 		}
 
-		body, berr := expr(buf)
+		// the ladder is assigned after the declarations are built —
+		// the field is read here, at call time
+		body, berr := p.expr(buf)
 		if berr != nil {
 			return nil, berr
 		}
@@ -165,47 +163,22 @@ func (p *parser) funDecl(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune,
 }
 
 // ---------------------------------------------------------------------------
-// Expressions
+// Expression forms
 
-// expr parses a full expression: one of the special forms if and fn,
-// or an infix chain. The special forms dispatch through a MapAs table
-// keyed by the whole leading token — a discarded prefix, the form
-// owns the input from there; anything else is the infix chain. A new
-// special form is a new table key.
-func (p *parser) expr(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	token := tokens.Satisfy(
-		lex,
-		"expected expression",
-		parsec.Anything[Token],
-	)
-
-	form := parsec.MapAs(
-		"expected expression",
-		map[Token]parsec.Combinator[rune, Position, Expr]{
-			{Kind: KindKeyword, Lexeme: "if"}: p.ifExp(lex),
-			{Kind: KindKeyword, Lexeme: "fn"}: p.fnExp(lex),
-		},
-		token,
-	)
-
-	return parsec.Choice("expected expression",
-		parsec.Try(form),
-		p.infexp(lex),
-	)
-}
-
-// ifExp parses the rest of an if-expression, exp then exp else exp;
-// the if keyword is already consumed.
-func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	thenKw := tokens.Exact(lex, KindKeyword, "then")
-	elseKw := tokens.Exact(lex, KindKeyword, "else")
+// ifForm builds the if-expression form, if exp then exp else exp. It
+// is a form of the expression level — an if is not an operand, and
+// every branch is again a full expression.
+func (p *parser) ifForm(l lang.Ladder) parsec.Combinator[rune, Position, Expr] {
+	ifKw := tokens.Exact(l.Lex, KindKeyword, "if")
+	thenKw := tokens.Exact(l.Lex, KindKeyword, "then")
+	elseKw := tokens.Exact(l.Lex, KindKeyword, "else")
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		// expr's table builds this form, so the reference stays in
-		// the body; one build serves all three branches
-		expr := p.expr(lex)
+		if _, err := ifKw(buf); err != nil {
+			return nil, err
+		}
 
-		cond, cerr := expr(buf)
+		cond, cerr := l.Expr(buf)
 		if cerr != nil {
 			return nil, cerr
 		}
@@ -214,7 +187,7 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 			return nil, err
 		}
 
-		then, terr := expr(buf)
+		then, terr := l.Expr(buf)
 		if terr != nil {
 			return nil, terr
 		}
@@ -223,7 +196,7 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 			return nil, err
 		}
 
-		els, eerr := expr(buf)
+		els, eerr := l.Expr(buf)
 		if eerr != nil {
 			return nil, eerr
 		}
@@ -232,13 +205,18 @@ func (p *parser) ifExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 	}
 }
 
-// fnExp parses the rest of an fn-expression, pat => exp; the fn
-// keyword is already consumed.
-func (p *parser) fnExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	arrow := tokens.Exact(lex, KindOperator, "=>")
-	atpat := p.atpat(lex)
+// fnForm builds the function form, fn pat => exp. It is a form of
+// the expression level, like if: a lambda is not an operand.
+func (p *parser) fnForm(l lang.Ladder) parsec.Combinator[rune, Position, Expr] {
+	fnKw := tokens.Exact(l.Lex, KindKeyword, "fn")
+	arrow := tokens.Exact(l.Lex, KindOperator, "=>")
+	atpat := p.atpat(l.Lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
+		if _, err := fnKw(buf); err != nil {
+			return nil, err
+		}
+
 		arg, aerr := atpat(buf)
 		if aerr != nil {
 			return nil, aerr
@@ -248,9 +226,7 @@ func (p *parser) fnExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 			return nil, err
 		}
 
-		// the reference back into expr's table cannot move above
-		// the closure
-		body, berr := p.expr(lex)(buf)
+		body, berr := l.Expr(buf)
 		if berr != nil {
 			return nil, berr
 		}
@@ -259,180 +235,58 @@ func (p *parser) fnExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 	}
 }
 
-// orItem is one element of a flat infix sequence: an operand, or an
-// operator when op is set.
-type orItem struct {
-	op   Lexeme
-	expr Expr
-}
-
-// resolveInfix folds a flat operand-operator sequence into a tree with
-// the shunting-yard algorithm, using the fixity table for precedence
-// and associativity.
-func resolveInfix(items []orItem, fix map[Lexeme]fixity) Expr {
-	var vals []Expr
-	var ops []Lexeme
-
-	apply := func() {
-		r := vals[len(vals)-1]
-		l := vals[len(vals)-2]
-		vals = vals[:len(vals)-2]
-		op := ops[len(ops)-1]
-		ops = ops[:len(ops)-1]
-		vals = append(vals, Infix{Op: string(op), L: l, R: r})
-	}
-
-	for _, it := range items {
-		if it.op == "" {
-			vals = append(vals, it.expr)
-			continue
-		}
-
-		cur := fix[it.op]
-		for len(ops) > 0 {
-			top := fix[ops[len(ops)-1]]
-			if top.prec > cur.prec || top.prec == cur.prec && !cur.right {
-				apply()
-			} else {
-				break
-			}
-		}
-
-		ops = append(ops, it.op)
-	}
-
-	for len(ops) > 0 {
-		apply()
-	}
-
-	return vals[0]
-}
-
-// infexp parses a flat sequence of applications separated by infix
-// operators and resolves it with the fixity table.
-func (p *parser) infexp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	op := parsec.Try(tokens.Satisfy(lex, "operator", p.isOpToken))
-	appexp := p.appexp(lex)
+// letForm builds the let-expression form, decl+ in exp end. It is a
+// form of the operand level — a let is an atom, f let ... end applies
+// f — and its body is a full expression.
+func (p *parser) letForm(l lang.Ladder) parsec.Combinator[rune, Position, Expr] {
+	letKw := tokens.Exact(l.Lex, KindKeyword, "let")
+	inKw := tokens.Exact(l.Lex, KindKeyword, "in")
+	endKw := tokens.Exact(l.Lex, KindKeyword, "end")
+	decs := p.decList(l.Lex)
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		first, err := appexp(buf)
-		if err != nil {
+		if _, err := letKw(buf); err != nil {
 			return nil, err
 		}
 
-		items := []orItem{{expr: first}}
-
-		for {
-			next, oerr := op(buf)
-			if oerr != nil {
-				break
-			}
-
-			rhs, rerr := appexp(buf)
-			if rerr != nil {
-				return nil, parsec.NewParseError(
-					buf.Position(),
-					fmt.Sprintf("expected operand after operator %s", next.Lexeme),
-				)
-			}
-
-			items = append(items, orItem{op: next.Lexeme}, orItem{expr: rhs})
+		decls, derr := decs(buf)
+		if derr != nil {
+			return nil, derr
 		}
 
-		return resolveInfix(items, p.fixity), nil
-	}
-}
+		if len(decls) == 0 {
+			return nil, parsec.NewParseError(buf.Position(), "expected declaration in let")
+		}
 
-// isOpToken reports whether the token acts as an infix operator: an
-// operator token with fixity status, or the andalso and orelse
-// keywords, which live in the same space below every operator level.
-func (p *parser) isOpToken(t Token) bool {
-	if t.Kind == KindKeyword {
-		return t.Lexeme == "andalso" || t.Lexeme == "orelse"
-	}
-
-	_, hasFixity := p.fixity[t.Lexeme]
-	return t.Kind == KindOperator && hasFixity
-}
-
-// appexp parses left-nested application: one atom, then as many
-// argument atoms as parse, each attempt backtracked when it fails.
-// Application binds tighter than any infix operator, and the infix
-// operators are their own token kind — f x + y is (f x) + y by the
-// dispatch, not by a predicate.
-func (p *parser) appexp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	first := p.atexp(lex)
-	args := parsec.Many(0, parsec.Try(first))
-
-	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		e, err := first(buf)
-		if err != nil {
+		if _, err := inKw(buf); err != nil {
 			return nil, err
 		}
 
-		rest, _ := args(buf)
-
-		for _, arg := range rest {
-			e = App{Fn: e, Arg: arg}
+		body, berr := l.Expr(buf)
+		if berr != nil {
+			return nil, berr
 		}
 
-		return e, nil
+		if _, err := endKw(buf); err != nil {
+			return nil, err
+		}
+
+		return Let{Decls: decls, Body: body}, nil
 	}
 }
 
-// atexp parses one atomic expression. The dispatch is a cascade:
-// the forms whose whole leading token identifies them — let, the
-// boolean literals, the negation ~, the opening parenthesis — are
-// looked up in a MapAs table keyed by the token itself, a Token is
-// comparable; the token is a discarded prefix, the table entry owns
-// the rest. What is left has no such prefix — an integer has no
-// fixed lexeme — and stays a Choice of Try-wrapped alternatives, the
-// idiom of lang.primary. A new form with a fixed leading token is a
-// new table key.
-func (p *parser) atexp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	exactForms := map[Token]parsec.Combinator[rune, Position, Expr]{
-		{Kind: KindKeyword, Lexeme: "let"}:   p.letExp(lex),
-		{Kind: KindKeyword, Lexeme: "true"}:  parsec.Const[rune, Position, Expr](BoolLit{Value: true}),
-		{Kind: KindKeyword, Lexeme: "false"}: parsec.Const[rune, Position, Expr](BoolLit{Value: false}),
-		{Kind: KindOperator, Lexeme: "~"}:    p.negExp(lex),
-		{Kind: KindSymbol, Lexeme: "("}:      p.parenExp(lex),
-	}
-
-	token := tokens.Satisfy(lex, "expected expression", parsec.Anything[Token])
-	form := parsec.MapAs("expected expression", exactForms, token)
-
-	intLit := parsec.Cast(tokens.OfKind(lex, KindInt), func(t Token) (Expr, error) {
-		value, _ := strconv.ParseInt(string(t.Lexeme), 10, 64)
-		return IntLit{Text: string(t.Lexeme), Value: value}, nil
-	})
-
-	ident := parsec.Cast(
-		tokens.OfKind(lex, KindIdent),
-		func(t Token) (Expr, error) {
-			return Ident{Name: string(t.Lexeme)}, nil
-		},
-	)
-
-	return parsec.Choice("expected expression",
-		parsec.Try(form),
-		parsec.Try(intLit),
-		parsec.Try(ident),
-	)
-}
-
-// isBoolToken reports whether the token is a boolean literal.
-func isBoolToken(t Token) bool {
-	return t.Kind == KindKeyword && (t.Lexeme == "true" || t.Lexeme == "false")
-}
-
-// negExp parses the rest of a negated literal, ~3, with the negation
-// glued to the literal so that f ~3 is f applied to ~3, not f ~
-// applied to 3. A lone ~ is the negation function itself. The tilde
-// is already consumed by the dispatch table.
-func (p *parser) negExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	intLit := parsec.Try(tokens.OfKind(lex, KindInt))
+// negForm builds the negated literal ~3, with the negation glued to
+// the literal so that f ~3 is f applied to ~3, not f ~ applied to 3.
+// A lone ~ is the negation function itself.
+func (p *parser) negForm(l lang.Ladder) parsec.Combinator[rune, Position, Expr] {
+	tilde := tokens.Exact(l.Lex, KindOperator, "~")
+	intLit := parsec.Try(tokens.OfKind(l.Lex, KindInt))
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
+		if _, err := tilde(buf); err != nil {
+			return nil, err
+		}
+
 		lit, lerr := intLit(buf)
 		if lerr != nil {
 			return Ident{Name: "~"}, nil
@@ -444,20 +298,19 @@ func (p *parser) negExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, 
 	}
 }
 
-// parenExp parses the rest of a parenthesized expression, (e) and
-// tuple expressions (e1, ..., en); the opening parenthesis is
-// already consumed by the dispatch table.
-func (p *parser) parenExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	closeParen := tokens.Exact(lex, KindSymbol, ")")
-	comma := parsec.Try(tokens.Exact(lex, KindSymbol, ","))
+// parenForm builds the grouping form (e) and the tuple form
+// (e1, ..., en); every element is again a full expression.
+func (p *parser) parenForm(l lang.Ladder) parsec.Combinator[rune, Position, Expr] {
+	open := tokens.Exact(l.Lex, KindSymbol, "(")
+	closeParen := tokens.Exact(l.Lex, KindSymbol, ")")
+	comma := parsec.Try(tokens.Exact(l.Lex, KindSymbol, ","))
 
 	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		// atexp's table builds this form under expr's subtree, so
-		// the reference stays in the body; one build serves the
-		// whole tuple
-		expr := p.expr(lex)
+		if _, err := open(buf); err != nil {
+			return nil, err
+		}
 
-		first, ferr := expr(buf)
+		first, ferr := l.Expr(buf)
 		if ferr != nil {
 			return nil, ferr
 		}
@@ -469,7 +322,7 @@ func (p *parser) parenExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune
 				break
 			}
 
-			e, eerr := expr(buf)
+			e, eerr := l.Expr(buf)
 			if eerr != nil {
 				return nil, eerr
 			}
@@ -489,38 +342,16 @@ func (p *parser) parenExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune
 	}
 }
 
-// letExp parses the rest of a let-expression, decl+ in exp end; the
-// let keyword is already consumed by the dispatch table.
-func (p *parser) letExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
-	inKw := tokens.Exact(lex, KindKeyword, "in")
-	endKw := tokens.Exact(lex, KindKeyword, "end")
-
-	return func(buf parsec.Buffer[rune, Position]) (Expr, parsec.Error[Position]) {
-		// both references sit under atexp's table inside expr's
-		// subtree and cannot move above the closure
-		decls, derr := p.decList(lex)(buf)
-		if derr != nil {
-			return nil, derr
-		}
-
-		if len(decls) == 0 {
-			return nil, parsec.NewParseError(buf.Position(), "expected declaration in let")
-		}
-
-		if _, err := inKw(buf); err != nil {
-			return nil, err
-		}
-
-		body, berr := p.expr(lex)(buf)
-		if berr != nil {
-			return nil, berr
-		}
-
-		if _, err := endKw(buf); err != nil {
-			return nil, err
-		}
-
-		return Let{Decls: decls, Body: body}, nil
+// boolOperand turns a boolean literal into an extra operand of the
+// ladder: a keyword with a fixed meaning needs no recursion.
+func boolOperand(lexeme Lexeme, value bool) lang.Operand {
+	return func(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Expr] {
+		return parsec.Cast(
+			tokens.Exact(lex, KindKeyword, lexeme),
+			func(Token) (Expr, error) {
+				return BoolLit{Value: value}, nil
+			},
+		)
 	}
 }
 
@@ -529,7 +360,8 @@ func (p *parser) letExp(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, 
 
 // atpat parses one atomic pattern. Tiny ml has no constructors, so
 // there are no infix constructor patterns and no layered patterns.
-// The dispatch mirrors atexp: a Choice of Try-wrapped alternatives.
+// The dispatch mirrors the operand level of the ladder: a Choice of
+// Try-wrapped alternatives.
 func (p *parser) atpat(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, Position, Pat] {
 	wildcard := parsec.Cast(tokens.Exact(lex, KindSymbol, "_"), func(Token) (Pat, error) {
 		return WildcardPat{}, nil
@@ -556,6 +388,11 @@ func (p *parser) atpat(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, P
 		parsec.Try(varPat),
 		parsec.Try(p.tuplePat(lex)),
 	)
+}
+
+// isBoolToken reports whether the token is a boolean literal.
+func isBoolToken(t Token) bool {
+	return t.Kind == KindKeyword && (t.Lexeme == "true" || t.Lexeme == "false")
 }
 
 // isLiteralToken reports whether the token is an integer or boolean

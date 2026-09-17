@@ -1,18 +1,19 @@
 package tml
 
-import "strconv"
+import (
+	"strconv"
 
-// Expr is an expression node.
-type Expr interface {
-	String() string
-}
+	"github.com/okneniz/parsec/lang"
+)
 
-// IntLit is an integer literal; Value is the parsed Text, best
-// effort, the text itself is authoritative.
-type IntLit struct {
-	Text  string
-	Value int64
-}
+// Expr is an expression node. The contract is the one of the lang
+// ladder: a node renders itself as a string.
+type Expr = lang.Expr
+
+// The nodes the expression ladder of lang produces are its own: the
+// rendered forms of tiny ml match, so the ladder and the typechecker
+// and the interpreter share them as is.
+type IntLit = lang.IntLit
 
 // BoolLit is a boolean literal.
 type BoolLit struct {
@@ -20,9 +21,7 @@ type BoolLit struct {
 }
 
 // Ident is a variable reference; tiny ml has no qualified names.
-type Ident struct {
-	Name string
-}
+type Ident = lang.Ident
 
 // If is a conditional expression.
 type If struct {
@@ -37,17 +36,11 @@ type Fn struct {
 
 // App is function application; application binds tighter than any
 // infix operator.
-type App struct {
-	Fn  Expr
-	Arg Expr
-}
+type App = lang.App
 
 // Infix is an infix application; Op is the operator lexeme, which may
 // also be the reserved words andalso and orelse.
-type Infix struct {
-	Op   string
-	L, R Expr
-}
+type Infix = lang.Binary
 
 // Tuple is a tuple expression (e1, ..., en).
 type Tuple struct {
@@ -109,16 +102,8 @@ type TuplePat struct {
 	Items []Pat
 }
 
-func (e IntLit) String() string {
-	return e.Text
-}
-
 func (e BoolLit) String() string {
 	return strconv.FormatBool(e.Value)
-}
-
-func (e Ident) String() string {
-	return e.Name
 }
 
 func (e If) String() string {
@@ -127,14 +112,6 @@ func (e If) String() string {
 
 func (e Fn) String() string {
 	return paren("fn", e.Arg.String(), e.Body.String())
-}
-
-func (e App) String() string {
-	return paren("app", e.Fn.String(), e.Arg.String())
-}
-
-func (e Infix) String() string {
-	return paren(e.Op, e.L.String(), e.R.String())
 }
 
 func (e Tuple) String() string {
