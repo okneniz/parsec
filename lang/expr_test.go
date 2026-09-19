@@ -362,3 +362,171 @@ func TestKeywordInfix(t *testing.T) {
 		})
 	}
 }
+
+// ternaryDefinition is the test definition with the two separators
+// of the conditional among its symbols.
+func ternaryDefinition() Definition {
+	def := testDefinition()
+	def.Punctuation = def.Punctuation + "?:"
+
+	return def
+}
+
+func TestTernary(t *testing.T) {
+	// the operator ladder of c: a comma of the lowest precedence,
+	// the assignment above it, the conditional between the
+	// assignment and the additive operators
+	p := NewParser().
+		Infix(0, ",").
+		InfixRight(1, "=").
+		Ternary(2, "?", ":").
+		Infix(3, "+", "-").
+		Infix(4, "*", "/")
+
+	tests := []struct {
+		src  string
+		want string
+	}{
+		{"a ? b : c", "(?: a b c)"},
+		{"a ? b : c ? d : e", "(?: a b (?: c d e))"},
+		{"x = a ? b : c", "(= x (?: a b c))"},
+		{"x = a + 2 ? b : c", "(= x (?: (+ a 2) b c))"},
+		{"x = y = a + 1 ? b : c", "(= x (= y (?: (+ a 1) b c)))"},
+		{"a + 1 = b ? c : d", "(= (+ a 1) (?: b c d))"},
+		{"x = y = 1", "(= x (= y 1))"},
+		{"1 + a ? b : c", "(?: (+ 1 a) b c)"},
+		{"(a ? b : c) + 1", "(+ (?: a b c) 1)"},
+		{"a ? b = 1 : c", "(?: a (= b 1) c)"},
+		{"a ? b, c : d", "(?: a (, b c) d)"},
+		{"a ? b : c, d", "(, (?: a b c) d)"},
+		{"a, b, c", "(, (, a b) c)"},
+		{"(a, b)", "(, a b)"},
+	}
+
+	parse := New(ternaryDefinition(), p)
+
+	for _, test := range tests {
+		expression := strings.Buffer([]rune(test.src))
+
+		t.Run(test.src, func(t *testing.T) {
+			e, err := parse(expression)
+			require.NoError(t, err)
+			require.Equal(t, test.want, e.String())
+		})
+	}
+}
+
+func TestTernaryErrors(t *testing.T) {
+	p := NewParser().
+		InfixRight(1, "=").
+		Ternary(2, "?", ":").
+		Infix(3, "+", "-")
+
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{"missing colon", "a ? b", "to close the conditional operator"},
+		{"missing middle", "a ? : c", "expected operand"},
+		{"missing condition", "? a : b", "expected operand"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := New(ternaryDefinition(), p)(strings.Buffer([]rune(test.src)))
+			require.ErrorContains(t, err, test.want)
+		})
+	}
+}
+
+// callNode stands in for a call form of this test.
+type callNode struct {
+	Fn   string
+	Args []Expr
+}
+
+func (n callNode) String() string {
+	out := "(" + n.Fn
+
+	for _, arg := range n.Args {
+		out += " " + arg.String()
+	}
+
+	return out + ")"
+}
+
+func TestLadderFrom(t *testing.T) {
+	// a call reads its arguments above the comma, the assignment
+	// still inside: the c argument list
+	call := func(l Ladder) parsec.Combinator[rune, strings.Position, Expr] {
+		open := tokens.Exact(l.Lex, KindSymbol, "(")
+		closeParen := tokens.Exact(l.Lex, KindSymbol, ")")
+		comma := parsec.Try(tokens.Exact(l.Lex, KindSymbol, ","))
+		ident := tokens.OfKind(l.Lex, KindIdent)
+		arg := l.From(1)
+
+		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+			fn, err := ident(buf)
+			if err != nil {
+				return nil, err
+			}
+
+			if _, err := open(buf); err != nil {
+				return nil, err
+			}
+
+			node := callNode{Fn: string(fn.Lexeme)}
+
+			for {
+				e, aerr := arg(buf)
+				if aerr != nil {
+					return nil, aerr
+				}
+
+				node.Args = append(node.Args, e)
+
+				if _, cerr := comma(buf); cerr != nil {
+					break
+				}
+			}
+
+			if _, err := closeParen(buf); err != nil {
+				return nil, err
+			}
+
+			return node, nil
+		}
+	}
+
+	p := NewParser().
+		Infix(0, ",").
+		InfixRight(1, "=").
+		Ternary(2, "?", ":").
+		Infix(3, "+", "-").
+		PrefixForm(call)
+
+	tests := []struct {
+		src  string
+		want string
+	}{
+		{"f(a, b)", "(f a b)"},
+		{"f(a, b, c)", "(f a b c)"},
+		{"g((a, b))", "(g (, a b))"},
+		{"h(x = 1, y = 2)", "(h (= x 1) (= y 2))"},
+		{"f(a ? b : c, d)", "(f (?: a b c) d)"},
+		{"f(a, b), f(c, d)", "(, (f a b) (f c d))"},
+	}
+
+	parse := New(ternaryDefinition(), p)
+
+	for _, test := range tests {
+		expression := strings.Buffer([]rune(test.src))
+
+		t.Run(test.src, func(t *testing.T) {
+			e, err := parse(expression)
+			require.NoError(t, err)
+			require.Equal(t, test.want, e.String())
+		})
+	}
+}

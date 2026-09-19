@@ -80,3 +80,40 @@ func ExampleParser_PrefixForm() {
 	fmt.Println(e)
 	// Output: (+ 1 (* (sizeof x) 2))
 }
+
+// A ternary conditional operator: right associative, sitting between
+// the assignment and the additive operators, its middle part a full
+// expression.
+func ExampleParser_Ternary() {
+	def := lang.Definition{
+		Operators:   []string{"+", "*"},
+		Punctuation: "()?:=,",
+		Integers:    true,
+	}
+
+	p := lang.NewParser().
+		Infix(0, ",").
+		InfixRight(1, "=").
+		Ternary(2, "?", ":").
+		Infix(3, "+").
+		Infix(4, "*")
+
+	parse := lang.New(def, p)
+
+	assigned, aerr := parse(strings.Buffer([]rune("x = a ? b : c")))
+	if aerr != nil {
+		panic(aerr)
+	}
+
+	fmt.Println(assigned)
+
+	chained, cerr := parse(strings.Buffer([]rune("a ? b : c ? d : e")))
+	if cerr != nil {
+		panic(cerr)
+	}
+
+	fmt.Println(chained)
+	// Output:
+	// (= x (?: a b c))
+	// (?: a b (?: c d e))
+}

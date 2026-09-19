@@ -27,14 +27,21 @@
 // and associativities. An operator is a lexeme with fixity status,
 // whatever kind the lexer gave its token — the reserved words
 // andalso and orelse of sml are infix operators of their own level.
+// Ternary declares the conditional the table cannot hold in one
+// lexeme, its question and its colon: right associative, the middle
+// part a full expression. An operator of the lowest precedence is
+// how a comma operator fits — the sub-levels of the ladder keep it
+// out of the argument lists.
 //
 // The forms a language has beyond operators — if e then e else e
 // above the infix chain, a sizeof e or a let among the operands —
 // rarely reduce to an operator lexeme. ExprForm declares the ones of
 // the expression level, PrefixForm the ones of the operand level,
 // and the Ladder each form receives hands it the recursion: Expr is
-// the full expression, forms included, Atom one operand, Lex the
-// lexer the ladder reads through. The extras of Parser.Expr remain
-// the plain token-level operand combinators for the rest of the
-// syntax: boolean literals, calls, indexing.
+// the full expression, forms included, Atom one operand, From the
+// expression from a precedence up — the level the arguments of a
+// call read at, above the comma — and Lex the lexer the ladder reads
+// through. The extras of Parser.Expr remain the plain token-level
+// operand combinators for the rest of the syntax: boolean literals,
+// calls, indexing.
 package lang
