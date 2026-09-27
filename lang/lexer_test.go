@@ -11,14 +11,14 @@ import (
 
 // lex runs the Lexer stepper to the end of input: the test-side
 // replacement of the deleted lang.Lex.
-func lex(def Definition, src string) ([]Token, error) {
+func lex[S any](def Definition[S], state S, src string) ([]Token, error) {
 	buf := strings.Buffer([]rune(src))
 	next := Lexer(def)
 
 	stream := make([]Token, 0, 64)
 
 	for {
-		tok, err := next(buf)
+		tok, err := next(state, buf)
 		if errors.Is(err, parsec.ErrEndOfFile) {
 			break
 		}
@@ -33,10 +33,10 @@ func lex(def Definition, src string) ([]Token, error) {
 }
 
 // lexemes is a shorthand for the flat token text of a source.
-func lexemes(t *testing.T, def Definition, src string) []string {
+func lexemes[S any](t *testing.T, def Definition[S], state S, src string) []string {
 	t.Helper()
 
-	stream, err := lex(def, src)
+	stream, err := lex(def, state, src)
 	require.NoError(t, err)
 
 	out := make([]string, 0, len(stream))
@@ -46,8 +46,8 @@ func lexemes(t *testing.T, def Definition, src string) []string {
 	return out
 }
 
-func testDefinition() Definition {
-	return Definition{
+func testDefinition() Definition[parsec.Stateless] {
+	return Definition[parsec.Stateless]{
 		LineComment:    "//",
 		BlockComment:   [2]string{"(*", "*)"},
 		NestedComments: true,
@@ -81,7 +81,7 @@ func TestLex(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.Equal(t, test.want, lexemes(t, testDefinition(), test.src))
+			require.Equal(t, test.want, lexemes(t, testDefinition(), parsec.Stateless{}, test.src))
 		})
 	}
 }
@@ -101,22 +101,22 @@ func TestLexErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := lex(testDefinition(), test.src)
+			_, err := lex(testDefinition(), parsec.Stateless{}, test.src)
 			require.ErrorContains(t, err, test.want)
 		})
 	}
 }
 
-func charLiteral(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
+func charLiteral(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 	pos := buf.Position()
 
-	hash := strings.Eq("expected '#'", '#')
-	if _, err := hash(buf); err != nil {
+	hash := strings.Eq[parsec.Stateless]("expected '#'", '#')
+	if _, err := hash(state, buf); err != nil {
 		return Token{}, ErrNoMatch
 	}
 
-	quote := strings.Eq(`expected '"'`, '"')
-	if _, err := quote(buf); err != nil {
+	quote := strings.Eq[parsec.Stateless](`expected '"'`, '"')
+	if _, err := quote(state, buf); err != nil {
 		return Token{}, parsec.NewParseError(pos, "expected character literal")
 	}
 
@@ -124,7 +124,7 @@ func charLiteral(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 		return Token{}, parsec.NewParseError(pos, "unterminated character literal")
 	}
 
-	r, err := strings.Any()(buf)
+	r, err := strings.Any[parsec.Stateless]()(state, buf)
 	if err != nil {
 		return Token{}, err
 	}
@@ -133,7 +133,7 @@ func charLiteral(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 		return Token{}, parsec.NewParseError(pos, "empty character literal")
 	}
 
-	if _, err := quote(buf); err != nil {
+	if _, err := quote(state, buf); err != nil {
 		return Token{}, parsec.NewParseError(pos, "unterminated character literal")
 	}
 
@@ -158,28 +158,28 @@ func TestCustomEscapes(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.src, func(t *testing.T) {
-			got, err := lex(def, test.src)
+			got, err := lex(def, parsec.Stateless{}, test.src)
 			require.NoError(t, err)
 			require.Equal(t, test.want, string(got[0].Lexeme))
 		})
 	}
 
 	// an escape outside the table is an error
-	_, err := lex(def, `"a\nb"`)
+	_, err := lex(def, parsec.Stateless{}, `"a\nb"`)
 	require.ErrorContains(t, err, "unknown escape")
 }
 
 func TestCustomTokens(t *testing.T) {
 	def := testDefinition()
-	def.Custom = []func(parsec.Buffer[rune, strings.Position]) (Token, error){charLiteral}
+	def.Custom = []func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Token, error){charLiteral}
 
-	got := lexemes(t, def, `x #"a" == #"b"`)
+	got := lexemes(t, def, parsec.Stateless{}, `x #"a" == #"b"`)
 	require.Equal(t, []string{"x", "a", "==", "b"}, got)
 
 	// the # is still free for other uses when the custom declines
-	require.Equal(t, []string{"x", "==", "y"}, lexemes(t, def, "x == y"))
+	require.Equal(t, []string{"x", "==", "y"}, lexemes(t, def, parsec.Stateless{}, "x == y"))
 
 	// custom errors abort Lex
-	_, err := lex(def, `x #"ab"`)
+	_, err := lex(def, parsec.Stateless{}, `x #"ab"`)
 	require.ErrorContains(t, err, "unterminated character literal")
 }

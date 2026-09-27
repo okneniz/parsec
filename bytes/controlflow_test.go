@@ -13,9 +13,9 @@ func TestConcat(t *testing.T) {
 		{
 			comb: Concat(
 				6,
-				Count(1, "expected one a", Eq("expected a", 'a')),
-				Count(2, "expected double b", Eq("expected b", 'b')),
-				Count(3, "expected three not z", NotEq("expected not z", 'z')),
+				Count(1, "expected one a", Eq[parsec.Stateless]("expected a", 'a')),
+				Count(2, "expected double b", Eq[parsec.Stateless]("expected b", 'b')),
+				Count(3, "expected three not z", NotEq[parsec.Stateless]("expected not z", 'z')),
 			),
 			cases: []testCase[[]byte]{
 				{
@@ -75,9 +75,9 @@ func TestSequence(t *testing.T) {
 		{
 			comb: Sequence(
 				3,
-				Eq("expected a", 'a'),
-				Eq("expected b", 'b'),
-				NotEq("expected not z", 'z'),
+				Eq[parsec.Stateless]("expected a", 'a'),
+				Eq[parsec.Stateless]("expected b", 'b'),
+				NotEq[parsec.Stateless]("expected not z", 'z'),
 			),
 			cases: []testCase[[]byte]{
 				{
@@ -133,9 +133,9 @@ func TestChoice(t *testing.T) {
 		{
 			comb: Choice(
 				"expected a, b or c",
-				Try(Eq("expected a", 'a')),
-				Try(Eq("expected b", 'b')),
-				Eq("expected c", 'c'),
+				Try(Eq[parsec.Stateless]("expected a", 'a')),
+				Try(Eq[parsec.Stateless]("expected b", 'b')),
+				Eq[parsec.Stateless]("expected c", 'c'),
 			),
 			cases: []testCase[byte]{
 				{
@@ -172,8 +172,8 @@ func TestSkip(t *testing.T) {
 		runTests(t, []test[byte]{
 			{
 				comb: Skip(
-					Eq("expected 'a'", 'a'),
-					Eq("expected 'b'", 'b'),
+					Eq[parsec.Stateless]("expected 'a'", 'a'),
+					Eq[parsec.Stateless]("expected 'b'", 'b'),
 				),
 				cases: []testCase[byte]{
 					{
@@ -208,8 +208,8 @@ func TestSkip(t *testing.T) {
 		runTests(t, []test[byte]{
 			{
 				comb: Skip(
-					Optional(Try(Eq("expected 'a'", 'a')), 'x'),
-					Eq("expected 'b'", 'b'),
+					Optional(Try(Eq[parsec.Stateless]("expected 'a'", 'a')), 'x'),
+					Eq[parsec.Stateless]("expected 'b'", 'b'),
 				),
 				cases: []testCase[byte]{
 					{
@@ -246,8 +246,8 @@ func TestSkipMany(t *testing.T) {
 	runTestsSlice(t, []test[[]byte]{
 		{
 			comb: parsec.SkipMany(
-				NoneOf("expected not a, b or c", 'a', 'b', 'c'),
-				SequenceOf("expected abc", 'a', 'b', 'c'),
+				NoneOf[parsec.Stateless]("expected not a, b or c", 'a', 'b', 'c'),
+				SequenceOf[parsec.Stateless]("expected abc", 'a', 'b', 'c'),
 			),
 			cases: []testCase[[]byte]{
 				{
@@ -306,8 +306,8 @@ func TestSkipAfter(t *testing.T) {
 	runTests(t, []test[byte]{
 		{
 			comb: SkipAfter(
-				Eq("expected 'b'", 'b'),
-				Eq("expected 'a'", 'a'),
+				Eq[parsec.Stateless]("expected 'b'", 'b'),
+				Eq[parsec.Stateless]("expected 'a'", 'a'),
 			),
 			cases: []testCase[byte]{
 				{
@@ -354,8 +354,8 @@ func TestPadded(t *testing.T) {
 	runTests(t, []test[byte]{
 		{
 			comb: Padded(
-				Eq("expected dot", '.'),
-				Range("expected digit", '0', '9'),
+				Eq[parsec.Stateless]("expected dot", '.'),
+				Range[parsec.Stateless]("expected digit", '0', '9'),
 			),
 			cases: []testCase[byte]{
 				{

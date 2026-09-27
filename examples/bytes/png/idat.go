@@ -41,27 +41,27 @@ func (c *IDAT) String() string {
 	return b.String()
 }
 
-func IDATChunk(size uint32) parsec.Combinator[byte, int, *IDAT] {
+func IDATChunk(size uint32) parsec.Combinator[byte, int, *IDAT, parsec.Stateless] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected %d bytes of IDAT chunk", size),
-		bytes.Any(),
+		bytes.Any[parsec.Stateless](),
 	)
 
-	parseCRC := bytes.ReadAs[uint32](4, "expected four bytes of CRC", binary.BigEndian)
+	parseCRC := bytes.ReadAs[uint32, parsec.Stateless](4, "expected four bytes of CRC", binary.BigEndian)
 
-	return func(buffer parsec.Buffer[byte, int]) (*IDAT, parsec.Error[int]) {
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (*IDAT, parsec.Error[int]) {
 		var data []byte
 		var err parsec.Error[int]
 
 		if size > 0 {
-			data, err = parseData(buffer)
+			data, err = parseData(state, buffer)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		crc, err := parseCRC(buffer)
+		crc, err := parseCRC(state, buffer)
 		if err != nil {
 			return nil, err
 		}

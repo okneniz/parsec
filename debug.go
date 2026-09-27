@@ -12,18 +12,18 @@ type Logged interface {
 // Trace wraps c and logs the buffer position before and after its
 // application, plus the parsed result or the error.
 // It is a debugging helper and changes no parsing behavior.
-func Trace[T any, P any, S any](
+func Trace[T any, P any, O any, S any](
 	l Logged,
 	m string,
-	c Combinator[T, P, S],
-) Combinator[T, P, S] {
-	var null S
+	c Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		l.Log(m)
 		l.Log("\tposition before:", buffer.Position())
 
-		result, err := c(buffer)
+		result, err := c(state, buffer)
 		l.Log("\tposition after:", buffer.Position())
 		if err != nil {
 			l.Log("\tnot parsed:", m, result, err)

@@ -11,7 +11,7 @@ import (
 // charLexer skips spaces and takes one rune as a char token, following
 // the Lexer contract: trivia skipped inside, the exhausted input
 // reported with parsec.ErrEndOfFile.
-func charLexer(buf parsec.Buffer[rune, strings.Position]) (Token[string, string], error) {
+func charLexer(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Token[string, string], error) {
 	for !buf.IsEOF() {
 		r, err := buf.Read(false)
 		if err != nil || r != ' ' {
@@ -40,16 +40,16 @@ func TestSatisfy(t *testing.T) {
 	exact := Exact(charLexer, "char", "a")
 	ofKind := OfKind(charLexer, "char")
 
-	if _, err := exact(buf); err != nil {
+	if _, err := exact(parsec.Stateless{}, buf); err != nil {
 		t.Fatalf("Exact a: %v", err)
 	}
 
-	if _, err := ofKind(buf); err != nil {
+	if _, err := ofKind(parsec.Stateless{}, buf); err != nil {
 		t.Fatalf("OfKind char: %v", err)
 	}
 
 	// greedy failure consumes the token: the c is gone now
-	if _, err := Exact(charLexer, "char", "z")(buf); err == nil {
+	if _, err := Exact(charLexer, "char", "z")(parsec.Stateless{}, buf); err == nil {
 		t.Fatal("Exact char z matched")
 	}
 
@@ -62,25 +62,25 @@ func TestUnexpected(t *testing.T) {
 	buf := strings.Buffer([]rune("ab"))
 
 	unexpected := parsec.Unexpected(charLexer, "testing")
-	if _, uerr := unexpected(buf); uerr == nil || !stdstrings.Contains(uerr.Error(), `char "a"`) {
+	if _, uerr := unexpected(parsec.Stateless{}, buf); uerr == nil || !stdstrings.Contains(uerr.Error(), `char "a"`) {
 		t.Fatalf("Unexpected = %v", uerr)
 	}
 
 	empty := strings.Buffer(nil)
 
-	_, uerr := unexpected(empty)
+	_, uerr := unexpected(parsec.Stateless{}, empty)
 	if uerr == nil || !stdstrings.Contains(uerr.Error(), "unexpected end of input") {
 		t.Fatalf("Unexpected at EOF = %v", uerr)
 	}
 }
 
 func TestLineComment(t *testing.T) {
-	line := LineComment("//")
+	line := LineComment[parsec.Stateless]("//")
 
 	// the comment runs to and including the newline
 	buf := strings.Buffer([]rune("// hello\nx"))
 
-	ok, err := line(buf)
+	ok, err := line(parsec.Stateless{}, buf)
 	if err != nil || !ok {
 		t.Fatalf("LineComment failed: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestLineComment(t *testing.T) {
 	}
 
 	// a comment at the end of input closes at the end
-	ok, err = line(strings.Buffer([]rune("// tail")))
+	ok, err = line(parsec.Stateless{}, strings.Buffer([]rune("// tail")))
 	if err != nil || !ok {
 		t.Fatalf("LineComment at EOF failed: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestLineComment(t *testing.T) {
 	// a missing marker fails with the input intact
 	buf = strings.Buffer([]rune("x"))
 
-	if _, err := line(buf); err == nil {
+	if _, err := line(parsec.Stateless{}, buf); err == nil {
 		t.Fatal("LineComment of x succeeded, want error")
 	}
 
@@ -108,17 +108,17 @@ func TestLineComment(t *testing.T) {
 }
 
 func TestCommentBody(t *testing.T) {
-	body := CommentBody("(*", "*)", true)
-	open := strings.Try(strings.String("comment start", "(*"))
+	body := CommentBody[parsec.Stateless]("(*", "*)", true)
+	open := strings.Try(strings.String[parsec.Stateless]("comment start", "(*"))
 
 	// the body runs to the matching close, nested comments counted
 	buf := strings.Buffer([]rune("(* a (* b *) c *)+"))
 
-	if _, err := open(buf); err != nil {
+	if _, err := open(parsec.Stateless{}, buf); err != nil {
 		t.Fatalf("open failed: %v", err)
 	}
 
-	ok, err := body(buf)
+	ok, err := body(parsec.Stateless{}, buf)
 	if err != nil || !ok {
 		t.Fatalf("CommentBody failed: %v", err)
 	}
@@ -129,20 +129,20 @@ func TestCommentBody(t *testing.T) {
 	}
 
 	// an unterminated comment fails
-	if _, err := body(strings.Buffer([]rune("(* a"))); err == nil || !stdstrings.Contains(err.Error(), "unterminated comment") {
+	if _, err := body(parsec.Stateless{}, strings.Buffer([]rune("(* a"))); err == nil || !stdstrings.Contains(err.Error(), "unterminated comment") {
 		t.Fatalf("CommentBody of an unterminated comment = %v", err)
 	}
 
 	// with nesting off, an inner open is plain text
-	flat := CommentBody("(*", "*)", false)
+	flat := CommentBody[parsec.Stateless]("(*", "*)", false)
 
 	buf = strings.Buffer([]rune("(* a *)"))
 
-	if _, err := open(buf); err != nil {
+	if _, err := open(parsec.Stateless{}, buf); err != nil {
 		t.Fatalf("open failed: %v", err)
 	}
 
-	if ok, err := flat(buf); err != nil || !ok {
+	if ok, err := flat(parsec.Stateless{}, buf); err != nil || !ok {
 		t.Fatalf("flat CommentBody failed: %v", err)
 	}
 }

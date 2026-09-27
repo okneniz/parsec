@@ -270,7 +270,7 @@ func freeVars(t Type) []*TVar {
 
 // generalize quantifies every variable of t which is not free in the
 // environment — the heart of let-polymorphism.
-func generalize(env map[string]*scheme, t Type) *scheme {
+func generalize(env []*scheme, t Type) *scheme {
 	envFree := map[*TVar]struct{}{}
 
 	for _, s := range env {

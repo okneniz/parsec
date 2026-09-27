@@ -15,7 +15,7 @@ func TestSatisfy(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Satisfy("expected not 'c'", true, func(x rune) bool { return x != 'c' }),
+			comb: Satisfy[parsec.Stateless]("expected not 'c'", true, func(x rune) bool { return x != 'c' }),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -52,7 +52,7 @@ func TestSatisfy(t *testing.T) {
 			},
 		},
 		{
-			comb: Satisfy("error explanation", true, parsec.Nothing),
+			comb: Satisfy[parsec.Stateless]("error explanation", true, parsec.Nothing),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -88,7 +88,7 @@ func TestAny(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Any(),
+			comb: Any[parsec.Stateless](),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -116,10 +116,10 @@ func TestAny(t *testing.T) {
 		seed := time.Now().UnixNano()
 		t.Logf("seed: %v", seed)
 		rnd := rand.New(rand.NewPCG(0, uint64(seed)))
-		comb := Any()
+		comb := Any[parsec.Stateless]()
 
 		ohsnap.Check(t, 1000, ohsnap.NewBuilder(rnd).Rune(), func(r rune) bool {
-			result, err := Parse([]rune{r}, comb)
+			result, err := Parse(parsec.Stateless{}, []rune{r}, comb)
 			if err != nil {
 				t.Logf("input: %v", []rune{r})
 				t.Logf("output: %v", result)
@@ -138,7 +138,7 @@ func TestTry(t *testing.T) {
 	runTests(t, []test[rune]{
 		{
 			comb: Try(
-				Satisfy(
+				Satisfy[parsec.Stateless](
 					"error explanation",
 					true,
 					func(x rune) bool { return x <= 'b' },
@@ -184,14 +184,14 @@ func TestTry(t *testing.T) {
 func TestBetween(t *testing.T) {
 	t.Parallel()
 
-	notBrackets := Satisfy("test", true, func(x rune) bool {
+	notBrackets := Satisfy[parsec.Stateless]("test", true, func(x rune) bool {
 		return x != ')' && x != '('
 	})
 
 	comb := Between(
-		Eq("expected '('", '('),
+		Eq[parsec.Stateless]("expected '('", '('),
 		Some(0, "expected not ( or ) symbols", Try(notBrackets)),
-		Eq("expected ')'", ')'),
+		Eq[parsec.Stateless]("expected ')'", ')'),
 	)
 
 	runTestsString(t, []test[[]rune]{
@@ -279,7 +279,7 @@ func TestEOF(t *testing.T) {
 
 	runTests(t, []test[bool]{
 		{
-			comb: EOF(),
+			comb: EOF[parsec.Stateless](),
 			cases: []testCase[bool]{
 				{
 					input:  "",
@@ -304,7 +304,7 @@ func TestCast(t *testing.T) {
 	runTests(t, []test[int]{
 		{
 			comb: Cast(
-				Satisfy("test", true, parsec.Anything[rune]),
+				Satisfy[parsec.Stateless]("test", true, parsec.Anything[rune]),
 				func(x rune) (int, error) { return int(x), nil },
 			),
 			cases: []testCase[int]{
@@ -332,7 +332,7 @@ func TestCast(t *testing.T) {
 		},
 		{
 			comb: Cast(
-				Any(),
+				Any[parsec.Stateless](),
 				func(x rune) (int, error) { return -1, fmt.Errorf("test error") },
 			),
 			cases: []testCase[int]{

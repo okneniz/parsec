@@ -1,6 +1,8 @@
 package xml
 
 import (
+	"github.com/okneniz/parsec"
+
 	"testing"
 
 	"github.com/okneniz/parsec/strings"
@@ -195,7 +197,7 @@ func TestEvents(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			seq, err := Events()(strings.Buffer([]rune(test.src)))
+			seq, err := Events()(parsec.Stateless{}, strings.Buffer([]rune(test.src)))
 			require.NoError(t, err)
 
 			var got []string

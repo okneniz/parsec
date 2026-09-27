@@ -12,7 +12,7 @@ import (
 )
 
 func Example() {
-	def := lang.Definition{
+	def := lang.Definition[parsec.Stateless]{
 		LineComment:    "//",
 		BlockComment:   [2]string{"(*", "*)"},
 		NestedComments: true,
@@ -23,7 +23,7 @@ func Example() {
 		Integers:    true,
 	}
 
-	p := lang.NewParser().
+	p := lang.NewParser[parsec.Stateless]().
 		Infix(1, "+", "-").
 		Infix(2, "*", "/").
 		Prefix("-")
@@ -32,7 +32,7 @@ func Example() {
 	buf := strings.Buffer([]rune(expression))
 	ml := lang.New(def, p)
 
-	e, perr := ml(buf)
+	e, perr := ml(parsec.Stateless{}, buf)
 	if perr != nil {
 		panic(perr)
 	}
@@ -44,21 +44,21 @@ func Example() {
 // A sizeof form: a keyword-led operand that binds like a prefix
 // operator, tighter than any infix one.
 func ExampleParser_PrefixForm() {
-	def := lang.Definition{
+	def := lang.Definition[parsec.Stateless]{
 		Keywords:  []string{"sizeof"},
 		Operators: []string{"+", "*"},
 		Integers:  true,
 	}
 
-	sizeof := func(l lang.Ladder) parsec.Combinator[rune, strings.Position, lang.Expr] {
+	sizeof := func(l lang.Ladder[parsec.Stateless]) parsec.Combinator[rune, strings.Position, lang.Expr, parsec.Stateless] {
 		kw := tokens.Exact(l.Lex, lang.KindKeyword, "sizeof")
 
-		return func(buf parsec.Buffer[rune, strings.Position]) (lang.Expr, parsec.Error[strings.Position]) {
-			if _, err := kw(buf); err != nil {
+		return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (lang.Expr, parsec.Error[strings.Position]) {
+			if _, err := kw(state, buf); err != nil {
 				return nil, err
 			}
 
-			sub, serr := l.Atom(buf)
+			sub, serr := l.Atom(state, buf)
 			if serr != nil {
 				return nil, serr
 			}
@@ -67,12 +67,12 @@ func ExampleParser_PrefixForm() {
 		}
 	}
 
-	p := lang.NewParser().
+	p := lang.NewParser[parsec.Stateless]().
 		Infix(1, "+").
 		Infix(2, "*").
 		PrefixForm(sizeof)
 
-	e, perr := lang.New(def, p)(strings.Buffer([]rune("1 + sizeof x * 2")))
+	e, perr := lang.New(def, p)(parsec.Stateless{}, strings.Buffer([]rune("1 + sizeof x * 2")))
 	if perr != nil {
 		panic(perr)
 	}
@@ -85,13 +85,13 @@ func ExampleParser_PrefixForm() {
 // the assignment and the additive operators, its middle part a full
 // expression.
 func ExampleParser_Ternary() {
-	def := lang.Definition{
+	def := lang.Definition[parsec.Stateless]{
 		Operators:   []string{"+", "*"},
 		Punctuation: "()?:=,",
 		Integers:    true,
 	}
 
-	p := lang.NewParser().
+	p := lang.NewParser[parsec.Stateless]().
 		Infix(0, ",").
 		InfixRight(1, "=").
 		Ternary(2, "?", ":").
@@ -100,14 +100,14 @@ func ExampleParser_Ternary() {
 
 	parse := lang.New(def, p)
 
-	assigned, aerr := parse(strings.Buffer([]rune("x = a ? b : c")))
+	assigned, aerr := parse(parsec.Stateless{}, strings.Buffer([]rune("x = a ? b : c")))
 	if aerr != nil {
 		panic(aerr)
 	}
 
 	fmt.Println(assigned)
 
-	chained, cerr := parse(strings.Buffer([]rune("a ? b : c ? d : e")))
+	chained, cerr := parse(parsec.Stateless{}, strings.Buffer([]rune("a ? b : c ? d : e")))
 	if cerr != nil {
 		panic(cerr)
 	}

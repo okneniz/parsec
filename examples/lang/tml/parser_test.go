@@ -17,13 +17,13 @@ func TestPrecedence(t *testing.T) {
 		{"a = b andalso c < d", "(andalso (= a b) (< c d))"},
 		{"a orelse b andalso c", "(orelse a (andalso b c))"},
 		{"f x y", "(app (app f x) y)"},
-		{"f ~3", "(app f (app ~ 3))"},
+		{"f ~3", "(app f (app var(0) 3))"},
 		{"(1 + 2) * 3", "(* (+ 1 2) 3)"},
 		{"if p then f x else g y", "(if p (app f x) (app g y))"},
-		{"fn x => x + 1", "(fn x (+ x 1))"},
-		{"fn (x, _) => x", "(fn (tuple x _) x)"},
+		{"fn x => x + 1", "(fn (+ var(0) 1))"},
+		{"fn (x, _) => x", "(fn var(0))"},
 		{"(a, b, c)", "(tuple a b c)"},
-		{"let val x = 1 in x end", "(let (val (x 1)) in x end)"},
+		{"let val x = 1 in x end", "(let (val (x 1)) in var(0) end)"},
 	}
 
 	for _, test := range tests {
@@ -61,10 +61,10 @@ end
 `
 
 	want := []string{
-		"(fun fact n (if (= n 0) 1 (* n (app fact (- n 1)))))",
-		"(fun fib n (if (< n 2) n (+ (app fib (- n 1)) (app fib (- n 2)))))",
-		"(fun add (tuple a b) (+ a b))",
-		"(val (answer (let (val (five (app fact 5))) (val (ten (app fib 10))) (val (seven (app add (tuple 3 4)))) in (- (+ (+ five ten) seven) (app ~ 1)) end)))",
+		"(fun fact n (if (= var(0) 0) 1 (* var(0) (app var(1) (- var(0) 1)))))",
+		"(fun fib n (if (< var(0) 2) var(0) (+ (app var(1) (- var(0) 1)) (app var(1) (- var(0) 2)))))",
+		"(fun add (tuple a b) (+ var(1) var(0)))",
+		"(val (answer (let (val (five (app var(2) 5))) (val (ten (app var(2) 10))) (val (seven (app var(2) (tuple 3 4)))) in (- (+ (+ var(2) var(1)) var(0)) (app var(6) 1)) end)))",
 	}
 
 	decls, err := Parse(src)

@@ -8,20 +8,20 @@ import (
 // when it fails, the second combinator is used.
 // Like Choice, it does not restore the buffer position between attempts:
 // wrap both arguments in Try if they can fail after consuming input.
-func Or[T any](
+func Or[O any, S any](
 	errMessage string,
-	x parsec.Combinator[byte, int, T],
-	y parsec.Combinator[byte, int, T],
-) parsec.Combinator[byte, int, T] {
-	return parsec.Or[byte, int, T](errMessage, x, y)
+	x parsec.Combinator[byte, int, O, S],
+	y parsec.Combinator[byte, int, O, S],
+) parsec.Combinator[byte, int, O, S] {
+	return parsec.Or[byte, int, O, S](errMessage, x, y)
 }
 
 // And parses x, then y, and combines their results
 // with the compose function.
-func And[S any, B any, M any](
-	x parsec.Combinator[byte, int, S],
-	y parsec.Combinator[byte, int, B],
-	compose parsec.Composer[S, B, M],
-) parsec.Combinator[byte, int, M] {
-	return parsec.And[byte, int, S, B, M](x, y, compose)
+func And[A any, B any, O any, S any](
+	x parsec.Combinator[byte, int, A, S],
+	y parsec.Combinator[byte, int, B, S],
+	compose parsec.Composer[A, B, O],
+) parsec.Combinator[byte, int, O, S] {
+	return parsec.And[byte, int, A, B, O, S](x, y, compose)
 }

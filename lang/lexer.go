@@ -29,7 +29,11 @@ const (
 
 var ErrNoMatch = errors.New("no match")
 
-type Definition struct {
+// Definition describes the lexical syntax of a language. The type
+// parameter S is the parser state the Custom combinators and the
+// generated Lexer carry — the same state the expression machinery
+// of a Parser carries, so a stepper sees what the parser sees.
+type Definition[S any] struct {
 	// LineComment starts a comment which runs to the end of the line,
 	// as in "//" or "#"; empty disables line comments.
 	LineComment string
@@ -83,10 +87,10 @@ type Definition struct {
 	// in order before the built-in tokens. A combinator returns
 	// ErrNoMatch to decline the input; any other error aborts Lex.
 	// The tokens it produces may use arbitrary Kind strings.
-	Custom []func(parsec.Buffer[rune, strings.Position]) (Token, error)
+	Custom []func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, error)
 }
 
-func (def Definition) withDefaults() Definition {
+func (def Definition[S]) withDefaults() Definition[S] {
 	if def.IdentStart == nil {
 		def.IdentStart = func(r rune) bool {
 			return unicode.IsLetter(r) || r == '_'
@@ -116,19 +120,19 @@ func (def Definition) withDefaults() Definition {
 	return def
 }
 
-func (def Definition) keywordSet() map[string]struct{} {
+func (def Definition[S]) keywordSet() map[string]struct{} {
 	set := make(map[string]struct{}, len(def.Keywords))
 	for _, kw := range def.Keywords {
-		set[kw] = struct{}{}
+		set[kw] = parsec.Stateless{}
 	}
 	return set
 }
 
-func (def Definition) operatorTree() parsec.Tree[rune, strings.Position, Token] {
-	cases := make(map[string]parsec.Combinator[rune, strings.Position, Token], len(def.Operators))
+func (def Definition[S]) operatorTree() parsec.Tree[rune, strings.Position, Token, S] {
+	cases := make(map[string]parsec.Combinator[rune, strings.Position, Token, S], len(def.Operators))
 
 	for _, op := range def.Operators {
-		cases[op] = parsec.Const[rune, strings.Position, Token](Token{
+		cases[op] = parsec.Const[rune, strings.Position, Token, S](Token{
 			Kind:   KindOperator,
 			Lexeme: Lexeme(op),
 		})
@@ -139,13 +143,15 @@ func (def Definition) operatorTree() parsec.Tree[rune, strings.Position, Token] 
 	})
 }
 
-func Lexer(def Definition) tokens.Lexer[Kind, Lexeme] {
+// Lexer turns the definition into a one-token stepper which carries
+// the same state as the language parser.
+func Lexer[S any](def Definition[S]) tokens.Lexer[Kind, Lexeme, S] {
 	def = def.withDefaults()
 	token := def.token()
 	trivia := def.trivia()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
-		if _, terr := trivia(buf); terr != nil {
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
+		if _, terr := trivia(state, buf); terr != nil {
 			return Token{}, terr
 		}
 
@@ -153,21 +159,22 @@ func Lexer(def Definition) tokens.Lexer[Kind, Lexeme] {
 			return Token{}, parsec.ErrEndOfFile
 		}
 
-		return nextToken(def, token, buf)
+		return nextToken(state, def, token, buf)
 	}
 }
 
 // nextToken parses one token: custom combinators first, then the
 // built-in dispatch by the leading rune.
-func nextToken(
-	def Definition,
-	token parsec.Combinator[rune, strings.Position, Token],
+func nextToken[S any](
+	state S,
+	def Definition[S],
+	token parsec.Combinator[rune, strings.Position, Token, S],
 	buf parsec.Buffer[rune, strings.Position],
 ) (Token, error) {
 	for _, custom := range def.Custom {
 		pos := buf.Position()
 
-		tok, err := custom(buf)
+		tok, err := custom(state, buf)
 		if err == nil {
 			return tok, nil
 		}
@@ -180,7 +187,7 @@ func nextToken(
 		}
 	}
 
-	tok, terr := token(buf)
+	tok, terr := token(state, buf)
 	if terr != nil {
 		return Token{}, terr
 	}
@@ -188,7 +195,7 @@ func nextToken(
 	return tok, nil
 }
 
-func (def Definition) token() parsec.Combinator[rune, strings.Position, Token] {
+func (def Definition[S]) token() parsec.Combinator[rune, strings.Position, Token, S] {
 	choice := parsec.Choice("unrecognized character",
 		parsec.Try(def.operator()),
 		parsec.Try(def.prefix()),
@@ -202,11 +209,11 @@ func (def Definition) token() parsec.Combinator[rune, strings.Position, Token] {
 	return def.stringForm(choice)
 }
 
-func (def Definition) operator() parsec.Combinator[rune, strings.Position, Token] {
+func (def Definition[S]) operator() parsec.Combinator[rune, strings.Position, Token, S] {
 	operators := def.operatorTree()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
-		op, lerr := operators.Lookup(buf)
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
+		op, lerr := operators.Lookup(state, buf)
 		if lerr != nil {
 			return Token{}, lerr
 		}
@@ -215,25 +222,25 @@ func (def Definition) operator() parsec.Combinator[rune, strings.Position, Token
 			return Token{}, parsec.NewParseError(buf.Position(), "not an operator")
 		}
 
-		return op(buf)
+		return op(state, buf)
 	}
 }
 
-func (def Definition) prefix() parsec.Combinator[rune, strings.Position, Token] {
+func (def Definition[S]) prefix() parsec.Combinator[rune, strings.Position, Token, S] {
 	digits := strings.Many(0, strings.Try(
-		strings.Satisfy("expected digit", true, func(r rune) bool {
+		strings.Satisfy[S]("expected digit", true, func(r rune) bool {
 			return r >= '0' && r <= '9'
 		}),
 	))
 
-	cases := map[rune]parsec.Combinator[rune, strings.Position, Token]{}
+	cases := map[rune]parsec.Combinator[rune, strings.Position, Token, S]{}
 
 	if def.Integers {
 		for _, d := range "0123456789" {
 			digit := d
 
-			cases[digit] = func(buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
-				tail, _ := digits(buf)
+			cases[digit] = func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
+				tail, _ := digits(state, buf)
 
 				return Token{Kind: KindInt, Lexeme: Lexeme(string(digit) + string(tail))}, nil
 			}
@@ -243,66 +250,66 @@ func (def Definition) prefix() parsec.Combinator[rune, strings.Position, Token] 
 	for _, r := range def.Punctuation {
 		punct := r
 
-		cases[punct] = parsec.Const[rune, strings.Position, Token](Token{
+		cases[punct] = parsec.Const[rune, strings.Position, Token, S](Token{
 			Kind:   KindSymbol,
 			Lexeme: Lexeme(punct),
 		})
 	}
 
-	return parsec.MapAs("no such leading rune", cases, strings.Any())
+	return parsec.MapAs("no such leading rune", cases, strings.Any[S]())
 }
 
-func (def Definition) stringForm(
-	choice parsec.Combinator[rune, strings.Position, Token],
-) parsec.Combinator[rune, strings.Position, Token] {
-	quote := strings.Try(strings.Eq(`expected '"'`, '"'))
-	str := stringRest(def.Escapes)
+func (def Definition[S]) stringForm(
+	choice parsec.Combinator[rune, strings.Position, Token, S],
+) parsec.Combinator[rune, strings.Position, Token, S] {
+	quote := strings.Try(strings.Eq[S](`expected '"'`, '"'))
+	str := stringRest[S](def.Escapes)
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
-		if _, qerr := quote(buf); qerr == nil {
-			return str(buf)
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
+		if _, qerr := quote(state, buf); qerr == nil {
+			return str(state, buf)
 		}
 
-		return choice(buf)
+		return choice(state, buf)
 	}
 }
 
-func (def Definition) trivia() parsec.Combinator[rune, strings.Position, bool] {
-	space := strings.Satisfy("expected whitespace", true, def.Space)
+func (def Definition[S]) trivia() parsec.Combinator[rune, strings.Position, bool, S] {
+	space := strings.Satisfy[S]("expected whitespace", true, def.Space)
 	spaces := parsec.Many(0, strings.Try(space))
 
-	var line parsec.Combinator[rune, strings.Position, bool]
+	var line parsec.Combinator[rune, strings.Position, bool, S]
 
 	if def.LineComment != "" {
-		line = tokens.LineComment(def.LineComment)
+		line = tokens.LineComment[S](def.LineComment)
 	}
 
-	var blockOpen parsec.Combinator[rune, strings.Position, string]
-	var blockBody parsec.Combinator[rune, strings.Position, bool]
+	var blockOpen parsec.Combinator[rune, strings.Position, string, S]
+	var blockBody parsec.Combinator[rune, strings.Position, bool, S]
 
 	if def.BlockComment[0] != "" {
-		blockOpen = strings.Try(strings.String("comment start", def.BlockComment[0]))
-		blockBody = tokens.CommentBody(def.BlockComment[0], def.BlockComment[1], def.NestedComments)
+		blockOpen = strings.Try(strings.String[S]("comment start", def.BlockComment[0]))
+		blockBody = tokens.CommentBody[S](def.BlockComment[0], def.BlockComment[1], def.NestedComments)
 	}
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (bool, parsec.Error[strings.Position]) {
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (bool, parsec.Error[strings.Position]) {
 		for {
-			if _, err := spaces(buf); err != nil {
+			if _, err := spaces(state, buf); err != nil {
 				return false, err
 			}
 
 			// a line comment has no fatal errors of its own: the
 			// only failure is the missing start marker
 			if line != nil {
-				if _, err := line(buf); err == nil {
+				if _, err := line(state, buf); err == nil {
 					continue
 				}
 			}
 
 			// a block comment commits after its opening
 			if blockOpen != nil {
-				if _, err := blockOpen(buf); err == nil {
-					if _, cerr := blockBody(buf); cerr != nil {
+				if _, err := blockOpen(state, buf); err == nil {
+					if _, cerr := blockBody(state, buf); cerr != nil {
 						return false, cerr
 					}
 
@@ -315,20 +322,20 @@ func (def Definition) trivia() parsec.Combinator[rune, strings.Position, bool] {
 	}
 }
 
-func (def Definition) identifier() parsec.Combinator[rune, strings.Position, Token] {
-	first := strings.Satisfy("expected identifier", true, def.IdentStart)
+func (def Definition[S]) identifier() parsec.Combinator[rune, strings.Position, Token, S] {
+	first := strings.Satisfy[S]("expected identifier", true, def.IdentStart)
 	rest := strings.Many(0, strings.Try(
-		strings.Satisfy("expected identifier", true, def.IdentLetter),
+		strings.Satisfy[S]("expected identifier", true, def.IdentLetter),
 	))
 	keywords := def.keywordSet()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
-		head, err := first(buf)
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
+		head, err := first(state, buf)
 		if err != nil {
 			return Token{}, err
 		}
 
-		tail, _ := rest(buf)
+		tail, _ := rest(state, buf)
 
 		lexeme := Lexeme(string(head) + string(tail))
 
@@ -341,10 +348,10 @@ func (def Definition) identifier() parsec.Combinator[rune, strings.Position, Tok
 	}
 }
 
-func stringRest(escapes map[rune]rune) parsec.Combinator[rune, strings.Position, Token] {
-	any := strings.Any()
+func stringRest[S any](escapes map[rune]rune) parsec.Combinator[rune, strings.Position, Token, S] {
+	any := strings.Any[S]()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
 		var text []rune
 
 		for {
@@ -352,7 +359,7 @@ func stringRest(escapes map[rune]rune) parsec.Combinator[rune, strings.Position,
 				return Token{}, parsec.NewParseError(buf.Position(), "unterminated string literal")
 			}
 
-			r, rerr := any(buf)
+			r, rerr := any(state, buf)
 			if rerr != nil {
 				return Token{}, rerr
 			}
@@ -362,7 +369,7 @@ func stringRest(escapes map[rune]rune) parsec.Combinator[rune, strings.Position,
 			}
 
 			if r == '\\' {
-				e, eerr := any(buf)
+				e, eerr := any(state, buf)
 				if eerr != nil {
 					return Token{}, eerr
 				}

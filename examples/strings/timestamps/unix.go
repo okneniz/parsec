@@ -9,66 +9,67 @@ import (
 )
 
 // UnixDate = "Mon Jan _2 15:04:05 MST 2006"
-func unixDate() parsec.Combinator[rune, strings.Position, *time.Time] {
+func unixDate() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Stateless] {
 	dayOfWeek := dayOfWeekPrefix()
 	month := monthPrefix()
 	day := paddedDayNum()
 	hour := paddedHourNum()
-	separator := strings.Colon()
+	separator := strings.Colon[parsec.Stateless]()
 	minute := paddedMinuteNum()
 	second := paddedSecondNum()
 	year := yearWithCentury()
-	zone, _ := strings.TimeZoneByNames("UTC", "EST", "GMT")
+	zone, _ := strings.TimeZoneByNames[parsec.Stateless]("UTC", "EST", "GMT")
 
 	return func(
+		state parsec.Stateless,
 		buffer parsec.Buffer[rune, strings.Position],
 	) (*time.Time, parsec.Error[strings.Position]) {
-		dw, err := dayOfWeek(buffer)
+		dw, err := dayOfWeek(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err := month(buffer)
+		m, err := month(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		d, err := day(buffer)
+		d, err := day(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		h, err := hour(buffer)
+		h, err := hour(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = separator(buffer)
+		_, err = separator(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		min, err := minute(buffer)
+		min, err := minute(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = separator(buffer)
+		_, err = separator(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		sec, err := second(buffer)
+		sec, err := second(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		loc, err := zone(buffer)
+		loc, err := zone(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		y, err := year(buffer)
+		y, err := year(state, buffer)
 		if err != nil {
 			return nil, err
 		}

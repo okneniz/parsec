@@ -217,7 +217,7 @@ func check[T any](t *testing.T, expected interface{}) {
 		t.Fatal(err)
 	}
 
-	actual, err := bytes.Parse(data, MessagePack())
+	actual, err := bytes.Parse(parsec.Stateless{}, data, MessagePack())
 	if err != nil {
 		t.Logf("input: %v", data)
 		t.Logf("hex: %s", toHex(data))

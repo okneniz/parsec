@@ -2,18 +2,20 @@
 // type, the token combinators, and the comment machinery.
 //
 // A lexer is a one-token stepper over the rune buffer,
-// func(parsec.Buffer[rune, strings.Position]) (Token, error): it
+// func(S, parsec.Buffer[rune, strings.Position]) (Token, error): it
 // skips the leading trivia itself and reports the exhausted input
 // with parsec.ErrEndOfFile, the very sentinel the buffers use. The
-// token combinators — Exact, OfKind, Satisfy — take that stepper as
-// their first argument and run over the same rune buffer it reads
-// from: nothing is materialized, the rune position doubles as the
-// token position, and parsec.Try rewinds through the stepper. A
-// language parser is then a combinator,
-// parsec.Combinator[rune, strings.Position, S], built from the token
-// combinators; the lang package assembles one from a Definition,
-// which is where the mapping from runes to tokens is configured:
-// nothing below that package maps runes to tokens.
+// stepper carries the parser state of type S — the same state the
+// combinators carry, so a lexer generated from a language definition
+// sees what the parser sees. The token combinators — Exact, OfKind,
+// Satisfy — take that stepper as their first argument and run over
+// the same rune buffer it reads from: nothing is materialized, the
+// rune position doubles as the token position, and parsec.Try
+// rewinds through the stepper. A language parser is then a
+// combinator, parsec.Combinator[rune, strings.Position, O, S], built
+// from the token combinators; the lang package assembles one from a
+// Definition, which is where the mapping from runes to tokens is
+// configured: nothing below that package maps runes to tokens.
 //
 // LineComment and CommentBody parse the comment forms the languages
 // share: the opening of a comment stays a separate probe, so that a

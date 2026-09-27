@@ -22,19 +22,28 @@
 //     type, a buffer implementing [Buffer], and token-level
 //     combinators.
 //
+// Every combinator also carries a state: one value, given at the entry
+// point, that travels through the whole parse. The state is mutable
+// by convention and combinators that change it restore their changes
+// before returning an error, so a failed alternative leaves the state
+// as it found it, the way Try leaves the buffer position. A parser
+// that needs no state uses [Stateless] for it.
+//
 // See the examples directory for complete parsers built with
 // this library: JSON, timestamps, credit card numbers, math
 // expressions, MessagePack, PNG, a tiny ML dialect and a math
 // language built from a lang.Definition.
 package parsec
 
-// Parse applies the c combinator to the buffer and returns its result.
-// It is a small convenience wrapper: c(buffer) does the same.
-func Parse[T any, P any, S any](
+// Parse applies the c combinator to the buffer with the given state
+// and returns its result. It is a small convenience wrapper:
+// c(state, buffer) does the same.
+func Parse[T any, P any, O any, S any](
+	state S,
 	buffer Buffer[T, P],
-	c Combinator[T, P, S],
-) (S, Error[P]) {
-	result, err := c(buffer)
+	c Combinator[T, P, O, S],
+) (O, Error[P]) {
+	result, err := c(state, buffer)
 	if err != nil {
 		return result, err
 	}

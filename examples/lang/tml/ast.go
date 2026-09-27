@@ -20,8 +20,28 @@ type BoolLit struct {
 	Value bool
 }
 
-// Ident is a variable reference; tiny ml has no qualified names.
-type Ident = lang.Ident
+// Var is a variable reference by de Bruijn index: 0 is the innermost
+// enclosing binder, 1 the next one out.
+type Var struct {
+	Index int
+}
+
+// ForwardRef is a reference to a name no enclosing binder holds when
+// it is read. The fixup pass of Parse resolves the ones that name a
+// top-level fun declared later — the mutual recursion of tiny ml —
+// into a TopVar; whatever survives names nothing at all, and the
+// typechecker reports it.
+type ForwardRef struct {
+	Name string
+}
+
+// TopVar is a reference into the top-level frame by absolute
+// position. The frame is one shared row of slots the declarations
+// fill as the program runs, so a function sees the top-level names
+// declared after it — tiny ml extends recursion this way.
+type TopVar struct {
+	Pos int
+}
 
 // If is a conditional expression.
 type If struct {
@@ -106,12 +126,24 @@ func (e BoolLit) String() string {
 	return strconv.FormatBool(e.Value)
 }
 
+func (e Var) String() string {
+	return "var(" + strconv.Itoa(e.Index) + ")"
+}
+
+func (e ForwardRef) String() string {
+	return e.Name
+}
+
+func (e TopVar) String() string {
+	return "top(" + strconv.Itoa(e.Pos) + ")"
+}
+
 func (e If) String() string {
 	return paren("if", e.Cond.String(), e.Then.String(), e.Else.String())
 }
 
 func (e Fn) String() string {
-	return paren("fn", e.Arg.String(), e.Body.String())
+	return paren("fn", e.Body.String())
 }
 
 func (e Tuple) String() string {

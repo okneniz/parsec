@@ -4,9 +4,9 @@ import "fmt"
 
 // Optional applies c and returns its result,
 // or the def value when c fails. It never fails.
-func Optional[T any, P any, S any](c Combinator[T, P, S], def S) Combinator[T, P, S] {
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		result, err := c(buffer)
+func Optional[T any, P any, O any, S any](c Combinator[T, P, O, S], def O) Combinator[T, P, O, S] {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		result, err := c(state, buffer)
 		if err != nil {
 			return def, nil
 		}
@@ -19,12 +19,12 @@ func Optional[T any, P any, S any](c Combinator[T, P, S], def S) Combinator[T, P
 // It stops at the first error or at the end of the buffer and returns
 // everything collected so far, possibly an empty slice.
 // Wrap c in Try to stop without consuming input.
-func Many[T any, P any, S any](cap int, c Combinator[T, P, S]) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+func Many[T any, P any, O any, S any](cap int, c Combinator[T, P, O, S]) Combinator[T, P, []O, S] {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
 		for !buffer.IsEOF() {
-			x, err := c(buffer)
+			x, err := c(state, buffer)
 			if err != nil {
 				break
 			}
@@ -38,18 +38,18 @@ func Many[T any, P any, S any](cap int, c Combinator[T, P, S]) Combinator[T, P, 
 
 // Some is like Many but requires at least one item:
 // it fails with errMessage when nothing could be parsed.
-func Some[T any, P any, S any](
+func Some[T any, P any, O any, S any](
 	cap int,
 	errMessage string,
-	c Combinator[T, P, S],
-) Combinator[T, P, []S] {
+	c Combinator[T, P, O, S],
+) Combinator[T, P, []O, S] {
 	parse := Many(cap, c)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
 
 		// ignore err for coverage - many return at least empty slice
-		result, _ := parse(buffer)
+		result, _ := parse(state, buffer)
 		if len(result) == 0 {
 			return nil, NewParseError(pos, errMessage)
 		}
@@ -60,11 +60,11 @@ func Some[T any, P any, S any](
 
 // Count applies c exactly cap times and collects the results.
 // It fails with errMessage as soon as any application fails.
-func Count[T any, P any, S any](
+func Count[T any, P any, O any, S any](
 	cap int,
 	errMessage string,
-	c Combinator[T, P, S],
-) Combinator[T, P, []S] {
+	c Combinator[T, P, O, S],
+) Combinator[T, P, []O, S] {
 	f, err := Quantifier(errMessage, cap, cap, c)
 	if err != nil {
 		panic(err)
@@ -77,11 +77,11 @@ func Count[T any, P any, S any](
 // It stops at the first error after collecting from items, restoring
 // the buffer position to the end of the last successful application.
 // It returns a build error when from is greater than to or negative.
-func Quantifier[T any, P any, S any](
+func Quantifier[T any, P any, O any, S any](
 	errMessage string,
 	from, to int,
-	c Combinator[T, P, S],
-) (Combinator[T, P, []S], error) {
+	c Combinator[T, P, O, S],
+) (Combinator[T, P, []O, S], error) {
 	if from > to {
 		return nil, fmt.Errorf(
 			"param 'from' must be less than param 'to', actual from=%d, to=%d",
@@ -98,14 +98,14 @@ func Quantifier[T any, P any, S any](
 		)
 	}
 
-	return func(buf Buffer[T, P]) ([]S, Error[P]) {
+	return func(state S, buf Buffer[T, P]) ([]O, Error[P]) {
 		start := buf.Position()
-		result := make([]S, 0, to-from)
+		result := make([]O, 0, to-from)
 
 		for i := 0; i < to; i++ {
 			pos := buf.Position()
 
-			n, err := c(buf)
+			n, err := c(state, buf)
 			if err != nil {
 				if len(result) >= from {
 					if seekErr := buf.Seek(pos); seekErr != nil {

@@ -12,13 +12,13 @@ import (
 func TestLexerDefinitions(t *testing.T) {
 	tests := []struct {
 		name string
-		def  Definition
+		def  Definition[parsec.Stateless]
 		src  string
 		want []Token
 	}{
 		{
 			name: "bare identifiers and integers",
-			def:  Definition{Integers: true},
+			def:  Definition[parsec.Stateless]{Integers: true},
 			src:  "x1 42 y",
 			want: []Token{
 				{Kind: KindIdent, Lexeme: "x1"},
@@ -28,7 +28,7 @@ func TestLexerDefinitions(t *testing.T) {
 		},
 		{
 			name: "a config file: line comments, keywords, punctuation",
-			def: Definition{
+			def: Definition[parsec.Stateless]{
 				LineComment: "#",
 				Keywords:    []string{"set", "on", "off"},
 				Punctuation: "=:",
@@ -48,7 +48,7 @@ func TestLexerDefinitions(t *testing.T) {
 		},
 		{
 			name: "shared operator prefixes go to the longest",
-			def: Definition{
+			def: Definition[parsec.Stateless]{
 				Operators:   []string{"<<=", "<<", "<"},
 				Punctuation: "()",
 			},
@@ -67,7 +67,7 @@ func TestLexerDefinitions(t *testing.T) {
 		},
 		{
 			name: "nested comments, strings with escapes",
-			def: Definition{
+			def: Definition[parsec.Stateless]{
 				BlockComment:   [2]string{"(*", "*)"},
 				NestedComments: true,
 				Operators:      []string{"==", "=", "<="},
@@ -114,7 +114,7 @@ func TestLexerDefinitions(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := lex(test.def, test.src)
+			got, err := lex(test.def, parsec.Stateless{}, test.src)
 			require.NoError(t, err)
 			require.Equal(t, test.want, got)
 		})
@@ -126,8 +126,8 @@ func TestLexerDefinitions(t *testing.T) {
 // the punctuation, and — through Custom, the way the doc suggests —
 // raw strings and rune literals, which a Definition cannot describe.
 // It is a lexer for reading Go, not a front end: hex digits and
-func goDefinition() Definition {
-	return Definition{
+func goDefinition() Definition[parsec.Stateless] {
+	return Definition[parsec.Stateless]{
 		LineComment:    "//",
 		BlockComment:   [2]string{"/*", "*/"},
 		NestedComments: false,
@@ -151,12 +151,12 @@ func goDefinition() Definition {
 			'\'': '\'', 'a': '\a', 'b': '\b', 'f': '\f', 'v': '\v',
 			'0': 0, 'u': 'u', 'U': 'U', 'x': 'x',
 		},
-		Custom: []func(parsec.Buffer[rune, strings.Position]) (Token, error){rawString, runeLiteral},
+		Custom: []func(parsec.Stateless, parsec.Buffer[rune, strings.Position]) (Token, error){rawString, runeLiteral},
 	}
 }
 
 // rawString lexes a Go raw string literal: a backquote run whose
-func rawString(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
+func rawString(_ parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 	r, err := buf.Read(true)
 	if err != nil || r != '`' {
 		return Token{}, ErrNoMatch
@@ -184,7 +184,7 @@ func rawString(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 	return Token{Kind: KindString, Lexeme: Lexeme(text)}, nil
 }
 
-func runeLiteral(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
+func runeLiteral(_ parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 	pos := buf.Position()
 
 	r, err := buf.Read(true)
@@ -231,15 +231,15 @@ func TestLexerGoSource(t *testing.T) {
 	require.NoError(t, err)
 
 	def := goDefinition()
-	stream, err := lex(def, string(src))
+	stream, err := lex(def, parsec.Stateless{}, string(src))
 	require.NoError(t, err)
 
 	require.GreaterOrEqual(t, len(stream), 100)
 	require.Equal(t, Token{Kind: KindKeyword, Lexeme: "package"}, stream[0])
 
-	keywords := map[Lexeme]struct{}{}
+	keywords := map[Lexeme]parsec.Stateless{}
 	for _, kw := range def.Keywords {
-		keywords[Lexeme(kw)] = struct{}{}
+		keywords[Lexeme(kw)] = parsec.Stateless{}
 	}
 
 	for _, tok := range stream {

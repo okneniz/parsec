@@ -7,7 +7,7 @@ import (
 	. "github.com/okneniz/parsec/strings"
 )
 
-func dayOfWeekPrefix() parsec.Combinator[rune, Position, time.Weekday] {
+func dayOfWeekPrefix() parsec.Combinator[rune, Position, time.Weekday, parsec.Stateless] {
 	dwDict := map[string]time.Weekday{
 		"Mon": time.Monday,
 		"Tue": time.Tuesday,
@@ -19,12 +19,12 @@ func dayOfWeekPrefix() parsec.Combinator[rune, Position, time.Weekday] {
 	}
 
 	return Padded(
-		Try(Space("space")),
-		MapStrings("expected day of week", dwDict),
+		Try(Space[parsec.Stateless]("space")),
+		MapStrings[time.Weekday, parsec.Stateless]("expected day of week", dwDict),
 	)
 }
 
-func monthPrefix() parsec.Combinator[rune, Position, time.Month] {
+func monthPrefix() parsec.Combinator[rune, Position, time.Month, parsec.Stateless] {
 	monthDict := map[string]time.Month{
 		"Jan": time.January,
 		"Feb": time.February,
@@ -41,46 +41,46 @@ func monthPrefix() parsec.Combinator[rune, Position, time.Month] {
 	}
 
 	return Padded(
-		Try(Space("space")),
-		MapStrings("expected name of month", monthDict),
+		Try(Space[parsec.Stateless]("space")),
+		MapStrings[time.Month, parsec.Stateless]("expected name of month", monthDict),
 	)
 }
 
-func yearWithCentury() parsec.Combinator[rune, Position, int] {
+func yearWithCentury() parsec.Combinator[rune, Position, int, parsec.Stateless] {
 	return Padded(
-		Try(Space("space")),
-		UnsignedN[int](4, "expected year with century"),
+		Try(Space[parsec.Stateless]("space")),
+		UnsignedN[int, parsec.Stateless](4, "expected year with century"),
 	)
 }
 
-func paddedDayNum() parsec.Combinator[rune, Position, int] {
+func paddedDayNum() parsec.Combinator[rune, Position, int, parsec.Stateless] {
 	return Padded(
-		Try(Space("space")),
+		Try(Space[parsec.Stateless]("space")),
 		Choice(
 			"expected day number",
-			Try(UnsignedN[int](2, "expected day number")),
-			UnsignedN[int](1, "expected day number"),
+			Try(UnsignedN[int, parsec.Stateless](2, "expected day number")),
+			UnsignedN[int, parsec.Stateless](1, "expected day number"),
 		),
 	)
 }
 
-func paddedHourNum() parsec.Combinator[rune, Position, int] {
+func paddedHourNum() parsec.Combinator[rune, Position, int, parsec.Stateless] {
 	return Padded(
-		Try(Space("space")),
-		UnsignedN[int](2, "expected hour number"),
+		Try(Space[parsec.Stateless]("space")),
+		UnsignedN[int, parsec.Stateless](2, "expected hour number"),
 	)
 }
 
-func paddedMinuteNum() parsec.Combinator[rune, Position, int] {
+func paddedMinuteNum() parsec.Combinator[rune, Position, int, parsec.Stateless] {
 	return Padded(
-		Try(Space("space")),
-		UnsignedN[int](2, "expected minute number"),
+		Try(Space[parsec.Stateless]("space")),
+		UnsignedN[int, parsec.Stateless](2, "expected minute number"),
 	)
 }
 
-func paddedSecondNum() parsec.Combinator[rune, Position, int] {
+func paddedSecondNum() parsec.Combinator[rune, Position, int, parsec.Stateless] {
 	return Padded(
-		Try(Space("space")),
-		UnsignedN[int](2, "expected second number"),
+		Try(Space[parsec.Stateless]("space")),
+		UnsignedN[int, parsec.Stateless](2, "expected second number"),
 	)
 }

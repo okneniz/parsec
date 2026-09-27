@@ -16,7 +16,7 @@ func TestParens(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Parens(Try(NoneOf("expected none parens", '(', ')'))),
+			comb: Parens(Try(NoneOf[parsec.Stateless]("expected none parens", '(', ')'))),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -98,7 +98,7 @@ func TestBraces(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Braces(Try(NoneOf("expected none braces", '{', '}'))),
+			comb: Braces(Try(NoneOf[parsec.Stateless]("expected none braces", '{', '}'))),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -180,7 +180,7 @@ func TestAngles(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Angles(Try(NoneOf("expected none angles", '<', '>'))),
+			comb: Angles(Try(NoneOf[parsec.Stateless]("expected none angles", '<', '>'))),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -262,7 +262,7 @@ func TestSquares(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Squares(Try(NoneOf("expected none squares", '[', ']'))),
+			comb: Squares(Try(NoneOf[parsec.Stateless]("expected none squares", '[', ']'))),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -344,7 +344,7 @@ func TestSemi(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Semi(),
+			comb: Semi[parsec.Stateless](),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -386,7 +386,7 @@ func TestComma(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Comma(),
+			comb: Comma[parsec.Stateless](),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -428,7 +428,7 @@ func TestColon(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Colon(),
+			comb: Colon[parsec.Stateless](),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -470,7 +470,7 @@ func TestDot(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Dot(),
+			comb: Dot[parsec.Stateless](),
 			cases: []testCase[rune]{
 				{
 					input: "",
@@ -515,12 +515,12 @@ func TestUnsigned(t *testing.T) {
 	arb := ohsnap.NewBuilder(rnd)
 
 	t.Run("uint8", func(t *testing.T) {
-		parseUnsigned := Unsigned[uint8]()
+		parseUnsigned := Unsigned[uint8, parsec.Stateless]()
 
 		ohsnap.Check(t, math.MaxUint8, arb.Uint8(), func(data uint8) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -541,12 +541,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("uint16", func(t *testing.T) {
-		parseUnsigned := Unsigned[uint16]()
+		parseUnsigned := Unsigned[uint16, parsec.Stateless]()
 
 		ohsnap.Check(t, math.MaxUint16, arb.Uint16(), func(data uint16) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -567,12 +567,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("uint32", func(t *testing.T) {
-		parseUnsigned := Unsigned[uint32]()
+		parseUnsigned := Unsigned[uint32, parsec.Stateless]()
 
 		ohsnap.Check(t, 50000, arb.Uint32(), func(data uint32) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -593,12 +593,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("uint64", func(t *testing.T) {
-		parseUnsigned := Unsigned[uint64]()
+		parseUnsigned := Unsigned[uint64, parsec.Stateless]()
 
 		ohsnap.Check(t, 50000, arb.Uint64(), func(data uint64) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -619,12 +619,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("uint", func(t *testing.T) {
-		parseUnsigned := Unsigned[uint]()
+		parseUnsigned := Unsigned[uint, parsec.Stateless]()
 
 		ohsnap.Check(t, 50000, arb.Uint(), func(data uint) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -645,12 +645,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("positive int8", func(t *testing.T) {
-		parseUnsigned := Unsigned[int8]()
+		parseUnsigned := Unsigned[int8, parsec.Stateless]()
 
 		ohsnap.Check(t, math.MaxInt8, arb.MinInt8(0).Int8(), func(data int8) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -671,12 +671,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("positive int16", func(t *testing.T) {
-		parseUnsigned := Unsigned[int16]()
+		parseUnsigned := Unsigned[int16, parsec.Stateless]()
 
 		ohsnap.Check(t, math.MaxInt16, arb.MinInt16(0).Int16(), func(data int16) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -697,12 +697,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("positive int32", func(t *testing.T) {
-		parseUnsigned := Unsigned[int32]()
+		parseUnsigned := Unsigned[int32, parsec.Stateless]()
 
 		ohsnap.Check(t, 50000, arb.MinInt32(0).Int32(), func(data int32) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -723,12 +723,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("positive int64", func(t *testing.T) {
-		parseUnsigned := Unsigned[int64]()
+		parseUnsigned := Unsigned[int64, parsec.Stateless]()
 
 		ohsnap.Check(t, 50000, arb.MinInt64(0).Int64(), func(data int64) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -749,12 +749,12 @@ func TestUnsigned(t *testing.T) {
 	})
 
 	t.Run("positive int", func(t *testing.T) {
-		parseUnsigned := Unsigned[int]()
+		parseUnsigned := Unsigned[int, parsec.Stateless]()
 
 		ohsnap.Check(t, 50000, arb.MinInt(0).Int(), func(data int) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)
@@ -782,7 +782,7 @@ func checkUnsignedN[T parsec.Integer](t *testing.T, size int, arb ohsnap.Arbitra
 		t.Helper()
 		t.Parallel()
 
-		parseUnsigned := UnsignedN[T](
+		parseUnsigned := UnsignedN[T, parsec.Stateless](
 			size,
 			fmt.Sprintf("expected digit (size=%d)", size),
 		)
@@ -790,7 +790,7 @@ func checkUnsignedN[T parsec.Integer](t *testing.T, size int, arb ohsnap.Arbitra
 		ohsnap.Check(t, 1000, arb, func(data T) bool {
 			str := fmt.Sprintf("%d", data)
 
-			result, err := ParseString(str, parseUnsigned)
+			result, err := ParseString(parsec.Stateless{}, str, parseUnsigned)
 			if err != nil {
 				t.Log("number", data)
 				t.Log("number string", str)

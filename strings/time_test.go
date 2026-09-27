@@ -1,6 +1,8 @@
 package strings
 
 import (
+	"github.com/okneniz/parsec"
+
 	"testing"
 	"time"
 	_ "time/tzdata"
@@ -12,13 +14,13 @@ func TestTimeZone(t *testing.T) {
 	zones := []string{"UTC", "EST", "GMT"}
 
 	t.Run("case 1", func(t *testing.T) {
-		comb, err := TimeZoneByNames(zones...)
+		comb, err := TimeZoneByNames[parsec.Stateless](zones...)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		for _, zone := range zones {
-			result, err := ParseString(zone, comb)
+			result, err := ParseString(parsec.Stateless{}, zone, comb)
 			assert.NoError(t, err)
 			assert.NotNil(t, result, "expected pointer to time zone")
 			assert.Equal(t, result.String(), zone)
@@ -26,13 +28,13 @@ func TestTimeZone(t *testing.T) {
 	})
 
 	t.Run("case 2", func(t *testing.T) {
-		comb, err := TimeZoneByNames("Europe/Moscow")
+		comb, err := TimeZoneByNames[parsec.Stateless]("Europe/Moscow")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		for _, zone := range zones {
-			result, err := ParseString(zone, comb)
+			result, err := ParseString(parsec.Stateless{}, zone, comb)
 			assert.Error(t, err)
 			assert.Nil(t, result, nil)
 		}
@@ -56,10 +58,10 @@ func TestTimeZoneByNames(t *testing.T) {
 	}
 
 	t.Run("case 1", func(t *testing.T) {
-		comb := TimeZone(locations...)
+		comb := TimeZone[parsec.Stateless](locations...)
 
 		for _, zone := range zones {
-			result, err := ParseString(zone, comb)
+			result, err := ParseString(parsec.Stateless{}, zone, comb)
 			assert.NoError(t, err)
 			assert.NotNil(t, result, "expected pointer to time zone")
 			assert.Equal(t, result.String(), zone)
@@ -72,10 +74,10 @@ func TestTimeZoneByNames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		comb := TimeZone(loc)
+		comb := TimeZone[parsec.Stateless](loc)
 
 		for _, zone := range zones {
-			result, err := ParseString(zone, comb)
+			result, err := ParseString(parsec.Stateless{}, zone, comb)
 			assert.Error(t, err)
 			assert.Nil(t, result)
 		}

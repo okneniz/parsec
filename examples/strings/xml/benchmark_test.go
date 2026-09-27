@@ -1,6 +1,8 @@
 package xml
 
 import (
+	"github.com/okneniz/parsec"
+
 	"testing"
 
 	"github.com/okneniz/parsec/strings"
@@ -20,7 +22,7 @@ func BenchmarkSAX(b *testing.B) {
 	buf := strings.Buffer([]rune(`<a x="1">text &amp; more</a><!-- note --><b/>`))
 	start := buf.Position()
 
-	seq, _ := Events()(buf)
+	seq, _ := Events()(parsec.Stateless{}, buf)
 
 	b.ReportAllocs()
 

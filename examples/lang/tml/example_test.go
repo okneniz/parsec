@@ -23,9 +23,9 @@ val _ = let val x = even 10 in if x then 1 else ~1 end
 		fmt.Println(d)
 	}
 	// Output:
-	// (fun even n (if (= n 0) true (app odd (- n 1))))
-	// (fun odd n (if (= n 0) false (app even (- n 1))))
-	// (val (_ (let (val (x (app even 10))) in (if x 1 (app ~ 1)) end)))
+	// (fun even n (if (= var(0) 0) true (app top(2) (- var(0) 1))))
+	// (fun odd n (if (= var(0) 0) false (app var(2) (- var(0) 1))))
+	// (val (_ (let (val (x (app var(1) 10))) in (if var(0) 1 (app var(3) 1)) end)))
 }
 
 func Example_infer() {

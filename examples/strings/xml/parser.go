@@ -36,9 +36,9 @@ func isNameRune(r rune) bool {
 // so its errors reach the stream as they are. The stream ends
 // silently at the end of the document and with the error of the
 // first malformed event; see [parsec.Seq] for the full contract.
-func Events() parsec.Combinator[rune, strings.Position, iter.Seq2[Event, parsec.Error[strings.Position]]] {
-	branches := parsec.NewLongestPrefixTree[string, strings.Position, rune, Event](
-		map[string]parsec.Combinator[rune, strings.Position, Event]{
+func Events() parsec.Combinator[rune, strings.Position, iter.Seq2[Event, parsec.Error[strings.Position]], parsec.Stateless] {
+	branches := parsec.NewLongestPrefixTree[rune, strings.Position, string, Event, parsec.Stateless](
+		map[string]parsec.Combinator[rune, strings.Position, Event, parsec.Stateless]{
 			"<!--":      commentBody(),
 			"<![CDATA[": cdataBody(),
 			"<?":        procInstBody(),
@@ -52,10 +52,10 @@ func Events() parsec.Combinator[rune, strings.Position, iter.Seq2[Event, parsec.
 
 	text := charData()
 
-	step := func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+	step := func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
 		pos := buf.Position()
 
-		branch, err := branches.Lookup(buf)
+		branch, err := branches.Lookup(state, buf)
 		if err != nil {
 			return Event{}, err
 		}
@@ -63,9 +63,9 @@ func Events() parsec.Combinator[rune, strings.Position, iter.Seq2[Event, parsec.
 		var ev Event
 
 		if branch != nil {
-			ev, err = branch(buf)
+			ev, err = branch(state, buf)
 		} else {
-			ev, err = text(buf)
+			ev, err = text(state, buf)
 		}
 
 		ev.Pos = pos
@@ -82,7 +82,7 @@ func Events() parsec.Combinator[rune, strings.Position, iter.Seq2[Event, parsec.
 func Parse(src string) ([]Event, error) {
 	buf := strings.Buffer([]rune(src))
 
-	seq, err := Events()(buf)
+	seq, err := Events()(parsec.Stateless{}, buf)
 	if err != nil {
 		return nil, err
 	}
@@ -156,9 +156,9 @@ func isSpaceText(text string) bool {
 
 // name parses an XML name: a start rune, then as many name runes as
 // there are.
-func name() parsec.Combinator[rune, strings.Position, string] {
-	head := strings.Try(strings.Satisfy("expected name", true, isNameStart))
-	tail := strings.Many(0, strings.Try(strings.Satisfy("expected name", true, isNameRune)))
+func name() parsec.Combinator[rune, strings.Position, string, parsec.Stateless] {
+	head := strings.Try(strings.Satisfy[parsec.Stateless]("expected name", true, isNameStart))
+	tail := strings.Many(0, strings.Try(strings.Satisfy[parsec.Stateless]("expected name", true, isNameRune)))
 
 	return parsec.Cast(
 		parsec.And(head, tail, func(head rune, tail []rune) []rune {
@@ -172,11 +172,11 @@ func name() parsec.Combinator[rune, strings.Position, string] {
 
 // commentBody parses the rest of a comment after the dispatch has
 // consumed its opener: everything up to -->, which is not included.
-func commentBody() parsec.Combinator[rune, strings.Position, Event] {
+func commentBody() parsec.Combinator[rune, strings.Position, Event, parsec.Stateless] {
 	body := bodyUntil("-->", "unterminated comment")
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
-		text, err := body(buf)
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+		text, err := body(state, buf)
 		if err != nil {
 			return Event{}, err
 		}
@@ -188,11 +188,11 @@ func commentBody() parsec.Combinator[rune, strings.Position, Event] {
 // cdataBody parses the rest of a CDATA section after the dispatch
 // has consumed its opener: everything up to ]]>, as is — markup
 // inside is not interpreted.
-func cdataBody() parsec.Combinator[rune, strings.Position, Event] {
+func cdataBody() parsec.Combinator[rune, strings.Position, Event, parsec.Stateless] {
 	body := bodyUntil("]]>", "unterminated CDATA section")
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
-		text, err := body(buf)
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+		text, err := body(state, buf)
 		if err != nil {
 			return Event{}, err
 		}
@@ -204,17 +204,17 @@ func cdataBody() parsec.Combinator[rune, strings.Position, Event] {
 // procInstBody parses the rest of a processing instruction after the
 // dispatch has consumed <?: a target name, then everything up to ?>.
 // The xml declaration is one, with the target xml.
-func procInstBody() parsec.Combinator[rune, strings.Position, Event] {
+func procInstBody() parsec.Combinator[rune, strings.Position, Event, parsec.Stateless] {
 	target := name()
 	body := bodyUntil("?>", "unterminated processing instruction")
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
-		n, err := target(buf)
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+		n, err := target(state, buf)
 		if err != nil {
 			return Event{}, parsec.NewParseError(buf.Position(), "expected processing instruction target", err)
 		}
 
-		text, err := body(buf)
+		text, err := body(state, buf)
 		if err != nil {
 			return Event{}, err
 		}
@@ -225,17 +225,17 @@ func procInstBody() parsec.Combinator[rune, strings.Position, Event] {
 
 // endTagBody parses the rest of a closing tag after the dispatch has
 // consumed </: a name, then >.
-func endTagBody() parsec.Combinator[rune, strings.Position, Event] {
+func endTagBody() parsec.Combinator[rune, strings.Position, Event, parsec.Stateless] {
 	target := name()
-	gt := strings.Eq("expected '>'", '>')
+	gt := strings.Eq[parsec.Stateless]("expected '>'", '>')
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
-		n, err := target(buf)
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+		n, err := target(state, buf)
 		if err != nil {
 			return Event{}, parsec.NewParseError(buf.Position(), "expected element name", err)
 		}
 
-		if _, err := gt(buf); err != nil {
+		if _, err := gt(state, buf); err != nil {
 			return Event{}, parsec.NewParseError(buf.Position(), "expected '>' after </"+n, err)
 		}
 
@@ -250,15 +250,15 @@ func endTagBody() parsec.Combinator[rune, strings.Position, Event] {
 // the probe that stops it, everything after the whitespace is
 // committed to the attribute, and a committed body cannot live
 // inside Many.
-func startTagBody() parsec.Combinator[rune, strings.Position, Event] {
+func startTagBody() parsec.Combinator[rune, strings.Position, Event, parsec.Stateless] {
 	target := name()
-	space := strings.Try(strings.Space("expected attribute"))
+	space := strings.Try(strings.Space[parsec.Stateless]("expected attribute"))
 	attribute := attr()
-	slash := strings.Try(strings.String("expected '>'", "/"))
-	gt := strings.Eq("expected '>'", '>')
+	slash := strings.Try(strings.String[parsec.Stateless]("expected '>'", "/"))
+	gt := strings.Eq[parsec.Stateless]("expected '>'", '>')
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
-		n, err := target(buf)
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+		n, err := target(state, buf)
 		if err != nil {
 			return Event{}, parsec.NewParseError(buf.Position(), "expected element name", err)
 		}
@@ -266,11 +266,11 @@ func startTagBody() parsec.Combinator[rune, strings.Position, Event] {
 		var as []Attr
 
 		for {
-			if _, err := space(buf); err != nil {
+			if _, err := space(state, buf); err != nil {
 				break
 			}
 
-			a, err := attribute(buf)
+			a, err := attribute(state, buf)
 			if err != nil {
 				return Event{}, err
 			}
@@ -278,15 +278,15 @@ func startTagBody() parsec.Combinator[rune, strings.Position, Event] {
 			as = append(as, a)
 		}
 
-		if _, err := slash(buf); err == nil {
-			if _, err := gt(buf); err != nil {
+		if _, err := slash(state, buf); err == nil {
+			if _, err := gt(state, buf); err != nil {
 				return Event{}, err
 			}
 
 			return Event{Kind: KindEmptyTag, Name: n, Attrs: as}, nil
 		}
 
-		if _, err := gt(buf); err != nil {
+		if _, err := gt(state, buf); err != nil {
 			return Event{}, err
 		}
 
@@ -298,22 +298,22 @@ func startTagBody() parsec.Combinator[rune, strings.Position, Event] {
 // caller has already consumed as the loop probe: a name, =, and a
 // quoted value with entities decoded. Everything here is committed:
 // a broken attribute is an error, not a missing one.
-func attr() parsec.Combinator[rune, strings.Position, Attr] {
+func attr() parsec.Combinator[rune, strings.Position, Attr, parsec.Stateless] {
 	target := name()
-	eq := strings.Eq("expected '='", '=')
+	eq := strings.Eq[parsec.Stateless]("expected '='", '=')
 	value := attrValue()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Attr, parsec.Error[strings.Position]) {
-		n, err := target(buf)
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Attr, parsec.Error[strings.Position]) {
+		n, err := target(state, buf)
 		if err != nil {
 			return Attr{}, err
 		}
 
-		if _, err := eq(buf); err != nil {
+		if _, err := eq(state, buf); err != nil {
 			return Attr{}, err
 		}
 
-		v, err := value(buf)
+		v, err := value(state, buf)
 		if err != nil {
 			return Attr{}, err
 		}
@@ -326,36 +326,36 @@ func attr() parsec.Combinator[rune, strings.Position, Attr] {
 // The opening quote is a probe; everything after it is committed: a
 // '<' inside the value or a missing closing quote is an error, and
 // the run stops only at the opening quote again.
-func attrValue() parsec.Combinator[rune, strings.Position, string] {
+func attrValue() parsec.Combinator[rune, strings.Position, string, parsec.Stateless] {
 	quote := parsec.Choice("expected quoted value",
-		strings.Try(strings.Eq("expected quote", '"')),
-		strings.Try(strings.Eq("expected quote", '\'')),
+		strings.Try(strings.Eq[parsec.Stateless]("expected quote", '"')),
+		strings.Try(strings.Eq[parsec.Stateless]("expected quote", '\'')),
 	)
 
 	entity := entityBody()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (string, parsec.Error[strings.Position]) {
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (string, parsec.Error[strings.Position]) {
 		pos := buf.Position()
 
-		q, err := quote(buf)
+		q, err := quote(state, buf)
 		if err != nil {
 			return "", err
 		}
 
-		body := strings.Try(strings.Satisfy("expected attribute value", true, func(r rune) bool {
+		body := strings.Try(strings.Satisfy[parsec.Stateless]("expected attribute value", true, func(r rune) bool {
 			return r != q && r != '<'
 		}))
 
 		var out []rune
 
 		for !buf.IsEOF() {
-			r, err := body(buf)
+			r, err := body(state, buf)
 			if err != nil {
 				break
 			}
 
 			if r == '&' {
-				decoded, derr := entity(buf)
+				decoded, derr := entity(state, buf)
 				if derr != nil {
 					return "", derr
 				}
@@ -368,7 +368,7 @@ func attrValue() parsec.Combinator[rune, strings.Position, string] {
 			out = append(out, r)
 		}
 
-		if _, err := strings.Eq("expected closing quote", q)(buf); err != nil {
+		if _, err := strings.Eq[parsec.Stateless]("expected closing quote", q)(state, buf); err != nil {
 			return "", parsec.NewParseError(pos, "unterminated attribute value", err)
 		}
 
@@ -380,24 +380,24 @@ func attrValue() parsec.Combinator[rune, strings.Position, string] {
 // next '<', with entities and character references decoded. The
 // first rune is a probe — the run is committed only once it has
 // started, and an empty run fails without consuming input.
-func charData() parsec.Combinator[rune, strings.Position, Event] {
-	text := strings.Try(strings.Satisfy("expected character data", true, func(r rune) bool {
+func charData() parsec.Combinator[rune, strings.Position, Event, parsec.Stateless] {
+	text := strings.Try(strings.Satisfy[parsec.Stateless]("expected character data", true, func(r rune) bool {
 		return r != '<'
 	}))
 
 	entity := entityBody()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Event, parsec.Error[strings.Position]) {
 		var out []rune
 
 		for !buf.IsEOF() {
-			r, err := text(buf)
+			r, err := text(state, buf)
 			if err != nil {
 				break
 			}
 
 			if r == '&' {
-				decoded, derr := entity(buf)
+				decoded, derr := entity(state, buf)
 				if derr != nil {
 					return Event{}, derr
 				}
@@ -423,19 +423,19 @@ func charData() parsec.Combinator[rune, strings.Position, Event] {
 // names, a decimal character reference &#65;, or a hexadecimal one
 // &#x41;. It is committed: a missing ';' or an unknown name is an
 // error, not a literal.
-func entityBody() parsec.Combinator[rune, strings.Position, rune] {
-	semi := strings.Eq("expected ';'", ';')
-	ref := strings.Try(strings.Satisfy("expected entity name", true, func(r rune) bool {
+func entityBody() parsec.Combinator[rune, strings.Position, rune, parsec.Stateless] {
+	semi := strings.Eq[parsec.Stateless]("expected ';'", ';')
+	ref := strings.Try(strings.Satisfy[parsec.Stateless]("expected entity name", true, func(r rune) bool {
 		return isNameRune(r) || r == '#'
 	}))
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (rune, parsec.Error[strings.Position]) {
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (rune, parsec.Error[strings.Position]) {
 		pos := buf.Position()
 
 		var body []rune
 
 		for !buf.IsEOF() {
-			r, err := ref(buf)
+			r, err := ref(state, buf)
 			if err != nil {
 				break
 			}
@@ -447,7 +447,7 @@ func entityBody() parsec.Combinator[rune, strings.Position, rune] {
 			return 0, parsec.NewParseError(pos, "expected entity name after '&'")
 		}
 
-		if _, err := semi(buf); err != nil {
+		if _, err := semi(state, buf); err != nil {
 			return 0, parsec.NewParseError(pos, "unterminated entity &"+string(body), err)
 		}
 
@@ -488,15 +488,15 @@ func decodeEntity(pos strings.Position, body []rune) (rune, parsec.Error[strings
 // without the marker. It is committed: an exhausted buffer before
 // the marker is an error, and a partial match of the marker is just
 // text.
-func bodyUntil(end string, errMessage string) parsec.Combinator[rune, strings.Position, string] {
-	anyRune := strings.Any()
+func bodyUntil(end string, errMessage string) parsec.Combinator[rune, strings.Position, string, parsec.Stateless] {
+	anyRune := strings.Any[parsec.Stateless]()
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (string, parsec.Error[strings.Position]) {
+	return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (string, parsec.Error[strings.Position]) {
 		var out []rune
 		matched := 0
 
 		for !buf.IsEOF() {
-			r, err := anyRune(buf)
+			r, err := anyRune(state, buf)
 			if err != nil {
 				return "", err
 			}

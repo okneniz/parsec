@@ -19,7 +19,7 @@ func TestChainl(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
+	parseOp := func(_ parsec.Stateless, buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
@@ -34,7 +34,7 @@ func TestChainl(t *testing.T) {
 		}
 	}
 
-	parseItem := Cast(Any(), func(x rune) (string, error) {
+	parseItem := Cast(Any[parsec.Stateless](), func(x rune) (string, error) {
 		return fmt.Sprintf("%v", string(x)), nil
 	})
 
@@ -94,7 +94,7 @@ func TestChainl1(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
+	parseOp := func(_ parsec.Stateless, buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
@@ -109,7 +109,7 @@ func TestChainl1(t *testing.T) {
 		}
 	}
 
-	parseItem := Cast(Any(), func(x rune) (string, error) {
+	parseItem := Cast(Any[parsec.Stateless](), func(x rune) (string, error) {
 		return fmt.Sprintf("%v", string(x)), nil
 	})
 
@@ -177,7 +177,7 @@ func TestChainr(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
+	parseOp := func(_ parsec.Stateless, buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
@@ -192,7 +192,7 @@ func TestChainr(t *testing.T) {
 		}
 	}
 
-	parseItem := Cast(Any(), func(x rune) (string, error) {
+	parseItem := Cast(Any[parsec.Stateless](), func(x rune) (string, error) {
 		return fmt.Sprintf("%v", string(x)), nil
 	})
 
@@ -252,7 +252,7 @@ func TestChainr1(t *testing.T) {
 		return fmt.Sprintf("(%s + %s)", x, y)
 	}
 
-	parseOp := func(buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
+	parseOp := func(_ parsec.Stateless, buf parsec.Buffer[rune, Position]) (parsec.BinaryOp[string], parsec.Error[Position]) {
 		pos := buf.Position()
 
 		symbol, err := buf.Read(true)
@@ -267,7 +267,7 @@ func TestChainr1(t *testing.T) {
 		}
 	}
 
-	parseItem := Cast(Any(), func(x rune) (string, error) {
+	parseItem := Cast(Any[parsec.Stateless](), func(x rune) (string, error) {
 		return fmt.Sprintf("%v", string(x)), nil
 	})
 
@@ -331,8 +331,8 @@ func TestSepBy(t *testing.T) {
 		{
 			comb: SepBy(
 				0,
-				NotEq("expected not ','", ','),
-				Eq("expected ','", ','),
+				NotEq[parsec.Stateless]("expected not ','", ','),
+				Eq[parsec.Stateless]("expected ','", ','),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -376,8 +376,8 @@ func TestSepBy1(t *testing.T) {
 			comb: SepBy1(
 				0,
 				"expected at least one item separated by ','",
-				NotEq("expected not ','", ','),
-				Eq("expected ','", ','),
+				NotEq[parsec.Stateless]("expected not ','", ','),
+				Eq[parsec.Stateless]("expected ','", ','),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -444,8 +444,8 @@ func TestEndBy(t *testing.T) {
 		{
 			comb: EndBy(
 				0,
-				NotEq("expected not ','", ','),
-				Eq("expected ','", ','),
+				NotEq[parsec.Stateless]("expected not ','", ','),
+				Eq[parsec.Stateless]("expected ','", ','),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -505,8 +505,8 @@ func TestEndBy1(t *testing.T) {
 			comb: EndBy1(
 				0,
 				"expected at least one item separated and ended by ','",
-				NotEq("expected not ','", ','),
-				Eq("expected ','", ','),
+				NotEq[parsec.Stateless]("expected not ','", ','),
+				Eq[parsec.Stateless]("expected ','", ','),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -613,8 +613,8 @@ func TestSepEndBy(t *testing.T) {
 		{
 			comb: SepEndBy(
 				0,
-				NotEq("expected not eq ','", ','),
-				Eq("expected eq ','", ','),
+				NotEq[parsec.Stateless]("expected not eq ','", ','),
+				Eq[parsec.Stateless]("expected eq ','", ','),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -658,8 +658,8 @@ func TestSepEndBy1(t *testing.T) {
 			comb: SepEndBy1(
 				0,
 				"expected at least one item separated and ended by ','",
-				NotEq("expected not eq ','", ','),
-				Eq("expected eq ','", ','),
+				NotEq[parsec.Stateless]("expected not eq ','", ','),
+				Eq[parsec.Stateless]("expected eq ','", ','),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -727,8 +727,8 @@ func TestManyTill(t *testing.T) {
 			comb: ManyTill(
 				0,
 				"expected sequence of digits ended by dot",
-				Range("expected digit", '0', '9'),
-				Eq("expected dot", '.'),
+				Range[parsec.Stateless]("expected digit", '0', '9'),
+				Eq[parsec.Stateless]("expected dot", '.'),
 			),
 			cases: []testCase[[]rune]{
 				{
@@ -856,7 +856,7 @@ func TestSeq(t *testing.T) {
 
 			buf := Buffer([]rune(test.input))
 
-			seq, err := Seq(Try(Eq("expected a", 'a')))(buf)
+			seq, err := Seq(Try(Eq[parsec.Stateless]("expected a", 'a')))(parsec.Stateless{}, buf)
 			require.NoError(t, err)
 
 			var got []rune
@@ -904,7 +904,7 @@ func TestSeqEarlyStop(t *testing.T) {
 
 			buf := Buffer([]rune(test.input))
 
-			seq, err := Seq(Try(Eq("expected a", 'a')))(buf)
+			seq, err := Seq(Try(Eq[parsec.Stateless]("expected a", 'a')))(parsec.Stateless{}, buf)
 			require.NoError(t, err)
 
 			taken := 0
@@ -917,7 +917,7 @@ func TestSeqEarlyStop(t *testing.T) {
 				}
 			}
 
-			next, err := Try(Eq("expected next rune", test.next))(buf)
+			next, err := Try(Eq[parsec.Stateless]("expected next rune", test.next))(parsec.Stateless{}, buf)
 			require.NoError(t, err)
 			require.Equal(t, test.next, next)
 		})

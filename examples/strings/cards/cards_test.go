@@ -1,6 +1,8 @@
 package cards
 
 import (
+	"github.com/okneniz/parsec"
+
 	"maps"
 	"math/rand/v2"
 	"slices"
@@ -26,7 +28,7 @@ func TestCards(t *testing.T) {
 		Try(AmericanExpress()),
 	)
 
-	noice := Many(10, Try(NotRange("expected not digit", '0', '9')))
+	noice := Many(10, Try(NotRange[parsec.Stateless]("expected not digit", '0', '9')))
 	parse := Skip(noice, SepEndBy(0, cards, noice))
 
 	arbNoice := ohsnap.ArbitrarySlice(
@@ -65,7 +67,7 @@ func TestCards(t *testing.T) {
 	)
 
 	ohsnap.Check(t, 100_000, arb, func(input string) bool {
-		output, err := ParseString(input, parse)
+		output, err := ParseString(parsec.Stateless{}, input, parse)
 		if err != nil {
 			t.Log("input:", input)
 			t.Log("output:", output)

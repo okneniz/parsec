@@ -2,38 +2,38 @@ package parsec
 
 // Eq succeeds when the next item is equal to t and returns it.
 // Greedy: consumes the item even on failure (see Try).
-func Eq[T comparable, P any](
+func Eq[T comparable, P any, S any](
 	errMessage string,
 	t T,
-) Combinator[T, P, T] {
-	return Satisfy[T, P](errMessage, true, func(x T) bool {
+) Combinator[T, P, T, S] {
+	return Satisfy[T, P, S](errMessage, true, func(x T) bool {
 		return t == x
 	})
 }
 
 // NotEq succeeds when the next item is not equal to t and returns it.
 // Greedy: consumes the item even on failure (see Try).
-func NotEq[T comparable, P any](
+func NotEq[T comparable, P any, S any](
 	errMessage string,
 	t T,
-) Combinator[T, P, T] {
-	return Satisfy[T, P](errMessage, true, func(x T) bool {
+) Combinator[T, P, T, S] {
+	return Satisfy[T, P, S](errMessage, true, func(x T) bool {
 		return t != x
 	})
 }
 
 // OneOf succeeds when the next item is one of data and returns it.
 // Greedy: consumes the item even on failure (see Try).
-func OneOf[T comparable, P any](
+func OneOf[T comparable, P any, S any](
 	errMessage string,
 	data ...T,
-) Combinator[T, P, T] {
+) Combinator[T, P, T, S] {
 	m := make(map[T]struct{})
 	for _, x := range data {
 		m[x] = struct{}{}
 	}
 
-	return Satisfy[T, P](errMessage, true, func(x T) bool {
+	return Satisfy[T, P, S](errMessage, true, func(x T) bool {
 		_, exists := m[x]
 		return exists
 	})
@@ -41,16 +41,16 @@ func OneOf[T comparable, P any](
 
 // NoneOf succeeds when the next item is none of data and returns it.
 // Greedy: consumes the item even on failure (see Try).
-func NoneOf[T comparable, P any](
+func NoneOf[T comparable, P any, S any](
 	errMessage string,
 	data ...T,
-) Combinator[T, P, T] {
+) Combinator[T, P, T, S] {
 	m := make(map[T]struct{})
 	for _, x := range data {
 		m[x] = struct{}{}
 	}
 
-	return Satisfy[T, P](errMessage, true, func(x T) bool {
+	return Satisfy[T, P, S](errMessage, true, func(x T) bool {
 		_, exists := m[x]
 		return !exists
 	})
@@ -58,11 +58,11 @@ func NoneOf[T comparable, P any](
 
 // SequenceOf expects the next items to be equal to data in the same order
 // and returns them as a slice.
-func SequenceOf[T comparable, P any](
+func SequenceOf[T comparable, P any, S any](
 	errMessage string,
 	data ...T,
-) Combinator[T, P, []T] {
-	return func(buffer Buffer[T, P]) ([]T, Error[P]) {
+) Combinator[T, P, []T, S] {
+	return func(_ S, buffer Buffer[T, P]) ([]T, Error[P]) {
 		pos := buffer.Position()
 
 		result := make([]T, 0, len(data))
@@ -87,17 +87,17 @@ func SequenceOf[T comparable, P any](
 // Map parses a key with the c combinator, looks the key up in cases
 // and returns the mapped value. It fails with errMessage
 // when the key is not found.
-func Map[T any, P any, K comparable, V any](
+func Map[T any, P any, K comparable, O any, S any](
 	errMessage string,
-	cases map[K]V,
-	c Combinator[T, P, K],
-) Combinator[T, P, V] {
-	var null V
+	cases map[K]O,
+	c Combinator[T, P, K, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (V, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		pos := buffer.Position()
 
-		token, err := c(buffer)
+		token, err := c(state, buffer)
 		if err != nil {
 			return null, err
 		}
@@ -114,17 +114,17 @@ func Map[T any, P any, K comparable, V any](
 // MapAs parses a key with the comb combinator, looks the key up in cases
 // and applies the matched combinator to the rest of the input.
 // It fails with errMessage when the key is not found.
-func MapAs[T any, P any, K comparable, V any](
+func MapAs[T any, P any, K comparable, O any, S any](
 	errMessage string,
-	cases map[K]Combinator[T, P, V],
-	comb Combinator[T, P, K],
-) Combinator[T, P, V] {
-	var null V
+	cases map[K]Combinator[T, P, O, S],
+	comb Combinator[T, P, K, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (V, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		pos := buffer.Position()
 
-		key, err := comb(buffer)
+		key, err := comb(state, buffer)
 		if err != nil {
 			return null, err
 		}
@@ -134,7 +134,7 @@ func MapAs[T any, P any, K comparable, V any](
 			return null, NewParseError(pos, errMessage)
 		}
 
-		return parseValue(buffer)
+		return parseValue(state, buffer)
 	}
 }
 
@@ -142,25 +142,25 @@ func MapAs[T any, P any, K comparable, V any](
 // longest-prefix trie (keys are split into items with split) and applies
 // the combinator stored for the longest matched prefix.
 // It fails with errMessage when no key matches.
-func MapTree[T comparable, P any, K comparable, V any](
+func MapTree[T comparable, P any, K comparable, O any, S any](
 	errMessage string,
-	cases map[T]Combinator[K, P, V],
-	split func(T) []K,
-) Combinator[K, P, V] {
+	cases map[K]Combinator[T, P, O, S],
+	split func(K) []T,
+) Combinator[T, P, O, S] {
 	tree := NewLongestPrefixTree(cases, split)
 
-	var null V
+	var null O
 
-	return func(buf Buffer[K, P]) (V, Error[P]) {
+	return func(state S, buf Buffer[T, P]) (O, Error[P]) {
 		pos := buf.Position()
 
-		parse, err := tree.Lookup(buf)
+		parse, err := tree.Lookup(state, buf)
 		if err != nil {
 			return null, NewParseError(pos, err.Error())
 		}
 
 		if parse != nil {
-			return parse(buf)
+			return parse(state, buf)
 		}
 
 		return null, NewParseError(pos, errMessage)

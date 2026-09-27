@@ -28,67 +28,139 @@ func EvalFile(path string) (Env, error) {
 
 // evalProgram runs the already parsed and already typechecked
 // declarations — Eval parses once and passes the result to both the
-// typechecker and the interpreter.
+// typechecker and the interpreter. The environment mirrors the
+// binder stack the parser kept: one cell per binder, and the
+// top-level cells live in a shared frame, patched as the
+// declarations run.
 func evalProgram(decls []Decl) (Env, error) {
 	if _, err := inferProgram(decls); err != nil {
 		return nil, err
 	}
 
-	// one shared environment: closures capture it by reference, so
-	// top-level functions see each other regardless of order
-	env := Env{}
+	names := layout(decls)
+
+	frame := make([]*cell, len(names))
+	for i := range frame {
+		frame[i] = &cell{}
+	}
+
+	pos := 1
 
 	for _, d := range decls {
-		if err := evalDecl(env, d); err != nil {
+		consumed, err := evalTopDecl(frame, pos, d)
+		if err != nil {
 			return nil, err
 		}
+
+		pos += consumed
+	}
+
+	env := Env{}
+
+	for i, name := range names {
+		if name == "~" {
+			continue
+		}
+
+		env[name] = frame[i].val
 	}
 
 	return env, nil
 }
 
-// evalDecl evaluates one declaration into env.
-func evalDecl(env Env, d Decl) error {
+// evalTopDecl evaluates one top-level declaration into the frame
+// slots at pos and returns the slots consumed.
+func evalTopDecl(frame []*cell, pos int, d Decl) (int, error) {
 	switch decl := d.(type) {
 	case ValDecl:
+		consumed := 0
+
 		for _, b := range decl.Binds {
-			v, err := evalExpr(env, b.E)
+			v, err := evalExpr(frame, frame[:pos], b.E)
 			if err != nil {
-				return err
+				return 0, err
 			}
 
-			bindings := Env{}
+			var values []Value
 
-			if err := match(b.Pat, v, bindings); err != nil {
-				return err
+			if err := match(b.Pat, v, &values); err != nil {
+				return 0, err
 			}
 
-			for name, value := range bindings {
-				env[name] = value
+			for _, value := range values {
+				frame[pos].val = value
+				pos++
+				consumed++
 			}
 		}
 
-		return nil
+		return consumed, nil
 	case FunDecl:
-		// the closure captures env, which will contain the function
-		// itself by the time it is called
-		env[decl.Name] = curry(decl.Args, decl.Body, env)
+		// the closure reads the frame through its own slot, which
+		// holds the closure itself by the time it is called
+		frame[pos].val = curry(frame, frame[:pos+1], decl.Args, decl.Body)
 
-		return nil
+		return 1, nil
 	}
 
-	return fmt.Errorf("runtime error: unknown declaration")
+	return 0, fmt.Errorf("runtime error: unknown declaration")
+}
+
+// evalLocalDecl evaluates one declaration of a let and returns the
+// local chain extended with the bound cells.
+func evalLocalDecl(frame []*cell, env []*cell, d Decl) ([]*cell, error) {
+	switch decl := d.(type) {
+	case ValDecl:
+		for _, b := range decl.Binds {
+			v, err := evalExpr(frame, env, b.E)
+			if err != nil {
+				return nil, err
+			}
+
+			var values []Value
+
+			if err := match(b.Pat, v, &values); err != nil {
+				return nil, err
+			}
+
+			for _, value := range values {
+				env = appendCell(env, &cell{val: value})
+			}
+		}
+
+		return env, nil
+	case FunDecl:
+		// the cell comes first, the closure fills it after it is
+		// built: the recursion of a let-bound function
+		self := &cell{}
+
+		env = appendCell(env, self)
+		self.val = curry(frame, env, decl.Args, decl.Body)
+
+		return env, nil
+	}
+
+	return nil, fmt.Errorf("runtime error: unknown declaration")
+}
+
+// appendCell copies env with one more cell on top: the snapshots
+// never share a backing array, so the scopes stay their own.
+func appendCell(env []*cell, c *cell) []*cell {
+	out := make([]*cell, len(env), len(env)+1)
+	copy(out, env)
+
+	return append(out, c)
 }
 
 // curry wraps a multi-argument function body into nested one-argument
 // closures.
-func curry(args []Pat, body Expr, env Env) Value {
+func curry(frame []*cell, env []*cell, args []Pat, body Expr) Value {
 	if len(args) == 0 {
-		return &VClosure{Arg: WildcardPat{}, Body: body, Env: env}
+		return &VClosure{Arg: WildcardPat{}, Body: body, Frame: frame, Env: env}
 	}
 
 	if len(args) == 1 {
-		return &VClosure{Arg: args[0], Body: body, Env: env}
+		return &VClosure{Arg: args[0], Body: body, Frame: frame, Env: env}
 	}
 
 	return &VClosure{
@@ -97,7 +169,8 @@ func curry(args []Pat, body Expr, env Env) Value {
 			Arg:  args[1],
 			Body: nestFn(args[2:], body),
 		},
-		Env: env,
+		Frame: frame,
+		Env:   env,
 	}
 }
 
@@ -111,36 +184,44 @@ func nestFn(args []Pat, body Expr) Expr {
 	return Fn{Arg: args[0], Body: nestFn(args[1:], body)}
 }
 
-// evalExpr evaluates one expression.
-func evalExpr(env Env, e Expr) (Value, error) {
+// evalExpr evaluates one expression. The environment is the binder
+// stack the parser had: one cell per binder, innermost last.
+func evalExpr(frame []*cell, env []*cell, e Expr) (Value, error) {
 	switch expr := e.(type) {
 	case IntLit:
 		return VInt(expr.Value), nil
 	case BoolLit:
 		return VBool(expr.Value), nil
-	case Ident:
-		if v, bound := env[expr.Name]; bound {
+	case Var:
+		if v := env[len(env)-1-expr.Index].val; v != nil {
 			return v, nil
 		}
 
-		return nil, fmt.Errorf("runtime error: unbound variable %s", expr.Name)
+		return nil, fmt.Errorf("runtime error: unbound variable at index %d", expr.Index)
+	case TopVar:
+		if v := frame[expr.Pos].val; v != nil {
+			return v, nil
+		}
+
+		return nil, fmt.Errorf("runtime error: unbound variable at top-level slot %d", expr.Pos)
 	case If:
-		cond, err := evalExpr(env, expr.Cond)
+		cond, err := evalExpr(frame, env, expr.Cond)
 		if err != nil {
 			return nil, err
 		}
 
 		if bool(cond.(VBool)) {
-			return evalExpr(env, expr.Then)
+			return evalExpr(frame, env, expr.Then)
 		}
 
-		return evalExpr(env, expr.Else)
+		return evalExpr(frame, env, expr.Else)
 	case Fn:
-		return &VClosure{Arg: expr.Arg, Body: expr.Body, Env: env}, nil
+		return &VClosure{Arg: expr.Arg, Body: expr.Body, Frame: frame, Env: env}, nil
 	case App:
-		// the lexer glued negation into App(~, literal)
-		if id, ok := expr.Fn.(Ident); ok && id.Name == "~" {
-			arg, err := evalExpr(env, expr.Arg)
+		// the lexer glued negation into App(~, literal): ~ is the
+		// builtin binder at the bottom of the environment
+		if v, ok := expr.Fn.(Var); ok && v.Index == len(env)-1 {
+			arg, err := evalExpr(frame, env, expr.Arg)
 			if err != nil {
 				return nil, err
 			}
@@ -148,24 +229,24 @@ func evalExpr(env Env, e Expr) (Value, error) {
 			return VInt(-int64(arg.(VInt))), nil
 		}
 
-		fn, err := evalExpr(env, expr.Fn)
+		fn, err := evalExpr(frame, env, expr.Fn)
 		if err != nil {
 			return nil, err
 		}
 
-		arg, err := evalExpr(env, expr.Arg)
+		arg, err := evalExpr(frame, env, expr.Arg)
 		if err != nil {
 			return nil, err
 		}
 
-		return apply(fn, arg)
+		return apply(frame, fn, arg)
 	case Infix:
-		return evalInfix(env, expr)
+		return evalInfix(frame, env, expr)
 	case Tuple:
 		items := make(VTuple, 0, len(expr.Items))
 
 		for _, item := range expr.Items {
-			v, err := evalExpr(env, item)
+			v, err := evalExpr(frame, env, item)
 			if err != nil {
 				return nil, err
 			}
@@ -175,19 +256,18 @@ func evalExpr(env Env, e Expr) (Value, error) {
 
 		return items, nil
 	case Let:
-		inner := make(Env, len(env)+len(expr.Decls))
-
-		for k, v := range env {
-			inner[k] = v
-		}
+		inner := env
 
 		for _, d := range expr.Decls {
-			if err := evalDecl(inner, d); err != nil {
+			extended, err := evalLocalDecl(frame, inner, d)
+			if err != nil {
 				return nil, err
 			}
+
+			inner = extended
 		}
 
-		return evalExpr(inner, expr.Body)
+		return evalExpr(frame, inner, expr.Body)
 	}
 
 	return nil, fmt.Errorf("runtime error: unknown expression")
@@ -196,38 +276,35 @@ func evalExpr(env Env, e Expr) (Value, error) {
 // apply calls a closure: the argument is matched against the pattern
 // and the body runs in the captured environment extended with the
 // bindings.
-func apply(fn Value, arg Value) (Value, error) {
+func apply(frame []*cell, fn Value, arg Value) (Value, error) {
 	closure, ok := fn.(*VClosure)
 	if !ok {
 		return nil, fmt.Errorf("runtime error: not a function: %s", fn)
 	}
 
-	bindings := Env{}
+	var values []Value
 
-	if err := match(closure.Arg, arg, bindings); err != nil {
+	if err := match(closure.Arg, arg, &values); err != nil {
 		return nil, err
 	}
 
-	frame := make(Env, len(closure.Env)+len(bindings))
+	env := make([]*cell, len(closure.Env), len(closure.Env)+len(values))
+	copy(env, closure.Env)
 
-	for k, v := range closure.Env {
-		frame[k] = v
+	for _, value := range values {
+		env = append(env, &cell{val: value})
 	}
 
-	for k, v := range bindings {
-		frame[k] = v
-	}
-
-	return evalExpr(frame, closure.Body)
+	return evalExpr(closure.Frame, env, closure.Body)
 }
 
 // evalInfix evaluates an operator application. The typechecker has
 // already fixed the operand types, so the runtime only guards what it
 // cannot know: the zero divisor.
-func evalInfix(env Env, e Infix) (Value, error) {
+func evalInfix(frame []*cell, env []*cell, e Infix) (Value, error) {
 	switch e.Op {
 	case "andalso":
-		l, err := evalExpr(env, e.L)
+		l, err := evalExpr(frame, env, e.L)
 		if err != nil {
 			return nil, err
 		}
@@ -236,14 +313,14 @@ func evalInfix(env Env, e Infix) (Value, error) {
 			return VBool(false), nil
 		}
 
-		r, err := evalExpr(env, e.R)
+		r, err := evalExpr(frame, env, e.R)
 		if err != nil {
 			return nil, err
 		}
 
 		return r, nil
 	case "orelse":
-		l, err := evalExpr(env, e.L)
+		l, err := evalExpr(frame, env, e.L)
 		if err != nil {
 			return nil, err
 		}
@@ -252,15 +329,15 @@ func evalInfix(env Env, e Infix) (Value, error) {
 			return VBool(true), nil
 		}
 
-		return evalExpr(env, e.R)
+		return evalExpr(frame, env, e.R)
 	}
 
-	l, err := evalExpr(env, e.L)
+	l, err := evalExpr(frame, env, e.L)
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := evalExpr(env, e.R)
+	r, err := evalExpr(frame, env, e.R)
 	if err != nil {
 		return nil, err
 	}
@@ -297,13 +374,14 @@ func evalInfix(env Env, e Infix) (Value, error) {
 	return nil, fmt.Errorf("runtime error: unknown operator %s", e.Op)
 }
 
-// match binds the pattern variables of p to the parts of v.
-func match(p Pat, v Value, bindings Env) error {
+// match binds the pattern variables of p to the parts of v, in
+// binding order.
+func match(p Pat, v Value, values *[]Value) error {
 	switch pat := p.(type) {
 	case WildcardPat:
 		return nil
 	case VarPat:
-		bindings[pat.Name] = v
+		*values = append(*values, v)
 
 		return nil
 	case ConstPat:
@@ -328,7 +406,7 @@ func match(p Pat, v Value, bindings Env) error {
 		}
 
 		for i, item := range pat.Items {
-			if err := match(item, tuple[i], bindings); err != nil {
+			if err := match(item, tuple[i], values); err != nil {
 				return err
 			}
 		}

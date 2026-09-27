@@ -11,7 +11,7 @@ func TestMany(t *testing.T) {
 
 	runTestsString(t, []test[[]rune]{
 		{
-			comb: Many(0, Eq("expected a", 'a')),
+			comb: Many(0, Eq[parsec.Stateless]("expected a", 'a')),
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
@@ -47,7 +47,7 @@ func TestSome(t *testing.T) {
 
 	runTestsString(t, []test[[]rune]{
 		{
-			comb: Some(0, "expected at least one 'a'", Eq("expected 'a'", 'a')),
+			comb: Some(0, "expected at least one 'a'", Eq[parsec.Stateless]("expected 'a'", 'a')),
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
@@ -99,7 +99,7 @@ func TestOptional(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Optional(Eq("expected a", 'a'), 123),
+			comb: Optional(Eq[parsec.Stateless]("expected a", 'a'), 123),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -124,7 +124,7 @@ func TestOptional(t *testing.T) {
 			},
 		},
 		{
-			comb: Optional(Satisfy("never match", true, parsec.Nothing[rune]), 'x'),
+			comb: Optional(Satisfy[parsec.Stateless]("never match", true, parsec.Nothing[rune]), 'x'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -156,7 +156,7 @@ func TestCount(t *testing.T) {
 
 	runTestsString(t, []test[[]rune]{
 		{
-			comb: Count(2, "expected 'aa'", Eq("expected 'a'", 'a')),
+			comb: Count(2, "expected 'aa'", Eq[parsec.Stateless]("expected 'a'", 'a')),
 			cases: []testCase[[]rune]{
 				{
 					input:  "",

@@ -19,9 +19,19 @@
 // symbolic operators, the structural tokens of an indentation
 // language — a custom declines input by returning ErrNoMatch.
 //
+// The whole pipeline carries one parser state: Definition, the
+// generated Lexer, Parser and the assembled combinator are generic
+// in the same type parameter S, and a language that keeps no state
+// instantiates them all with parsec.Stateless. The state is
+// mutable by
+// convention and the parsec backtracking contract applies to it:
+// Try rewinds the buffer, not the state, so a combinator that
+// changes the state restores the change itself before failing.
+//
 // New assembles the full parser from a Definition and a Parser: a
 // combinator over the rune buffer, parsec.Combinator[rune,
-// strings.Position, Expr], composable with the rest of the library.
+// strings.Position, Expr, S], composable with the rest of the
+// library.
 // The Parser holds a small fixity table; its Expr parses prefix,
 // postfix and infix operator chains with the declared precedences
 // and associativities. An operator is a lexeme with fixity status,

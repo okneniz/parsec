@@ -33,16 +33,17 @@ const (
 const symbolicChars = "!%&$#+-/:<=>?@\\~`^|*"
 
 var symbolicRun = strings.Some(0, "expected symbolic identifier",
-	strings.Try(strings.OneOf("expected symbolic character", []rune(symbolicChars)...)),
+	strings.Try(strings.OneOf[*state]("expected symbolic character", []rune(symbolicChars)...)),
 )
 
 // symbolicIdentifier parses the maximal run of symbolic characters,
 // as in Standard ML, and returns it as an operator token waiting for
 // the fixity table. The reserved = and => are declined with
 // lang.ErrNoMatch: the definition below lists them as its operators,
-// and the lexer tries Custom before its own branches.
-func symbolicIdentifier(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
-	runes, err := symbolicRun(buf)
+// and the lexer tries Custom before its own branches. The stepper
+// carries the parser state but reads none of it.
+func symbolicIdentifier(st *state, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
+	runes, err := symbolicRun(st, buf)
 	if err != nil {
 		return Token{}, lang.ErrNoMatch
 	}
@@ -61,7 +62,7 @@ func symbolicIdentifier(buf parsec.Buffer[rune, strings.Position]) (Token, error
 // symbols and the punctuation. Everything a Definition cannot
 // describe — the open world of symbolic operators — goes into
 // Custom.
-var definition = lang.Definition{
+var definition = lang.Definition[*state]{
 	BlockComment:   [2]string{"(*", "*)"},
 	NestedComments: true,
 	IdentStart:     unicode.IsLetter,
@@ -72,7 +73,7 @@ var definition = lang.Definition{
 	Operators:   []string{"=>", "="},
 	Punctuation: "_(),",
 	Integers:    true,
-	Custom:      []func(parsec.Buffer[rune, strings.Position]) (Token, error){symbolicIdentifier},
+	Custom:      []func(*state, parsec.Buffer[rune, strings.Position]) (Token, error){symbolicIdentifier},
 }
 
 // lexer is the one-token stepper of tiny ml, generated from the
@@ -83,10 +84,11 @@ var lexer = lang.Lexer(definition)
 // to the end of input. Whitespace and comments are skipped.
 func Lex(src string) ([]Token, error) {
 	buf := strings.Buffer([]rune(src))
+	st := newState()
 	stream := make([]Token, 0, 64)
 
 	for {
-		tok, err := lexer(buf)
+		tok, err := lexer(st, buf)
 		if errors.Is(err, parsec.ErrEndOfFile) {
 			break
 		}

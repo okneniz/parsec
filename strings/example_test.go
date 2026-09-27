@@ -11,11 +11,11 @@ import (
 // surrounding whitespaces.
 func Example() {
 	parser := Padded(
-		Try(Space("whitespace")),
-		Unsigned[int](),
+		Try(Space[parsec.Stateless]("whitespace")),
+		Unsigned[int, parsec.Stateless](),
 	)
 
-	result, err := ParseString(" 42 ", parser)
+	result, err := ParseString(parsec.Stateless{}, " 42 ", parser)
 	fmt.Println(result, err)
 	// Output: 42 <nil>
 }
@@ -25,22 +25,22 @@ func Example() {
 func ExampleChoice() {
 	keyword := Choice(
 		"expected keyword",
-		Try(String("expected 'true'", "true")),
-		Try(String("expected 'false'", "false")),
+		Try(String[parsec.Stateless]("expected 'true'", "true")),
+		Try(String[parsec.Stateless]("expected 'false'", "false")),
 	)
 
-	result, err := ParseString("false", keyword)
+	result, err := ParseString(parsec.Stateless{}, "false", keyword)
 	fmt.Println(result, err)
 	// Output: false <nil>
 }
 
 // Satisfy matches a single rune against an arbitrary predicate.
 func ExampleSatisfy() {
-	vowel := Satisfy("expected vowel", true, func(r rune) bool {
+	vowel := Satisfy[parsec.Stateless]("expected vowel", true, func(r rune) bool {
 		return r == 'a' || r == 'e' || r == 'i' || r == 'o' || r == 'u'
 	})
 
-	result, err := ParseString("u", vowel)
+	result, err := ParseString(parsec.Stateless{}, "u", vowel)
 	fmt.Printf("%c %v\n", result, err)
 	// Output: u <nil>
 }
@@ -48,27 +48,27 @@ func ExampleSatisfy() {
 // Range matches a single rune inside an inclusive range,
 // for example a decimal digit.
 func ExampleRange() {
-	digit := Range("expected decimal digit", '0', '9')
+	digit := Range[parsec.Stateless]("expected decimal digit", '0', '9')
 
-	result, err := ParseString("7", digit)
+	result, err := ParseString(parsec.Stateless{}, "7", digit)
 	fmt.Printf("%c %v\n", result, err)
 	// Output: 7 <nil>
 }
 
 // SequenceOf expects a fixed sequence of runes, like a keyword.
 func ExampleSequenceOf() {
-	let := SequenceOf("expected 'let'", []rune("let")...)
+	let := SequenceOf[parsec.Stateless]("expected 'let'", []rune("let")...)
 
-	result, err := ParseString("let x = 1", let)
+	result, err := ParseString(parsec.Stateless{}, "let x = 1", let)
 	fmt.Println(string(result), err)
 	// Output: let <nil>
 }
 
 // Many applies a combinator as many times as possible.
 func ExampleMany() {
-	digits := Many(4, Digit("expected digit"))
+	digits := Many(4, Digit[parsec.Stateless]("expected digit"))
 
-	result, err := ParseString("0123", digits)
+	result, err := ParseString(parsec.Stateless{}, "0123", digits)
 	fmt.Println(string(result), err)
 	// Output: 0123 <nil>
 }
@@ -76,8 +76,8 @@ func ExampleMany() {
 // Optional falls back to a default value instead of failing.
 func ExampleOptional() {
 	signed := And(
-		Optional(Try(Eq("expected sign", '-')), '+'),
-		Unsigned[int](),
+		Optional(Try(Eq[parsec.Stateless]("expected sign", '-')), '+'),
+		Unsigned[int, parsec.Stateless](),
 		func(sign rune, num int) int {
 			if sign == '-' {
 				return -num
@@ -87,7 +87,7 @@ func ExampleOptional() {
 	)
 
 	for _, input := range []string{"-42", "42"} {
-		result, err := ParseString(input, signed)
+		result, err := ParseString(parsec.Stateless{}, input, signed)
 		fmt.Println(result, err)
 	}
 
@@ -98,9 +98,9 @@ func ExampleOptional() {
 
 // SepBy parses a separator-separated list.
 func ExampleSepBy() {
-	list := SepBy(3, Unsigned[int](), Comma())
+	list := SepBy(3, Unsigned[int, parsec.Stateless](), Comma[parsec.Stateless]())
 
-	result, err := ParseString("1,2,3", list)
+	result, err := ParseString(parsec.Stateless{}, "1,2,3", list)
 	fmt.Println(result, err)
 	// Output: [1 2 3] <nil>
 }
@@ -109,9 +109,9 @@ func ExampleSepBy() {
 // The body element is wrapped in Try: a greedy combinator consumes
 // the rune it failed on, which would otherwise eat the closing paren.
 func ExampleParens() {
-	ident := Some(4, "expected identifier", Try(Letter("expected letter")))
+	ident := Some(4, "expected identifier", Try(Letter[parsec.Stateless]("expected letter")))
 
-	result, err := ParseString("(abc)", Parens(ident))
+	result, err := ParseString(parsec.Stateless{}, "(abc)", Parens(ident))
 	fmt.Println(string(result), err)
 	// Output: abc <nil>
 }
@@ -119,12 +119,12 @@ func ExampleParens() {
 // MapStrings translates the parsed text using a map,
 // matching the longest key on a prefix collision.
 func ExampleMapStrings() {
-	literal := MapStrings("expected boolean literal", map[string]bool{
+	literal := MapStrings[bool, parsec.Stateless]("expected boolean literal", map[string]bool{
 		"true":  true,
 		"false": false,
 	})
 
-	result, err := ParseString("true", literal)
+	result, err := ParseString(parsec.Stateless{}, "true", literal)
 	fmt.Println(result, err)
 	// Output: true <nil>
 }
@@ -132,14 +132,14 @@ func ExampleMapStrings() {
 // Chainl1 parses left-associative binary expressions:
 // 10 - 4 - 2 is (10 - 4) - 2, not 10 - (4 - 2).
 func ExampleChainl1() {
-	number := Padded(Try(Space("whitespace")), Unsigned[int]())
+	number := Padded(Try(Space[parsec.Stateless]("whitespace")), Unsigned[int, parsec.Stateless]())
 
-	minus := Padded(Try(Space("whitespace")), Eq("expected '-'", '-'))
+	minus := Padded(Try(Space[parsec.Stateless]("whitespace")), Eq[parsec.Stateless]("expected '-'", '-'))
 	op := Cast(minus, func(r rune) (parsec.BinaryOp[int], error) {
 		return func(a, b int) int { return a - b }, nil
 	})
 
-	result, err := ParseString("10 - 4 - 2", Chainl1(number, op))
+	result, err := ParseString(parsec.Stateless{}, "10 - 4 - 2", Chainl1(number, op))
 	fmt.Println(result, err)
 	// Output: 4 <nil>
 }
@@ -151,13 +151,13 @@ func ExampleChainl1() {
 func ExampleSeq() {
 	buf := Buffer([]rune("aab"))
 
-	seq, _ := Seq(Try(Eq("expected a", 'a')))(buf)
+	seq, _ := Seq(Try(Eq[parsec.Stateless]("expected a", 'a')))(parsec.Stateless{}, buf)
 
 	for r, err := range seq {
 		fmt.Println(r, err)
 	}
 
-	next, err := Try(Eq("expected b", 'b'))(buf)
+	next, err := Try(Eq[parsec.Stateless]("expected b", 'b'))(parsec.Stateless{}, buf)
 	fmt.Println(next, err)
 
 	// Output:

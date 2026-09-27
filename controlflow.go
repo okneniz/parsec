@@ -2,15 +2,15 @@ package parsec
 
 // Concat applies the cs combinators one by one and concatenates
 // their slice results into a single slice.
-func Concat[T any, P any, S any](
+func Concat[T any, P any, O any, S any](
 	cap int,
-	cs ...Combinator[T, P, []S],
-) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+	cs ...Combinator[T, P, []O, S],
+) Combinator[T, P, []O, S] {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
 		for _, c := range cs {
-			t, err := c(buffer)
+			t, err := c(state, buffer)
 			if err != nil {
 				return nil, err
 			}
@@ -25,15 +25,15 @@ func Concat[T any, P any, S any](
 // Sequence applies the cs combinators one by one
 // and collects their results into a slice.
 // It fails as soon as any of them fails.
-func Sequence[T any, P any, S any](
+func Sequence[T any, P any, O any, S any](
 	cap int,
-	cs ...Combinator[T, P, S],
-) Combinator[T, P, []S] {
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+	cs ...Combinator[T, P, O, S],
+) Combinator[T, P, []O, S] {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
 		for _, c := range cs {
-			t, err := c(buffer)
+			t, err := c(state, buffer)
 			if err != nil {
 				return nil, err
 			}
@@ -54,18 +54,18 @@ func Sequence[T any, P any, S any](
 // eats input and breaks the following ones:
 //
 //	Choice(errMessage, Try(Eq(...)), Try(OneOf(...)))
-func Choice[T any, P any, S any](
+func Choice[T any, P any, O any, S any](
 	errMessage string,
-	cs ...Combinator[T, P, S],
-) Combinator[T, P, S] {
-	var null S
+	cs ...Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		previous := make([]Error[P], 0)
 		pos := buffer.Position()
 
 		for _, c := range cs {
-			result, err := c(buffer)
+			result, err := c(state, buffer)
 			if err == nil {
 				return result, err
 			}
@@ -79,37 +79,37 @@ func Choice[T any, P any, S any](
 
 // Skip parses skip, discards its result,
 // then parses body and returns the result of body.
-func Skip[T any, P any, S any, B any](
-	skip Combinator[T, P, B],
-	next Combinator[T, P, S],
-) Combinator[T, P, S] {
-	var null S
+func Skip[T any, P any, A any, O any, S any](
+	skip Combinator[T, P, A, S],
+	next Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		_, err := skip(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		_, err := skip(state, buffer)
 		if err != nil {
 			return null, err
 		}
 
-		return next(buffer)
+		return next(state, buffer)
 	}
 }
 
 // SkipAfter parses body first, then parses skip and discards its result.
 // It returns the result of body.
-func SkipAfter[T any, P any, S any, B any](
-	skip Combinator[T, P, B],
-	body Combinator[T, P, S],
-) Combinator[T, P, S] {
-	var null S
+func SkipAfter[T any, P any, A any, O any, S any](
+	skip Combinator[T, P, A, S],
+	body Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		result, err := body(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		result, err := body(state, buffer)
 		if err != nil {
 			return null, err
 		}
 
-		_, err = skip(buffer)
+		_, err = skip(state, buffer)
 		if err != nil {
 			return null, err
 		}
@@ -121,49 +121,49 @@ func SkipAfter[T any, P any, S any, B any](
 // SkipMany skips a sequence of items parsed by the skip combinator
 // and then applies body. Unlike Many it allocates nothing for
 // the skipped part.
-func SkipMany[T any, P any, S any, B any](
-	skip Combinator[T, P, S],
-	body Combinator[T, P, B],
-) Combinator[T, P, B] {
+func SkipMany[T any, P any, A any, O any, S any](
+	skip Combinator[T, P, A, S],
+	body Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
 	skip = Try(skip)
 
-	return func(buffer Buffer[T, P]) (B, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		for !buffer.IsEOF() {
-			_, err := skip(buffer)
+			_, err := skip(state, buffer)
 			if err != nil {
 				break
 			}
 		}
 
-		return body(buffer)
+		return body(state, buffer)
 	}
 }
 
 // Padded skips a sequence of items parsed by the skip combinator
 // before and after body.
-func Padded[T any, P any, S any, B any](
-	skip Combinator[T, P, S],
-	body Combinator[T, P, B],
-) Combinator[T, P, B] {
+func Padded[T any, P any, A any, O any, S any](
+	skip Combinator[T, P, A, S],
+	body Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
 	skip = Try(skip)
 
-	var null B
+	var null O
 
-	return func(buffer Buffer[T, P]) (B, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		for !buffer.IsEOF() {
-			_, err := skip(buffer)
+			_, err := skip(state, buffer)
 			if err != nil {
 				break
 			}
 		}
 
-		result, err := body(buffer)
+		result, err := body(state, buffer)
 		if err != nil {
 			return null, err
 		}
 
 		for !buffer.IsEOF() {
-			_, err := skip(buffer)
+			_, err := skip(state, buffer)
 			if err != nil {
 				break
 			}
@@ -175,12 +175,12 @@ func Padded[T any, P any, S any, B any](
 
 // SkipSequence applies the cs combinators one by one,
 // requires all of them to succeed and discards all the results.
-func SkipSequence[T, P, S any](combs ...Combinator[T, P, S]) Combinator[T, P, S] {
-	var null S
+func SkipSequence[T, P, O, S any](combs ...Combinator[T, P, O, S]) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		for _, c := range combs {
-			_, err := c(buffer)
+			_, err := c(state, buffer)
 			if err != nil {
 				return null, err
 			}
@@ -193,13 +193,13 @@ func SkipSequence[T, P, S any](combs ...Combinator[T, P, S]) Combinator[T, P, S]
 // SkipSequenceOf reads len(data) items and requires each of them
 // to be equal to the corresponding element of data; the results
 // are discarded. It reads the buffer directly, without extra allocations.
-func SkipSequenceOf[T comparable, P, S any](
+func SkipSequenceOf[T comparable, P, O, S any](
 	errMessage string,
 	data ...T,
-) Combinator[T, P, S] {
-	var null S
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(_ S, buffer Buffer[T, P]) (O, Error[P]) {
 		pos := buffer.Position()
 
 		for _, x := range data {

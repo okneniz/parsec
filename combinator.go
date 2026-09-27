@@ -10,14 +10,14 @@ import (
 // If greedy is true, buffer keeps position after reading - even when f fails,
 // so the failed combinator consumes exactly one item.
 // Wrap it in Try if you need the position to be restored on failure.
-func Satisfy[T any, P any](
+func Satisfy[T any, P any, S any](
 	errMessage string,
 	greedy bool,
 	f Condition[T],
-) Combinator[T, P, T] {
+) Combinator[T, P, T, S] {
 	var null T
 
-	return func(buffer Buffer[T, P]) (T, Error[P]) {
+	return func(_ S, buffer Buffer[T, P]) (T, Error[P]) {
 		pos := buffer.Position()
 
 		token, err := buffer.Read(greedy)
@@ -35,10 +35,10 @@ func Satisfy[T any, P any](
 
 // Any reads and returns the next item from the buffer.
 // It fails only at the end of the buffer.
-func Any[T any, P any]() Combinator[T, P, T] {
+func Any[T any, P any, S any]() Combinator[T, P, T, S] {
 	var null T
 
-	return func(buffer Buffer[T, P]) (T, Error[P]) {
+	return func(_ S, buffer Buffer[T, P]) (T, Error[P]) {
 		pos := buffer.Position()
 
 		token, err := buffer.Read(true)
@@ -56,13 +56,16 @@ func Any[T any, P any]() Combinator[T, P, T] {
 // so every combinator which can fail inside an alternative branch
 // (see Choice, Or) or in a loop (see Many and similar) must be wrapped
 // in Try to make backtracking possible.
-func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
-	var null S
+// The state is not rewound: a combinator that changes it must restore
+// the change itself before failing, so a retried alternative sees the
+// state as it was before the failed one.
+func Try[T any, P any, O any, S any](c Combinator[T, P, O, S]) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		pos := buffer.Position()
 
-		result, err := c(buffer)
+		result, err := c(state, buffer)
 		if err != nil {
 			if seekErr := buffer.Seek(pos); seekErr != nil {
 				return null, NewParseError(
@@ -81,25 +84,25 @@ func Try[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, S] {
 
 // Between parses open, then body, then close,
 // and returns only the result of body.
-func Between[T any, P any, S any, B any, M any](
-	pre Combinator[T, P, S],
-	c Combinator[T, P, B],
-	suf Combinator[T, P, M],
-) Combinator[T, P, B] {
-	var null B
+func Between[T any, P any, A any, B any, O any, S any](
+	pre Combinator[T, P, A, S],
+	c Combinator[T, P, O, S],
+	suf Combinator[T, P, B, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (B, Error[P]) {
-		_, err := pre(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		_, err := pre(state, buffer)
 		if err != nil {
 			return null, err
 		}
 
-		body, err := c(buffer)
+		body, err := c(state, buffer)
 		if err != nil {
 			return null, err
 		}
 
-		_, err = suf(buffer)
+		_, err = suf(state, buffer)
 		if err != nil {
 			return null, err
 		}
@@ -110,8 +113,8 @@ func Between[T any, P any, S any, B any, M any](
 
 // EOF reports whether the buffer is fully consumed.
 // It never fails and consumes nothing.
-func EOF[T any, P any]() Combinator[T, P, bool] {
-	return func(buffer Buffer[T, P]) (bool, Error[P]) {
+func EOF[T any, P any, S any]() Combinator[T, P, bool, S] {
+	return func(_ S, buffer Buffer[T, P]) (bool, Error[P]) {
 		if buffer.IsEOF() {
 			return true, nil
 		}
@@ -122,16 +125,16 @@ func EOF[T any, P any]() Combinator[T, P, bool] {
 
 // Cast parses the input with c and transforms the result with f.
 // It fails with errMessage when f returns an error.
-func Cast[T any, P any, S any, B any](
-	c Combinator[T, P, S],
-	cast func(S) (B, error),
-) Combinator[T, P, B] {
-	var null B
+func Cast[T any, P any, A any, O any, S any](
+	c Combinator[T, P, A, S],
+	cast func(A) (O, error),
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (B, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		pos := buffer.Position()
 
-		result, err := c(buffer)
+		result, err := c(state, buffer)
 		if err != nil {
 			return null, err
 		}
@@ -153,16 +156,16 @@ func Cast[T any, P any, S any, B any](
 //
 // A positional error of the step is returned untouched; the bare
 // ErrEndOfFile becomes "unexpected end of input".
-func Unexpected[T any, P any, S any](
-	step func(Buffer[T, P]) (S, error),
+func Unexpected[T any, P any, O any, S any](
+	step func(state S, buf Buffer[T, P]) (O, error),
 	context string,
-) Combinator[T, P, S] {
-	var null S
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buf Buffer[T, P]) (S, Error[P]) {
+	return func(state S, buf Buffer[T, P]) (O, Error[P]) {
 		pos := buf.Position()
 
-		result, err := step(buf)
+		result, err := step(state, buf)
 		if err != nil {
 			if parseErr, ok := err.(Error[P]); ok {
 				return null, parseErr
@@ -180,17 +183,17 @@ func Unexpected[T any, P any, S any](
 }
 
 // Const consumes nothing and returns the given value.
-func Const[T any, P any, S any](value S) Combinator[T, P, S] {
-	return func(_ Buffer[T, P]) (S, Error[P]) {
+func Const[T any, P any, O any, S any](value O) Combinator[T, P, O, S] {
+	return func(_ S, _ Buffer[T, P]) (O, Error[P]) {
 		return value, nil
 	}
 }
 
 // Fail consumes nothing and always fails with the given message.
-func Fail[T any, P any, S any](errMessage string) Combinator[T, P, S] {
-	var null S
+func Fail[T any, P any, O any, S any](errMessage string) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(_ S, buffer Buffer[T, P]) (O, Error[P]) {
 		return null, NewParseError(buffer.Position(), errMessage)
 	}
 }

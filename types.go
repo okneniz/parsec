@@ -2,16 +2,26 @@ package parsec
 
 // Combinator is the type of a single parsing step: it reads items of
 // type T from a [Buffer] with positions of type P and produces a value
-// of type S or a parse [Error]. Combinators are values, so they can be
+// of type O or a parse [Error]. The state of type S is shared mutable
+// context: the entry point hands it to the first combinator and every
+// combinator hands it to the next one. A combinator that changes the
+// state must restore the change before returning an error — [Try]
+// rewinds the buffer, not the state — so a failed alternative leaves
+// the state as it found it. Combinators are values, so they can be
 // stored, passed around and combined freely.
-type Combinator[T any, P any, S any] func(Buffer[T, P]) (S, Error[P])
+type Combinator[T any, P any, O any, S any] func(state S, buf Buffer[T, P]) (O, Error[P])
+
+// Stateless is the state of a parser that keeps none: instantiate
+// the state parameter S with the type and start the parse with the
+// value Stateless{}.
+type Stateless = struct{}
 
 // Condition is a predicate over a single input item, see [Satisfy].
 type Condition[T any] func(T) bool
 
 // Composer combines the results of two consecutive combinators into
 // one value, see [And].
-type Composer[T any, S any, B any] func(T, S) B
+type Composer[A any, B any, O any] func(A, B) O
 
 // Anything is a [Condition] that accepts any item.
 // Useful with the Satisfy combinator.

@@ -24,7 +24,18 @@
 // around the ladder. The rune position doubles as the token position,
 // so the tokens themselves stay coordinate-free.
 //
-// On top of the parser sit the two classic semantic passes:
+// The whole pipeline carries one parser state: the binder stack.
+// Every fn pattern, every declaration and every let pushes its
+// binders for the nested scopes and pops them on the way out, and an
+// identifier read off the stack becomes a Var node with its de Bruijn
+// index — 0 is the innermost binder. A name off the stack is a
+// ForwardRef the fixup pass of Parse resolves against the whole
+// program: one that names a top-level fun declared later — the mutual
+// recursion of tiny ml — becomes a TopVar, a slot of the shared
+// top-level frame; whatever survives names nothing at all.
+//
+// On top of the parser sit the two classic semantic passes, both
+// running on the positional environment the parser built:
 //
 //   - Infer, a Hindley-Milner typechecker with let-polymorphism: a
 //     mutation-based unification with occurs check, generalization
@@ -32,13 +43,16 @@
 //     level functions are pre-bound with shared type variables, so
 //     they may be mutually recursive;
 //   - Eval, an environment-based interpreter running after the
-//     typecheck: closures capture their environment by reference,
-//     curried declarations expand into nested fn-expressions, and
-//     patterns match at bindings and calls. Division by zero and
-//     pattern match failures are the only runtime errors left.
-//     EvalFile reads the program from a file.
+//     typecheck: the top level is one frame of cells the
+//     declarations fill as the program runs — what a closure built
+//     earlier sees a function declared later through — while the
+//     nested scopes extend snapshots of it, curried declarations
+//     expand into nested fn-expressions, and patterns match at
+//     bindings and calls. Division by zero and pattern match
+//     failures are the only runtime errors left. EvalFile reads the
+//     program from a file.
 //
-// The programs directory holds five teaching programs — from literals
+// The programs directory holds ten teaching programs — from literals
 // to mutual recursion — with the language features explained in
 // comments; programs_test.go runs them all and checks the results.
 package tml

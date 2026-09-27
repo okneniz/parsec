@@ -12,8 +12,16 @@ type Value interface {
 	String() string
 }
 
-// Env is an environment of bindings; the closures capture it by
-// reference, which is what makes recursion work.
+// cell is one binder's slot. The top-level frame is a row of cells
+// the declarations fill as the program runs, so a closure built
+// earlier sees a function declared later — the mutual recursion of
+// tiny ml.
+type cell struct {
+	val Value
+}
+
+// Env is the named view of the top-level frame the tests and the
+// examples read.
 type Env map[string]Value
 
 // VInt is an integer value.
@@ -25,12 +33,14 @@ type VBool bool
 // VTuple is a tuple value.
 type VTuple []Value
 
-// VClosure is a function value: one argument pattern, the body, and
-// the environment captured by reference.
+// VClosure is a function value: one argument pattern, the body, the
+// program frame it reads the top level through, and the environment
+// snapshot it captured.
 type VClosure struct {
-	Arg  Pat
-	Body Expr
-	Env  Env
+	Arg   Pat
+	Body  Expr
+	Frame []*cell
+	Env   []*cell
 }
 
 func (v VInt) String() string {

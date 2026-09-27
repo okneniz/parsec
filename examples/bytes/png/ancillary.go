@@ -46,31 +46,31 @@ func (c *Ancillary) String() string {
 func AncillaryChunk(
 	size uint32,
 	chunkType string,
-) parsec.Combinator[byte, int, *Ancillary] {
+) parsec.Combinator[byte, int, *Ancillary, parsec.Stateless] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected ancillary chunk (%s)", chunkType),
-		bytes.Any(),
+		bytes.Any[parsec.Stateless](),
 	)
 
-	parseCRC := bytes.ReadAs[uint32](
+	parseCRC := bytes.ReadAs[uint32, parsec.Stateless](
 		4,
 		"expected 4 big endian bytes of CRC",
 		binary.BigEndian,
 	)
 
-	return func(buffer parsec.Buffer[byte, int]) (*Ancillary, parsec.Error[int]) {
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (*Ancillary, parsec.Error[int]) {
 		var data []byte
 		var err parsec.Error[int]
 
 		if size > 0 {
-			data, err = parseData(buffer)
+			data, err = parseData(state, buffer)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		crc, err := parseCRC(buffer)
+		crc, err := parseCRC(state, buffer)
 		if err != nil {
 			return nil, err
 		}

@@ -4,21 +4,21 @@ package parsec
 // if it fails, uses the second combinator.
 // Like Choice, it does not restore the buffer position between attempts:
 // wrap both arguments in Try if they can fail after consuming input.
-func Or[T any, P any, S any](
+func Or[T any, P any, O any, S any](
 	errMessage string,
-	x, y Combinator[T, P, S],
-) Combinator[T, P, S] {
-	var null S
+	x, y Combinator[T, P, O, S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
 		pos := buffer.Position()
 
-		result, xErr := x(buffer)
+		result, xErr := x(state, buffer)
 		if xErr == nil {
 			return result, nil
 		}
 
-		result, yErr := y(buffer)
+		result, yErr := y(state, buffer)
 		if yErr == nil {
 			return result, nil
 		}
@@ -29,20 +29,20 @@ func Or[T any, P any, S any](
 
 // And parses x, then y, and combines their results
 // with the compose function.
-func And[T any, P any, S any, B any, M any](
-	x Combinator[T, P, S],
-	y Combinator[T, P, B],
-	compose Composer[S, B, M],
-) Combinator[T, P, M] {
-	var null M
+func And[T any, P any, A any, B any, O any, S any](
+	x Combinator[T, P, A, S],
+	y Combinator[T, P, B, S],
+	compose Composer[A, B, O],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (M, Error[P]) {
-		first, xErr := x(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		first, xErr := x(state, buffer)
 		if xErr != nil {
 			return null, xErr
 		}
 
-		second, yErr := y(buffer)
+		second, yErr := y(state, buffer)
 		if yErr != nil {
 			return null, yErr
 		}

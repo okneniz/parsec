@@ -17,7 +17,7 @@ type (
 	}
 
 	test[T any] struct {
-		comb  parsec.Combinator[rune, Position, T]
+		comb  parsec.Combinator[rune, Position, T, parsec.Stateless]
 		cases []testCase[T]
 	}
 )
@@ -39,7 +39,7 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 				t.Run(name, func(t *testing.T) {
 					t.Parallel()
 
-					result, err := Parse([]rune(testCase.input), test.comb)
+					result, err := Parse(parsec.Stateless{}, []rune(testCase.input), test.comb)
 
 					if testCase.err != nil {
 						assert.Equal(t, err.Error(), testCase.err.Error())
@@ -71,7 +71,7 @@ func runTestsString[T comparable](t *testing.T, tests []test[[]T]) {
 				t.Run(name, func(t *testing.T) {
 					t.Parallel()
 
-					result, err := ParseString(testCase.input, test.comb)
+					result, err := ParseString(parsec.Stateless{}, testCase.input, test.comb)
 
 					if testCase.err != nil {
 						assert.EqualError(t, err, testCase.err.Error())
@@ -91,7 +91,7 @@ func TestRange(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Range("expected char between 'a' and 'c'", 'a', 'c'),
+			comb: Range[parsec.Stateless]("expected char between 'a' and 'c'", 'a', 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -155,7 +155,7 @@ func TestNotRange(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: NotRange("expected char not between 'a' and 'c'", 'a', 'c'),
+			comb: NotRange[parsec.Stateless]("expected char not between 'a' and 'c'", 'a', 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -235,7 +235,7 @@ func TestGt(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Gt("expected char greater than 'c'", 'c'),
+			comb: Gt[parsec.Stateless]("expected char greater than 'c'", 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -319,7 +319,7 @@ func TestGte(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Gte("expected char greater than or equal 'c'", 'c'),
+			comb: Gte[parsec.Stateless]("expected char greater than or equal 'c'", 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -395,7 +395,7 @@ func TestLt(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Lt("expected char less than 'c'", 'c'),
+			comb: Lt[parsec.Stateless]("expected char less than 'c'", 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -479,7 +479,7 @@ func TestLte(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Lte("expected char less than or equal 'c'", 'c'),
+			comb: Lte[parsec.Stateless]("expected char less than or equal 'c'", 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",

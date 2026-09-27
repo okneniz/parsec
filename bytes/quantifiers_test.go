@@ -11,7 +11,7 @@ func TestMany(t *testing.T) {
 
 	runTestsSlice(t, []test[[]byte]{
 		{
-			comb: Many(0, Eq("expected a", 'a')),
+			comb: Many(0, Eq[parsec.Stateless]("expected a", 'a')),
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
@@ -47,7 +47,7 @@ func TestSome(t *testing.T) {
 
 	runTestsSlice(t, []test[[]byte]{
 		{
-			comb: Some(0, "expected at least one 'a'", Eq("expected 'a'", 'a')),
+			comb: Some(0, "expected at least one 'a'", Eq[parsec.Stateless]("expected 'a'", 'a')),
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
@@ -85,7 +85,7 @@ func TestOptional(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Optional(Eq("expected a", 'a'), 123),
+			comb: Optional(Eq[parsec.Stateless]("expected a", 'a'), 123),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -110,7 +110,7 @@ func TestOptional(t *testing.T) {
 			},
 		},
 		{
-			comb: Optional(Satisfy("never match", true, parsec.Nothing[byte]), 'x'),
+			comb: Optional(Satisfy[parsec.Stateless]("never match", true, parsec.Nothing[byte]), 'x'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -142,7 +142,7 @@ func TestCount(t *testing.T) {
 
 	runTestsSlice(t, []test[[]byte]{
 		{
-			comb: Count(2, "expected 'aa'", Eq("expected 'a'", 'a')),
+			comb: Count(2, "expected 'aa'", Eq[parsec.Stateless]("expected 'a'", 'a')),
 			cases: []testCase[[]byte]{
 				{
 					input: []byte{},

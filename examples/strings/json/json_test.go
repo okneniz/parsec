@@ -1,6 +1,8 @@
 package json
 
 import (
+	"github.com/okneniz/parsec"
+
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -30,7 +32,7 @@ func TestJSONParsing(t *testing.T) {
 				return false
 			}
 
-			result, err := strings.ParseString(str, comb)
+			result, err := strings.ParseString(parsec.Stateless{}, str, comb)
 			if err != nil {
 				t.Log("data", data)
 				t.Log("json", str)

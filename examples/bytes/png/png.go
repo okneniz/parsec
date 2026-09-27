@@ -9,8 +9,8 @@ import (
 
 // https://www.w3.org/TR/png
 
-func PNG() parsec.Combinator[byte, int, *File] {
-	parseHeader := parsec.SkipSequenceOf[byte, int, byte](
+func PNG() parsec.Combinator[byte, int, *File, parsec.Stateless] {
+	parseHeader := parsec.SkipSequenceOf[byte, int, byte, parsec.Stateless](
 		"expected PNG header",
 		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
 	)
@@ -21,13 +21,13 @@ func PNG() parsec.Combinator[byte, int, *File] {
 		bytes.Try(parseChunk()),
 	)
 
-	return func(buffer parsec.Buffer[byte, int]) (*File, parsec.Error[int]) {
-		_, err := parseHeader(buffer)
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (*File, parsec.Error[int]) {
+		_, err := parseHeader(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		chunks, err := parseChunks(buffer)
+		chunks, err := parseChunks(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -36,8 +36,8 @@ func PNG() parsec.Combinator[byte, int, *File] {
 	}
 }
 
-func parseChunk() parsec.Combinator[byte, int, Chunk] {
-	lenghtOfChunk := bytes.ReadAs[uint32](
+func parseChunk() parsec.Combinator[byte, int, Chunk, parsec.Stateless] {
+	lenghtOfChunk := bytes.ReadAs[uint32, parsec.Stateless](
 		4,
 		"expected 4 bytes (uint32) of chunk length",
 		binary.BigEndian,
@@ -46,16 +46,16 @@ func parseChunk() parsec.Combinator[byte, int, Chunk] {
 	typeOfChunk := bytes.Count(
 		4,
 		"expecte 4 bytes of chunk type",
-		bytes.Any(),
+		bytes.Any[parsec.Stateless](),
 	)
 
-	return func(buffer parsec.Buffer[byte, int]) (Chunk, parsec.Error[int]) {
-		length, err := lenghtOfChunk(buffer)
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (Chunk, parsec.Error[int]) {
+		length, err := lenghtOfChunk(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		chunkType, err := typeOfChunk(buffer)
+		chunkType, err := typeOfChunk(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -64,15 +64,15 @@ func parseChunk() parsec.Combinator[byte, int, Chunk] {
 
 		switch chunkTypeString {
 		case "IHDR":
-			return IHDRChunk(length)(buffer)
+			return IHDRChunk(length)(state, buffer)
 		case "PLTE":
-			return PLTEChunk(length)(buffer)
+			return PLTEChunk(length)(state, buffer)
 		case "IDAT":
-			return IDATChunk(length)(buffer)
+			return IDATChunk(length)(state, buffer)
 		case "IEND":
-			return IENDChunk(length)(buffer)
+			return IENDChunk(length)(state, buffer)
 		default:
-			return AncillaryChunk(length, chunkTypeString)(buffer)
+			return AncillaryChunk(length, chunkTypeString)(state, buffer)
 		}
 	}
 }

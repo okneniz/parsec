@@ -11,7 +11,7 @@ func TestEq(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Eq("expected 'c'", 'c'),
+			comb: Eq[parsec.Stateless]("expected 'c'", 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -46,7 +46,7 @@ func TestNotEq(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: NotEq("expected not c", 'c'),
+			comb: NotEq[parsec.Stateless]("expected not c", 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -81,7 +81,7 @@ func TestOneOf(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
+			comb: OneOf[parsec.Stateless]("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -131,7 +131,7 @@ func TestSequenceOf(t *testing.T) {
 
 	runTestsSlice(t, []test[[]byte]{
 		{
-			comb: SequenceOf("expected foo", 'f', 'o', 'o'),
+			comb: SequenceOf[parsec.Stateless]("expected foo", 'f', 'o', 'o'),
 			cases: []testCase[[]byte]{
 				{
 					input:  []byte{},
@@ -189,7 +189,7 @@ func TestMap(t *testing.T) {
 				1,
 				"expected at least one 0, 1 or 2",
 				parsec.SkipMany(
-					NoneOf("skip not 0, 1 or 2", 0, 1, 2),
+					NoneOf[parsec.Stateless]("skip not 0, 1 or 2", 0, 1, 2),
 					Map(
 						"expected 0, 1 or 2",
 						map[byte]string{
@@ -197,7 +197,7 @@ func TestMap(t *testing.T) {
 							1: "bar",
 							2: "baz",
 						},
-						Any(),
+						Any[parsec.Stateless](),
 					),
 				),
 			),

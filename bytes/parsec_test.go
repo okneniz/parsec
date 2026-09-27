@@ -15,17 +15,17 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name  string
 		input []byte
-		parse parsec.Combinator[byte, int, uint16]
+		parse parsec.Combinator[byte, int, uint16, parsec.Stateless]
 		want  uint16
 	}{
-		{"big endian uint16", []byte{0x01, 0x02}, bytes.ReadAs[uint16](2, "expected uint16", binary.BigEndian), 258},
-		{"little endian uint16", []byte{0x01, 0x02}, bytes.ReadAs[uint16](2, "expected uint16", binary.LittleEndian), 513},
-		{"trailing bytes are left in the buffer", []byte{0x01, 0x02, 0x03}, bytes.ReadAs[uint16](2, "expected uint16", binary.BigEndian), 258},
+		{"big endian uint16", []byte{0x01, 0x02}, bytes.ReadAs[uint16, parsec.Stateless](2, "expected uint16", binary.BigEndian), 258},
+		{"little endian uint16", []byte{0x01, 0x02}, bytes.ReadAs[uint16, parsec.Stateless](2, "expected uint16", binary.LittleEndian), 513},
+		{"trailing bytes are left in the buffer", []byte{0x01, 0x02, 0x03}, bytes.ReadAs[uint16, parsec.Stateless](2, "expected uint16", binary.BigEndian), 258},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := bytes.Parse(test.input, test.parse)
+			got, err := bytes.Parse(parsec.Stateless{}, test.input, test.parse)
 			if err != nil {
 				t.Fatalf("Parse(%v) failed: %v", test.input, err)
 			}
@@ -49,7 +49,7 @@ func TestParseErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := bytes.Parse(test.input, bytes.ReadAs[uint16](2, "expected uint16", binary.BigEndian))
+			_, err := bytes.Parse(parsec.Stateless{}, test.input, bytes.ReadAs[uint16, parsec.Stateless](2, "expected uint16", binary.BigEndian))
 			if err == nil {
 				t.Fatalf("Parse(%v) succeeded, want error", test.input)
 			}
@@ -73,9 +73,9 @@ func TestParseString(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			parse := bytes.SequenceOf("expected text", []byte(test.input)...)
+			parse := bytes.SequenceOf[parsec.Stateless]("expected text", []byte(test.input)...)
 
-			got, err := bytes.ParseString(test.input, parse)
+			got, err := bytes.ParseString(parsec.Stateless{}, test.input, parse)
 			if err != nil {
 				t.Fatalf("ParseString(%q) failed: %v", test.input, err)
 			}
@@ -104,9 +104,9 @@ func TestParseFile(t *testing.T) {
 				t.Fatalf("WriteFile failed: %v", err)
 			}
 
-			parse := bytes.SequenceOf("expected file content", []byte(test.content)...)
+			parse := bytes.SequenceOf[parsec.Stateless]("expected file content", []byte(test.content)...)
 
-			got, err := bytes.ParseFile(path, parse)
+			got, err := bytes.ParseFile(parsec.Stateless{}, path, parse)
 			if err != nil {
 				t.Fatalf("ParseFile failed: %v", err)
 			}
@@ -120,8 +120,9 @@ func TestParseFile(t *testing.T) {
 
 func TestParseFileError(t *testing.T) {
 	_, err := bytes.ParseFile(
+		parsec.Stateless{},
 		filepath.Join(t.TempDir(), "missing.bin"),
-		bytes.SequenceOf("expected magic bytes", 0xCA, 0xFE),
+		bytes.SequenceOf[parsec.Stateless]("expected magic bytes", 0xCA, 0xFE),
 	)
 	if err == nil {
 		t.Fatal("ParseFile succeeded, want error")

@@ -13,8 +13,8 @@ func TestOr(t *testing.T) {
 		{
 			comb: Or(
 				"expected symbol 'a' or digit",
-				Try(Eq("expected 'a'", 'a')),
-				Range("expected digit", '0', '9'),
+				Try(Eq[parsec.Stateless]("expected 'a'", 'a')),
+				Range[parsec.Stateless]("expected digit", '0', '9'),
 			),
 			cases: []testCase[byte]{
 				{
@@ -44,8 +44,8 @@ func TestOr(t *testing.T) {
 		{
 			comb: Or(
 				"expected symbol 'a' or digit",
-				Eq("expected 'a'", 'a'),
-				Range("expected digit", '0', '9'),
+				Eq[parsec.Stateless]("expected 'a'", 'a'),
+				Range[parsec.Stateless]("expected digit", '0', '9'),
 			),
 			cases: []testCase[byte]{
 				{
@@ -92,8 +92,8 @@ func TestAnd(t *testing.T) {
 	runTestsSlice(t, []test[[]byte]{
 		{
 			comb: And(
-				Eq("expected 'a'", 'a'),
-				Eq("expected 'b'", 'b'),
+				Eq[parsec.Stateless]("expected 'a'", 'a'),
+				Eq[parsec.Stateless]("expected 'b'", 'b'),
 				func(x, y byte) []byte { return []byte{x, y} },
 			),
 			cases: []testCase[[]byte]{

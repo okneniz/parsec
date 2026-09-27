@@ -1,6 +1,8 @@
 package xml_test
 
 import (
+	"github.com/okneniz/parsec"
+
 	"fmt"
 
 	"github.com/okneniz/parsec/examples/strings/xml"
@@ -14,7 +16,7 @@ import (
 func ExampleEvents() {
 	buf := strings.Buffer([]rune(`<library><book id="1"/><book id="2"/></library>`))
 
-	seq, _ := xml.Events()(buf)
+	seq, _ := xml.Events()(parsec.Stateless{}, buf)
 
 	taken := 0
 
@@ -34,7 +36,7 @@ func ExampleEvents() {
 		}
 	}
 
-	rest, _ := xml.Events()(buf)
+	rest, _ := xml.Events()(parsec.Stateless{}, buf)
 
 	for ev, err := range rest {
 		if err != nil {

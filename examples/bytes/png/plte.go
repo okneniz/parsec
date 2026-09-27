@@ -60,20 +60,20 @@ func (c *RGB) String() string {
 	return fmt.Sprintf("#%02x%02x%02x", c.Red, c.Green, c.Blue)
 }
 
-func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE] {
-	parseRED := bytes.ReadAs[uint8](
+func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE, parsec.Stateless] {
+	parseRED := bytes.ReadAs[uint8, parsec.Stateless](
 		1,
 		"expected one byte for red color",
 		binary.BigEndian,
 	)
 
-	parseGREEN := bytes.ReadAs[uint8](
+	parseGREEN := bytes.ReadAs[uint8, parsec.Stateless](
 		1,
 		"expected one byte for green color",
 		binary.BigEndian,
 	)
 
-	parseBLUE := bytes.ReadAs[uint8](
+	parseBLUE := bytes.ReadAs[uint8, parsec.Stateless](
 		1,
 		"expected one byte for blue color",
 		binary.BigEndian,
@@ -82,19 +82,19 @@ func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected %d bytes of PLTE chunk", size),
-		bytes.Any(),
+		bytes.Any[parsec.Stateless](),
 	)
 
-	parseCRC := bytes.ReadAs[uint32](
+	parseCRC := bytes.ReadAs[uint32, parsec.Stateless](
 		4,
 		"expected 4 bytes of CRC",
 		binary.BigEndian,
 	)
 
-	return func(buffer parsec.Buffer[byte, int]) (*PLTE, parsec.Error[int]) {
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (*PLTE, parsec.Error[int]) {
 		pos := buffer.Position()
 
-		data, err := parseData(buffer)
+		data, err := parseData(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -106,17 +106,17 @@ func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE] {
 		entries := make([]*RGB, 0, size/3)
 
 		for i := uint32(0); i < size/3; i++ {
-			red, err := parseRED(buffer)
+			red, err := parseRED(state, buffer)
 			if err != nil {
 				return nil, err
 			}
 
-			green, err := parseGREEN(buffer)
+			green, err := parseGREEN(state, buffer)
 			if err != nil {
 				return nil, err
 			}
 
-			blue, err := parseBLUE(buffer)
+			blue, err := parseBLUE(state, buffer)
 			if err != nil {
 				return nil, err
 			}
@@ -132,7 +132,7 @@ func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE] {
 			return nil, parsec.NewParseError(buffer.Position(), seekErr.Error())
 		}
 
-		crc, err := parseCRC(buffer)
+		crc, err := parseCRC(state, buffer)
 		if err != nil {
 			return nil, err
 		}

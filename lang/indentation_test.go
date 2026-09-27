@@ -36,9 +36,9 @@ func TestLexerIndentation(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// a fresh definition per case: the indentation combinator
-			// holds the indent stack of one program
-			stream, err := lex(pythonDefinition(), test.src)
+			// a fresh state per case: the indent stack belongs to one
+			// program
+			stream, err := lex(pythonDefinition(), newIndentState(), test.src)
 			require.NoError(t, err)
 			require.Equal(t, test.want, lexemeKinds(t, stream))
 		})
@@ -60,16 +60,28 @@ func TestLexerIndentationErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := lex(pythonDefinition(), test.src)
+			_, err := lex(pythonDefinition(), newIndentState(), test.src)
 			require.ErrorContains(t, err, test.want)
 		})
 	}
 }
 
-// pythonDefinition describes a Python-flavored language: the
-// newline is a token and the Custom combinator holds the indent
-func pythonDefinition() Definition {
-	return Definition{
+// indentState is the lexer state of an indentation language: the
+// stack of the open block widths and the dedents queued ahead of the
+// tokens that follow them.
+type indentState struct {
+	stack   []int
+	pending []Token
+}
+
+func newIndentState() *indentState {
+	return &indentState{stack: []int{0}}
+}
+
+// pythonDefinition describes a Python-flavored language: the newline
+// is a token and the indent stack lives in the lexer state.
+func pythonDefinition() Definition[*indentState] {
+	return Definition[*indentState]{
 		// the newline stays out of the trivia: it is a token
 		Space: func(r rune) bool {
 			return r == ' ' || r == '\t'
@@ -79,7 +91,7 @@ func pythonDefinition() Definition {
 		Punctuation: "(),:",
 		Integers:    true,
 		Strings:     true,
-		Custom:      []func(parsec.Buffer[rune, strings.Position]) (Token, error){newIndentTokens()},
+		Custom:      []func(state *indentState, buf parsec.Buffer[rune, strings.Position]) (Token, error){indentTokens},
 	}
 }
 
@@ -100,84 +112,79 @@ func lexemeKinds(t *testing.T, stream []Token) []string {
 	return out
 }
 
-// newIndentTokens builds the newline and indentation combinator of
-// a Python-flavored language: a newline token, then the leading
-// width of the next line against the stack — wider opens an indent,
+// indentTokens reads the newline and indentation tokens of a
+// Python-flavored language: a newline token, then the leading width
+// of the next line against the stack — wider opens an indent,
 // narrower closes blocks, a blank line only ends its own line. The
 // dedents of one line queue ahead of the tokens that follow, which
 // the customs-are-tried-every-token contract allows. The end of
 // input ends the last line without closing dedents: the stepper
-func newIndentTokens() func(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
-	stack := []int{0}
-	var pending []Token
+func indentTokens(state *indentState, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
+	if n := len(state.pending); n > 0 {
+		tok := state.pending[0]
+		state.pending = state.pending[1:]
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Token, error) {
-		if n := len(pending); n > 0 {
-			tok := pending[0]
-			pending = pending[1:]
+		return tok, nil
+	}
 
-			return tok, nil
+	r, err := buf.Read(false)
+	if err != nil || r != '\n' {
+		return Token{}, ErrNoMatch
+	}
+
+	pos := buf.Position()
+
+	if _, err := buf.Read(true); err != nil {
+		return Token{}, err
+	}
+
+	// the width of the next line; the spaces are trivia anyway,
+	// consuming them here only takes what the stepper would
+	width := 0
+
+	for {
+		at := buf.Position()
+
+		r, err = buf.Read(true)
+		if err != nil {
+			break
 		}
 
-		r, err := buf.Read(false)
-		if err != nil || r != '\n' {
-			return Token{}, ErrNoMatch
-		}
-
-		pos := buf.Position()
-
-		if _, err := buf.Read(true); err != nil {
-			return Token{}, err
-		}
-
-		// the width of the next line; the spaces are trivia anyway,
-		// consuming them here only takes what the stepper would
-		width := 0
-
-		for {
-			at := buf.Position()
-
-			r, err = buf.Read(true)
-			if err != nil {
-				break
+		if r != ' ' && r != '\t' {
+			if err := buf.Seek(at); err != nil {
+				return Token{}, err
 			}
 
-			if r != ' ' && r != '\t' {
-				if err := buf.Seek(at); err != nil {
-					return Token{}, err
-				}
-
-				break
-			}
-
-			width++
+			break
 		}
 
-		newline := Token{Kind: "newline", Lexeme: "\n"}
+		width++
+	}
 
-		// a blank line, or the end of input, ends its own line only
-		peek, perr := buf.Read(false)
-		if perr != nil || peek == '\n' {
-			return newline, nil
-		}
+	newline := Token{Kind: "newline", Lexeme: "\n"}
 
-		top := stack[len(stack)-1]
-
-		switch {
-		case width > top:
-			stack = append(stack, width)
-			pending = append(pending, Token{Kind: "indent"})
-		case width < top:
-			for len(stack) > 1 && stack[len(stack)-1] > width {
-				stack = stack[:len(stack)-1]
-				pending = append(pending, Token{Kind: "dedent"})
-			}
-
-			if stack[len(stack)-1] != width {
-				return Token{}, parsec.NewParseError(pos, "unindent does not match any outer level")
-			}
-		}
-
+	// a blank line, or the end of input, ends its own line only
+	peek, perr := buf.Read(false)
+	if perr != nil || peek == '\n' {
 		return newline, nil
 	}
+
+	top := state.stack[len(state.stack)-1]
+
+	switch {
+	case width > top:
+		state.stack = append(state.stack, width)
+		state.pending = append(state.pending, Token{Kind: "indent"})
+	case width < top:
+		for len(state.stack) > 1 && state.stack[len(state.stack)-1] > width {
+			state.stack = state.stack[:len(state.stack)-1]
+			state.pending = append(state.pending, Token{Kind: "dedent"})
+		}
+
+		if state.stack[len(state.stack)-1] != width {
+			return Token{}, parsec.NewParseError(pos, "unindent does not match any outer level")
+		}
+	}
+
+	return newline, nil
 }

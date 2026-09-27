@@ -82,18 +82,22 @@ type Fixity struct {
 	Right bool
 }
 
-type Parser struct {
+// Parser holds the operator table of a language and its syntactic
+// forms. The type parameter S is the parser state its combinators
+// carry — the same state the Definition the language lexes with
+// is generic in.
+type Parser[S any] struct {
 	fixity      map[string]Fixity
 	ternary     map[string]ternaryDef
 	prefix      map[string]struct{}
 	postfix     map[string]struct{}
-	exprForms   []Form
-	prefixForms []Form
+	exprForms   []Form[S]
+	prefixForms []Form[S]
 }
 
 // NewParser creates a parser with an empty operator table.
-func NewParser() *Parser {
-	return &Parser{
+func NewParser[S any]() *Parser[S] {
+	return &Parser[S]{
 		fixity:  map[string]Fixity{},
 		ternary: map[string]ternaryDef{},
 		prefix:  map[string]struct{}{},
@@ -103,7 +107,7 @@ func NewParser() *Parser {
 
 // Infix declares left-associative operators of the given precedence;
 // higher binds tighter.
-func (p *Parser) Infix(prec int, ops ...string) *Parser {
+func (p *Parser[S]) Infix(prec int, ops ...string) *Parser[S] {
 	for _, op := range ops {
 		p.fixity[op] = Fixity{Prec: prec}
 	}
@@ -112,7 +116,7 @@ func (p *Parser) Infix(prec int, ops ...string) *Parser {
 
 // InfixRight declares right-associative operators of the given
 // precedence, as exponentiation usually is.
-func (p *Parser) InfixRight(prec int, ops ...string) *Parser {
+func (p *Parser[S]) InfixRight(prec int, ops ...string) *Parser[S] {
 	for _, op := range ops {
 		p.fixity[op] = Fixity{Prec: prec, Right: true}
 	}
@@ -128,7 +132,7 @@ func (p *Parser) InfixRight(prec int, ops ...string) *Parser {
 // assignment of c live in it — and the else branch recurses at the
 // precedence of the conditional. The colon must not carry fixity of
 // its own: the middle part would take it for an infix operator.
-func (p *Parser) Ternary(prec int, question, colon string) *Parser {
+func (p *Parser[S]) Ternary(prec int, question, colon string) *Parser[S] {
 	p.ternary[question] = ternaryDef{colon: colon, prec: prec}
 	return p
 }
@@ -136,9 +140,9 @@ func (p *Parser) Ternary(prec int, question, colon string) *Parser {
 // Prefix declares prefix operators. A prefix operator applies to the
 // next operand only, so -a + b is (+ (- a) b) and -(a + b) needs
 // parentheses.
-func (p *Parser) Prefix(ops ...string) *Parser {
+func (p *Parser[S]) Prefix(ops ...string) *Parser[S] {
 	for _, op := range ops {
-		p.prefix[op] = struct{}{}
+		p.prefix[op] = parsec.Stateless{}
 	}
 	return p
 }
@@ -147,9 +151,9 @@ func (p *Parser) Prefix(ops ...string) *Parser {
 // the complete operand before it and chains right, so a! + b is
 // (+ (! a) b) and a!! is (! (! a)). An operator must not be both
 // postfix and infix: the postfix loop would consume it first.
-func (p *Parser) Postfix(ops ...string) *Parser {
+func (p *Parser[S]) Postfix(ops ...string) *Parser[S] {
 	for _, op := range ops {
-		p.postfix[op] = struct{}{}
+		p.postfix[op] = parsec.Stateless{}
 	}
 	return p
 }
@@ -159,7 +163,7 @@ func (p *Parser) Postfix(ops ...string) *Parser {
 // here, above every operator. An expression form is not an operand —
 // 1 + if e then e else e does not parse — and it consumes its whole
 // rest itself, subexpressions included, through the ladder.
-func (p *Parser) ExprForm(forms ...Form) *Parser {
+func (p *Parser[S]) ExprForm(forms ...Form[S]) *Parser[S] {
 	p.exprForms = append(p.exprForms, forms...)
 
 	return p
@@ -171,7 +175,7 @@ func (p *Parser) ExprForm(forms ...Form) *Parser {
 // operator, a cast (t) e likewise; a form that owns its
 // subexpressions wholly — a let, a parenthesized tuple — parses them
 // through the ladder's Expr.
-func (p *Parser) PrefixForm(forms ...Form) *Parser {
+func (p *Parser[S]) PrefixForm(forms ...Form[S]) *Parser[S] {
 	p.prefixForms = append(p.prefixForms, forms...)
 
 	return p
@@ -184,12 +188,13 @@ func (p *Parser) PrefixForm(forms ...Form) *Parser {
 // level a prefix operator applies to; From reads the expression from
 // a precedence up, the chain cut below it — the level the arguments
 // of a call read at, above a comma operator. Lex is the lexer the
-// whole ladder reads through.
-type Ladder struct {
-	Lex  tokens.Lexer[Kind, Lexeme]
-	Expr parsec.Combinator[rune, strings.Position, Expr]
-	Atom parsec.Combinator[rune, strings.Position, Expr]
-	From func(prec int) parsec.Combinator[rune, strings.Position, Expr]
+// whole ladder reads through. Every entry point carries the same
+// parser state S.
+type Ladder[S any] struct {
+	Lex  tokens.Lexer[Kind, Lexeme, S]
+	Expr parsec.Combinator[rune, strings.Position, Expr, S]
+	Atom parsec.Combinator[rune, strings.Position, Expr, S]
+	From func(prec int) parsec.Combinator[rune, strings.Position, Expr, S]
 }
 
 // A Form builds the combinator of a syntactic form that does not
@@ -198,15 +203,15 @@ type Ladder struct {
 // cast (t) e, a parenthesized tuple. The forms of a Parser are built
 // once, when its Expr runs; everything a form needs besides the
 // ladder it builds above the returned closure.
-type Form func(Ladder) parsec.Combinator[rune, strings.Position, Expr]
+type Form[S any] func(Ladder[S]) parsec.Combinator[rune, strings.Position, Expr, S]
 
-type Operand func(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, strings.Position, Expr]
+type Operand[S any] func(lex tokens.Lexer[Kind, Lexeme, S]) parsec.Combinator[rune, strings.Position, Expr, S]
 
-func (p *Parser) Expr(
-	lex tokens.Lexer[Kind, Lexeme],
-	extras ...Operand,
-) parsec.Combinator[rune, strings.Position, Expr] {
-	steps := make([]parsec.Combinator[rune, strings.Position, Expr], len(extras), len(extras)+len(p.prefixForms))
+func (p *Parser[S]) Expr(
+	lex tokens.Lexer[Kind, Lexeme, S],
+	extras ...Operand[S],
+) parsec.Combinator[rune, strings.Position, Expr, S] {
+	steps := make([]parsec.Combinator[rune, strings.Position, Expr, S], len(extras), len(extras)+len(p.prefixForms))
 
 	for i, extra := range extras {
 		steps[i] = extra(lex)
@@ -215,17 +220,17 @@ func (p *Parser) Expr(
 	// the forms are part of the ladder they recurse into, so the
 	// ladder hands out closures that read full and atom at call
 	// time, after the whole ladder is built
-	ladder := Ladder{Lex: lex}
+	ladder := Ladder[S]{Lex: lex}
 
-	var full parsec.Combinator[rune, strings.Position, Expr]
-	var atom parsec.Combinator[rune, strings.Position, Expr]
+	var full parsec.Combinator[rune, strings.Position, Expr, S]
+	var atom parsec.Combinator[rune, strings.Position, Expr, S]
 
-	ladder.Expr = func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		return full(buf)
+	ladder.Expr = func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		return full(state, buf)
 	}
 
-	ladder.Atom = func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		return atom(buf)
+	ladder.Atom = func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		return atom(state, buf)
 	}
 
 	// the full level is the expression forms, if any, over the
@@ -233,7 +238,7 @@ func (p *Parser) Expr(
 	// call above the comma — is the same composition with the chain
 	// cut at a precedence: From reads it, the full expression is From
 	// of the bottom
-	formAlts := make([]parsec.Combinator[rune, strings.Position, Expr], len(p.exprForms))
+	formAlts := make([]parsec.Combinator[rune, strings.Position, Expr, S], len(p.exprForms))
 
 	for i, form := range p.exprForms {
 		formAlts[i] = parsec.Try(form(ladder))
@@ -242,10 +247,10 @@ func (p *Parser) Expr(
 	// a form may read From while the steps it belongs to are still
 	// being built, so the sub-level of a precedence is built on its
 	// first read and kept
-	sublevels := make(map[int]parsec.Combinator[rune, strings.Position, Expr])
+	sublevels := make(map[int]parsec.Combinator[rune, strings.Position, Expr, S])
 
-	ladder.From = func(prec int) parsec.Combinator[rune, strings.Position, Expr] {
-		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+	ladder.From = func(prec int) parsec.Combinator[rune, strings.Position, Expr, S] {
+		return func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
 			level, built := sublevels[prec]
 			if !built {
 				level = p.expr(lex, steps, ladder.Expr, prec)
@@ -257,7 +262,7 @@ func (p *Parser) Expr(
 				sublevels[prec] = level
 			}
 
-			return level(buf)
+			return level(state, buf)
 		}
 	}
 
@@ -276,12 +281,12 @@ func (p *Parser) Expr(
 	return full
 }
 
-func (p *Parser) expr(
-	lex tokens.Lexer[Kind, Lexeme],
-	steps []parsec.Combinator[rune, strings.Position, Expr],
-	rec parsec.Combinator[rune, strings.Position, Expr],
+func (p *Parser[S]) expr(
+	lex tokens.Lexer[Kind, Lexeme, S],
+	steps []parsec.Combinator[rune, strings.Position, Expr, S],
+	rec parsec.Combinator[rune, strings.Position, Expr, S],
 	minPrec int,
-) parsec.Combinator[rune, strings.Position, Expr] {
+) parsec.Combinator[rune, strings.Position, Expr, S] {
 	// an operator is a lexeme with fixity status, whatever kind the
 	// lexer gave its token: the reserved words andalso and orelse of
 	// sml are infix operators of their own precedence level. The
@@ -300,7 +305,7 @@ func (p *Parser) expr(
 
 	// the colons of the conditional operators match by lexeme too,
 	// whatever kind their tokens carry
-	colons := make(map[string]parsec.Combinator[rune, strings.Position, Token], len(p.ternary))
+	colons := make(map[string]parsec.Combinator[rune, strings.Position, Token, S], len(p.ternary))
 
 	for question, def := range p.ternary {
 		colons[question] = tokens.Satisfy(lex, "conditional colon", func(t Token) bool {
@@ -308,8 +313,8 @@ func (p *Parser) expr(
 		})
 	}
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		first, err := p.appexp(lex, steps, rec)(buf)
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		first, err := p.appexp(lex, steps, rec)(state, buf)
 		if err != nil {
 			return nil, err
 		}
@@ -317,7 +322,7 @@ func (p *Parser) expr(
 		items := []infixItem{{expr: first}}
 
 		for {
-			next, oerr := op(buf)
+			next, oerr := op(state, buf)
 			if oerr != nil {
 				break
 			}
@@ -333,12 +338,12 @@ func (p *Parser) expr(
 				// the middle part is a full expression, like the one
 				// in parentheses — the comma and the assignment of c
 				// live here
-				then, terr := rec(buf)
+				then, terr := rec(state, buf)
 				if terr != nil {
 					return nil, terr
 				}
 
-				if _, cerr := colons[string(next.Lexeme)](buf); cerr != nil {
+				if _, cerr := colons[string(next.Lexeme)](state, buf); cerr != nil {
 					return nil, parsec.NewParseError(
 						buf.Position(),
 						"expected "+strconv.Quote(def.colon)+" to close the conditional operator "+strconv.Quote(string(next.Lexeme)),
@@ -347,7 +352,7 @@ func (p *Parser) expr(
 
 				// the else branch recurses at the precedence of the
 				// conditional, right associative
-				other, eerr := p.expr(lex, steps, rec, def.prec)(buf)
+				other, eerr := p.expr(lex, steps, rec, def.prec)(state, buf)
 				if eerr != nil {
 					return nil, eerr
 				}
@@ -357,7 +362,7 @@ func (p *Parser) expr(
 				continue
 			}
 
-			rhs, rerr := p.appexp(lex, steps, rec)(buf)
+			rhs, rerr := p.appexp(lex, steps, rec)(state, buf)
 			if rerr != nil {
 				return nil, parsec.NewParseError(
 					buf.Position(),
@@ -372,21 +377,21 @@ func (p *Parser) expr(
 	}
 }
 
-func (p *Parser) appexp(
-	lex tokens.Lexer[Kind, Lexeme],
-	steps []parsec.Combinator[rune, strings.Position, Expr],
-	rec parsec.Combinator[rune, strings.Position, Expr],
-) parsec.Combinator[rune, strings.Position, Expr] {
+func (p *Parser[S]) appexp(
+	lex tokens.Lexer[Kind, Lexeme, S],
+	steps []parsec.Combinator[rune, strings.Position, Expr, S],
+	rec parsec.Combinator[rune, strings.Position, Expr, S],
+) parsec.Combinator[rune, strings.Position, Expr, S] {
 	first := p.atom(lex, steps, true, rec)
 	args := parsec.Many(0, parsec.Try(p.atom(lex, steps, false, rec)))
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		e, err := first(buf)
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		e, err := first(state, buf)
 		if err != nil {
 			return nil, err
 		}
 
-		rest, _ := args(buf)
+		rest, _ := args(state, buf)
 
 		for _, arg := range rest {
 			e = App{Fn: e, Arg: arg}
@@ -396,12 +401,12 @@ func (p *Parser) appexp(
 	}
 }
 
-func (p *Parser) atom(
-	lex tokens.Lexer[Kind, Lexeme],
-	steps []parsec.Combinator[rune, strings.Position, Expr],
+func (p *Parser[S]) atom(
+	lex tokens.Lexer[Kind, Lexeme, S],
+	steps []parsec.Combinator[rune, strings.Position, Expr, S],
 	operandStart bool,
-	rec parsec.Combinator[rune, strings.Position, Expr],
-) parsec.Combinator[rune, strings.Position, Expr] {
+	rec parsec.Combinator[rune, strings.Position, Expr, S],
+) parsec.Combinator[rune, strings.Position, Expr, S] {
 	primary := p.primary(lex, steps, operandStart, rec)
 	postfix := parsec.Many(0, parsec.Try(tokens.Satisfy(lex, "postfix operator", func(t Token) bool {
 		_, isPostfix := p.postfix[string(t.Lexeme)]
@@ -409,13 +414,13 @@ func (p *Parser) atom(
 		return t.Kind == KindOperator && isPostfix
 	})))
 
-	return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		e, err := primary(buf)
+	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		e, err := primary(state, buf)
 		if err != nil {
 			return nil, err
 		}
 
-		ops, _ := postfix(buf)
+		ops, _ := postfix(state, buf)
 
 		for _, t := range ops {
 			e = Postfix{Op: string(t.Lexeme), E: e}
@@ -425,12 +430,12 @@ func (p *Parser) atom(
 	}
 }
 
-func (p *Parser) primary(
-	lex tokens.Lexer[Kind, Lexeme],
-	steps []parsec.Combinator[rune, strings.Position, Expr],
+func (p *Parser[S]) primary(
+	lex tokens.Lexer[Kind, Lexeme, S],
+	steps []parsec.Combinator[rune, strings.Position, Expr, S],
 	operandStart bool,
-	rec parsec.Combinator[rune, strings.Position, Expr],
-) parsec.Combinator[rune, strings.Position, Expr] {
+	rec parsec.Combinator[rune, strings.Position, Expr, S],
+) parsec.Combinator[rune, strings.Position, Expr, S] {
 	intLit := parsec.Cast(tokens.OfKind(lex, KindInt), func(t Token) (Expr, error) {
 		value, _ := strconv.ParseInt(string(t.Lexeme), 10, 64)
 
@@ -463,30 +468,30 @@ func (p *Parser) primary(
 
 	// rec is the full expression, the expression forms included: a
 	// parenthesized expression is again a full one
-	paren := func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		if _, err := open(buf); err != nil {
+	paren := func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		if _, err := open(state, buf); err != nil {
 			return nil, err
 		}
 
-		e, err := rec(buf)
+		e, err := rec(state, buf)
 		if err != nil {
 			return nil, err
 		}
 
-		if _, err := closeParen(buf); err != nil {
+		if _, err := closeParen(state, buf); err != nil {
 			return nil, err
 		}
 
 		return e, nil
 	}
 
-	prefixExpr := func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-		t, err := prefixOp(buf)
+	prefixExpr := func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+		t, err := prefixOp(state, buf)
 		if err != nil {
 			return nil, err
 		}
 
-		sub, serr := p.atom(lex, steps, true, rec)(buf)
+		sub, serr := p.atom(lex, steps, true, rec)(state, buf)
 		if serr != nil {
 			return nil, serr
 		}
@@ -494,7 +499,7 @@ func (p *Parser) primary(
 		return Unary{Op: string(t.Lexeme), Sub: sub}, nil
 	}
 
-	alts := make([]parsec.Combinator[rune, strings.Position, Expr], 0, len(steps)+4)
+	alts := make([]parsec.Combinator[rune, strings.Position, Expr, S], 0, len(steps)+4)
 
 	for _, step := range steps {
 		alts = append(alts, parsec.Try(step))

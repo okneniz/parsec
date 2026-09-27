@@ -39,8 +39,8 @@ func (c *IEND) String() string {
 	return b.String()
 }
 
-func IENDChunk(size uint32) parsec.Combinator[byte, int, *IEND] {
-	return func(buffer parsec.Buffer[byte, int]) (*IEND, parsec.Error[int]) {
+func IENDChunk(size uint32) parsec.Combinator[byte, int, *IEND, parsec.Stateless] {
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (*IEND, parsec.Error[int]) {
 		pos := buffer.Position()
 		if size > 0 {
 			return nil, parsec.NewParseError(
@@ -48,7 +48,7 @@ func IENDChunk(size uint32) parsec.Combinator[byte, int, *IEND] {
 			)
 		}
 
-		crc, err := ReadAs[uint32](4, "4 bytes of CRC", binary.BigEndian)(buffer)
+		crc, err := ReadAs[uint32, parsec.Stateless](4, "4 bytes of CRC", binary.BigEndian)(state, buffer)
 		if err != nil {
 			return nil, err
 		}

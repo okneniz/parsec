@@ -11,7 +11,7 @@ func TestRange(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Range("expected any byte between 'a' and 'c'", 'a', 'c'),
+			comb: Range[parsec.Stateless]("expected any byte between 'a' and 'c'", 'a', 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -54,7 +54,7 @@ func TestNotRange(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: NotRange("expected any byte not between 'a' and 'c'", 'a', 'c'),
+			comb: NotRange[parsec.Stateless]("expected any byte not between 'a' and 'c'", 'a', 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -98,7 +98,7 @@ func TestGt(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Gt("expected any byte greater than 'c'", 'c'),
+			comb: Gt[parsec.Stateless]("expected any byte greater than 'c'", 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -146,7 +146,7 @@ func TestGte(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Gte("expected any byte greater than or equal 'c'", 'c'),
+			comb: Gte[parsec.Stateless]("expected any byte greater than or equal 'c'", 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -193,7 +193,7 @@ func TestLt(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Lt("expected byte less than 'c'", 'c'),
+			comb: Lt[parsec.Stateless]("expected byte less than 'c'", 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},
@@ -233,7 +233,7 @@ func TestLte(t *testing.T) {
 
 	runTests(t, []test[byte]{
 		{
-			comb: Lte("expected byte less than or equal 'c'", 'c'),
+			comb: Lte[parsec.Stateless]("expected byte less than or equal 'c'", 'c'),
 			cases: []testCase[byte]{
 				{
 					input:  []byte{},

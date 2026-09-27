@@ -23,7 +23,7 @@ func TestParse(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := strings.Parse([]rune(test.input), strings.String("expected text", "hello"))
+			got, err := strings.Parse(parsec.Stateless{}, []rune(test.input), strings.String[parsec.Stateless]("expected text", "hello"))
 			if err != nil {
 				t.Fatalf("Parse(%q) failed: %v", test.input, err)
 			}
@@ -47,7 +47,7 @@ func TestParseErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := strings.Parse([]rune(test.input), strings.String("expected text", "hello"))
+			_, err := strings.Parse(parsec.Stateless{}, []rune(test.input), strings.String[parsec.Stateless]("expected text", "hello"))
 			if err == nil {
 				t.Fatalf("Parse(%q) succeeded, want error", test.input)
 			}
@@ -63,16 +63,16 @@ func TestParseString(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
-		parse parsec.Combinator[rune, strings.Position, string]
+		parse parsec.Combinator[rune, strings.Position, string, parsec.Stateless]
 		want  string
 	}{
-		{"literal text", "hello", strings.String("expected text", "hello"), "hello"},
-		{"multibyte runes", "привет", strings.String("expected text", "привет"), "привет"},
+		{"literal text", "hello", strings.String[parsec.Stateless]("expected text", "hello"), "hello"},
+		{"multibyte runes", "привет", strings.String[parsec.Stateless]("expected text", "привет"), "привет"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := strings.ParseString(test.input, test.parse)
+			got, err := strings.ParseString(parsec.Stateless{}, test.input, test.parse)
 			if err != nil {
 				t.Fatalf("ParseString(%q) failed: %v", test.input, err)
 			}
@@ -103,7 +103,7 @@ func TestParseFile(t *testing.T) {
 				t.Fatalf("WriteFile failed: %v", err)
 			}
 
-			got, err := strings.ParseFile(path, strings.Unsigned[uint64]())
+			got, err := strings.ParseFile(parsec.Stateless{}, path, strings.Unsigned[uint64, parsec.Stateless]())
 			if err != nil {
 				t.Fatalf("ParseFile failed: %v", err)
 			}
@@ -117,8 +117,9 @@ func TestParseFile(t *testing.T) {
 
 func TestParseFileError(t *testing.T) {
 	_, err := strings.ParseFile(
+		parsec.Stateless{},
 		filepath.Join(t.TempDir(), "missing.txt"),
-		strings.String("expected text", "hello"),
+		strings.String[parsec.Stateless]("expected text", "hello"),
 	)
 	if err == nil {
 		t.Fatal("ParseFile succeeded, want error")

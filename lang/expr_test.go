@@ -10,7 +10,7 @@ import (
 )
 
 func TestExpr(t *testing.T) {
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		Infix(1, "+", "-").
 		Infix(2, "*", "/").
 		InfixRight(3, "^").
@@ -53,7 +53,7 @@ func TestExpr(t *testing.T) {
 		expression := strings.Buffer([]rune(test.src))
 
 		t.Run(test.src, func(t *testing.T) {
-			e, err := parse(expression)
+			e, err := parse(parsec.Stateless{}, expression)
 			require.NoError(t, err)
 			require.Equal(t, test.want, e.String())
 		})
@@ -61,7 +61,7 @@ func TestExpr(t *testing.T) {
 }
 
 func TestExprErrors(t *testing.T) {
-	p := NewParser().Infix(1, "+", "-")
+	p := NewParser[parsec.Stateless]().Infix(1, "+", "-")
 
 	tests := []struct {
 		name string
@@ -75,7 +75,7 @@ func TestExprErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := New(testDefinition(), p)(strings.Buffer([]rune(test.src)))
+			_, err := New(testDefinition(), p)(parsec.Stateless{}, strings.Buffer([]rune(test.src)))
 			require.ErrorContains(t, err, test.want)
 		})
 	}
@@ -93,40 +93,40 @@ func (n letNode) String() string {
 }
 
 func TestExtraOperands(t *testing.T) {
-	p := NewParser().Infix(1, "+", "-").Infix(2, "*", "/")
+	p := NewParser[parsec.Stateless]().Infix(1, "+", "-").Infix(2, "*", "/")
 
 	// let x = value in body, with the value and the body parsed by
 	// the same parser — the closure-over-parser pattern.
-	let := func(lex tokens.Lexer[Kind, Lexeme]) parsec.Combinator[rune, strings.Position, Expr] {
+	let := func(lex tokens.Lexer[Kind, Lexeme, parsec.Stateless]) parsec.Combinator[rune, strings.Position, Expr, parsec.Stateless] {
 		letKw := tokens.Exact(lex, KindKeyword, "let")
 		inKw := tokens.Exact(lex, KindKeyword, "in")
 		eq := tokens.Exact(lex, KindSymbol, "=")
 		ident := tokens.OfKind(lex, KindIdent)
 
-		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-			if _, err := letKw(buf); err != nil {
+		return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+			if _, err := letKw(state, buf); err != nil {
 				return nil, err
 			}
 
-			name, err := ident(buf)
+			name, err := ident(state, buf)
 			if err != nil {
 				return nil, err
 			}
 
-			if _, err := eq(buf); err != nil {
+			if _, err := eq(state, buf); err != nil {
 				return nil, err
 			}
 
-			value, verr := p.Expr(lex)(buf)
+			value, verr := p.Expr(lex)(state, buf)
 			if verr != nil {
 				return nil, verr
 			}
 
-			if _, err := inKw(buf); err != nil {
+			if _, err := inKw(state, buf); err != nil {
 				return nil, err
 			}
 
-			body, berr := p.Expr(lex)(buf)
+			body, berr := p.Expr(lex)(state, buf)
 			if berr != nil {
 				return nil, berr
 			}
@@ -135,13 +135,13 @@ func TestExtraOperands(t *testing.T) {
 		}
 	}
 
-	e, err := New(testDefinition(), p, let)(strings.Buffer([]rune("let x = 1 + 2 in x * 3")))
+	e, err := New(testDefinition(), p, let)(parsec.Stateless{}, strings.Buffer([]rune("let x = 1 + 2 in x * 3")))
 	require.NoError(t, err)
 	require.Equal(t, "(let x (+ 1 2) (* x 3))", e.String())
 
 	// extras are tried first, with backtracking: a plain operand
 	// still parses when the extra declines.
-	e, err = New(testDefinition(), p, let)(strings.Buffer([]rune("1 + 2")))
+	e, err = New(testDefinition(), p, let)(parsec.Stateless{}, strings.Buffer([]rune("1 + 2")))
 	require.NoError(t, err)
 	require.Equal(t, "(+ 1 2)", e.String())
 }
@@ -166,15 +166,15 @@ func (n castNode) String() string {
 }
 
 func TestPrefixForm(t *testing.T) {
-	sizeof := func(l Ladder) parsec.Combinator[rune, strings.Position, Expr] {
+	sizeof := func(l Ladder[parsec.Stateless]) parsec.Combinator[rune, strings.Position, Expr, parsec.Stateless] {
 		kw := tokens.Exact(l.Lex, KindKeyword, "sizeof")
 
-		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-			if _, err := kw(buf); err != nil {
+		return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+			if _, err := kw(state, buf); err != nil {
 				return nil, err
 			}
 
-			sub, serr := l.Atom(buf)
+			sub, serr := l.Atom(state, buf)
 			if serr != nil {
 				return nil, serr
 			}
@@ -183,26 +183,26 @@ func TestPrefixForm(t *testing.T) {
 		}
 	}
 
-	cast := func(l Ladder) parsec.Combinator[rune, strings.Position, Expr] {
+	cast := func(l Ladder[parsec.Stateless]) parsec.Combinator[rune, strings.Position, Expr, parsec.Stateless] {
 		open := tokens.Exact(l.Lex, KindSymbol, "(")
 		closeParen := tokens.Exact(l.Lex, KindSymbol, ")")
 		ident := tokens.OfKind(l.Lex, KindIdent)
 
-		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-			if _, err := open(buf); err != nil {
+		return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+			if _, err := open(state, buf); err != nil {
 				return nil, err
 			}
 
-			ty, terr := ident(buf)
+			ty, terr := ident(state, buf)
 			if terr != nil {
 				return nil, terr
 			}
 
-			if _, err := closeParen(buf); err != nil {
+			if _, err := closeParen(state, buf); err != nil {
 				return nil, err
 			}
 
-			sub, serr := l.Atom(buf)
+			sub, serr := l.Atom(state, buf)
 			if serr != nil {
 				return nil, serr
 			}
@@ -211,7 +211,7 @@ func TestPrefixForm(t *testing.T) {
 		}
 	}
 
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		Infix(1, "+", "-").
 		Infix(2, "*", "/").
 		PrefixForm(sizeof, cast)
@@ -238,7 +238,7 @@ func TestPrefixForm(t *testing.T) {
 		expression := strings.Buffer([]rune(test.src))
 
 		t.Run(test.src, func(t *testing.T) {
-			e, err := parse(expression)
+			e, err := parse(parsec.Stateless{}, expression)
 			require.NoError(t, err)
 			require.Equal(t, test.want, e.String())
 		})
@@ -255,35 +255,35 @@ func (n ifNode) String() string {
 }
 
 func TestExprForm(t *testing.T) {
-	ifForm := func(l Ladder) parsec.Combinator[rune, strings.Position, Expr] {
+	ifForm := func(l Ladder[parsec.Stateless]) parsec.Combinator[rune, strings.Position, Expr, parsec.Stateless] {
 		ifKw := tokens.Exact(l.Lex, KindKeyword, "if")
 		thenKw := tokens.Exact(l.Lex, KindKeyword, "then")
 		elseKw := tokens.Exact(l.Lex, KindKeyword, "else")
 
-		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-			if _, err := ifKw(buf); err != nil {
+		return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+			if _, err := ifKw(state, buf); err != nil {
 				return nil, err
 			}
 
-			cond, cerr := l.Expr(buf)
+			cond, cerr := l.Expr(state, buf)
 			if cerr != nil {
 				return nil, cerr
 			}
 
-			if _, err := thenKw(buf); err != nil {
+			if _, err := thenKw(state, buf); err != nil {
 				return nil, err
 			}
 
-			then, terr := l.Expr(buf)
+			then, terr := l.Expr(state, buf)
 			if terr != nil {
 				return nil, terr
 			}
 
-			if _, err := elseKw(buf); err != nil {
+			if _, err := elseKw(state, buf); err != nil {
 				return nil, err
 			}
 
-			els, eerr := l.Expr(buf)
+			els, eerr := l.Expr(state, buf)
 			if eerr != nil {
 				return nil, eerr
 			}
@@ -292,7 +292,7 @@ func TestExprForm(t *testing.T) {
 		}
 	}
 
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		Infix(1, "+", "-").
 		Infix(2, "*", "/").
 		ExprForm(ifForm)
@@ -317,7 +317,7 @@ func TestExprForm(t *testing.T) {
 		expression := strings.Buffer([]rune(test.src))
 
 		t.Run(test.src, func(t *testing.T) {
-			e, err := parse(expression)
+			e, err := parse(parsec.Stateless{}, expression)
 			require.NoError(t, err)
 			require.Equal(t, test.want, e.String())
 		})
@@ -325,12 +325,12 @@ func TestExprForm(t *testing.T) {
 
 	// a form is not an operand: an if does not continue an infix
 	// chain, and the whole expression fails
-	_, err := parse(strings.Buffer([]rune("1 + if x then 1 else 2")))
+	_, err := parse(parsec.Stateless{}, strings.Buffer([]rune("1 + if x then 1 else 2")))
 	require.ErrorContains(t, err, "expected expression")
 }
 
 func TestKeywordInfix(t *testing.T) {
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		Infix(2, "*", "/").
 		Infix(1, "+", "-").
 		InfixRight(0, "andalso").
@@ -356,7 +356,7 @@ func TestKeywordInfix(t *testing.T) {
 		expression := strings.Buffer([]rune(test.src))
 
 		t.Run(test.src, func(t *testing.T) {
-			e, err := parse(expression)
+			e, err := parse(parsec.Stateless{}, expression)
 			require.NoError(t, err)
 			require.Equal(t, test.want, e.String())
 		})
@@ -365,7 +365,7 @@ func TestKeywordInfix(t *testing.T) {
 
 // ternaryDefinition is the test definition with the two separators
 // of the conditional among its symbols.
-func ternaryDefinition() Definition {
+func ternaryDefinition() Definition[parsec.Stateless] {
 	def := testDefinition()
 	def.Punctuation = def.Punctuation + "?:"
 
@@ -376,7 +376,7 @@ func TestTernary(t *testing.T) {
 	// the operator ladder of c: a comma of the lowest precedence,
 	// the assignment above it, the conditional between the
 	// assignment and the additive operators
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		Infix(0, ",").
 		InfixRight(1, "=").
 		Ternary(2, "?", ":").
@@ -409,7 +409,7 @@ func TestTernary(t *testing.T) {
 		expression := strings.Buffer([]rune(test.src))
 
 		t.Run(test.src, func(t *testing.T) {
-			e, err := parse(expression)
+			e, err := parse(parsec.Stateless{}, expression)
 			require.NoError(t, err)
 			require.Equal(t, test.want, e.String())
 		})
@@ -417,7 +417,7 @@ func TestTernary(t *testing.T) {
 }
 
 func TestTernaryErrors(t *testing.T) {
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		InfixRight(1, "=").
 		Ternary(2, "?", ":").
 		Infix(3, "+", "-")
@@ -434,7 +434,7 @@ func TestTernaryErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := New(ternaryDefinition(), p)(strings.Buffer([]rune(test.src)))
+			_, err := New(ternaryDefinition(), p)(parsec.Stateless{}, strings.Buffer([]rune(test.src)))
 			require.ErrorContains(t, err, test.want)
 		})
 	}
@@ -459,39 +459,39 @@ func (n callNode) String() string {
 func TestLadderFrom(t *testing.T) {
 	// a call reads its arguments above the comma, the assignment
 	// still inside: the c argument list
-	call := func(l Ladder) parsec.Combinator[rune, strings.Position, Expr] {
+	call := func(l Ladder[parsec.Stateless]) parsec.Combinator[rune, strings.Position, Expr, parsec.Stateless] {
 		open := tokens.Exact(l.Lex, KindSymbol, "(")
 		closeParen := tokens.Exact(l.Lex, KindSymbol, ")")
 		comma := parsec.Try(tokens.Exact(l.Lex, KindSymbol, ","))
 		ident := tokens.OfKind(l.Lex, KindIdent)
 		arg := l.From(1)
 
-		return func(buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
-			fn, err := ident(buf)
+		return func(state parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
+			fn, err := ident(state, buf)
 			if err != nil {
 				return nil, err
 			}
 
-			if _, err := open(buf); err != nil {
+			if _, err := open(state, buf); err != nil {
 				return nil, err
 			}
 
 			node := callNode{Fn: string(fn.Lexeme)}
 
 			for {
-				e, aerr := arg(buf)
+				e, aerr := arg(state, buf)
 				if aerr != nil {
 					return nil, aerr
 				}
 
 				node.Args = append(node.Args, e)
 
-				if _, cerr := comma(buf); cerr != nil {
+				if _, cerr := comma(state, buf); cerr != nil {
 					break
 				}
 			}
 
-			if _, err := closeParen(buf); err != nil {
+			if _, err := closeParen(state, buf); err != nil {
 				return nil, err
 			}
 
@@ -499,7 +499,7 @@ func TestLadderFrom(t *testing.T) {
 		}
 	}
 
-	p := NewParser().
+	p := NewParser[parsec.Stateless]().
 		Infix(0, ",").
 		InfixRight(1, "=").
 		Ternary(2, "?", ":").
@@ -524,7 +524,7 @@ func TestLadderFrom(t *testing.T) {
 		expression := strings.Buffer([]rune(test.src))
 
 		t.Run(test.src, func(t *testing.T) {
-			e, err := parse(expression)
+			e, err := parse(parsec.Stateless{}, expression)
 			require.NoError(t, err)
 			require.Equal(t, test.want, e.String())
 		})

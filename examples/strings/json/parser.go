@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	notZero = strings.Range("expected digit between 1 and 9", '1', '9')
-	digit   = strings.Digit("expected digit")
+	notZero = strings.Range[parsec.Stateless]("expected digit between 1 and 9", '1', '9')
+	digit   = strings.Digit[parsec.Stateless]("expected digit")
 
-	whitespace = strings.Space("space")
+	whitespace = strings.Space[parsec.Stateless]("space")
 )
 
-func Bool() parsec.Combinator[rune, strings.Position, JSON] {
-	return strings.MapStrings(
+func Bool() parsec.Combinator[rune, strings.Position, JSON, parsec.Stateless] {
+	return strings.MapStrings[JSON, parsec.Stateless](
 		"expected bool value",
 		map[string]JSON{
 			"true":  JSBool{true},
@@ -25,16 +25,16 @@ func Bool() parsec.Combinator[rune, strings.Position, JSON] {
 	)
 }
 
-func Null() parsec.Combinator[rune, strings.Position, JSON] {
+func Null() parsec.Combinator[rune, strings.Position, JSON, parsec.Stateless] {
 	return strings.Cast(
-		strings.String("expected null value", "null"),
+		strings.String[parsec.Stateless]("expected null value", "null"),
 		func(_ string) (JSON, error) {
 			return JSNull{}, nil
 		},
 	)
 }
 
-func Number_() parsec.Combinator[rune, strings.Position, JSON] {
+func Number_() parsec.Combinator[rune, strings.Position, JSON, parsec.Stateless] {
 	return strings.Cast(
 		strings.Concat(
 			1,
@@ -57,33 +57,34 @@ func Number_() parsec.Combinator[rune, strings.Position, JSON] {
 	)
 }
 
-func String_() parsec.Combinator[rune, strings.Position, JSON] {
+func String_() parsec.Combinator[rune, strings.Position, JSON, parsec.Stateless] {
 	leftQuote := strings.Padded(
 		whitespace,
-		strings.Eq(`expecte double quote as start of string literal`, '"'),
+		strings.Eq[parsec.Stateless](`expecte double quote as start of string literal`, '"'),
 	)
 
 	rightQuote := strings.Padded(
 		whitespace,
-		strings.Eq(`expected double quote as end of string literal`, '"'),
+		strings.Eq[parsec.Stateless](`expected double quote as end of string literal`, '"'),
 	)
 
 	parse := strings.ManyTill(
 		0,
 		"expected string literal",
-		strings.Any(),
+		strings.Any[parsec.Stateless](),
 		rightQuote,
 	)
 
 	return func(
+		state parsec.Stateless,
 		buffer parsec.Buffer[rune, strings.Position],
 	) (JSON, parsec.Error[strings.Position]) {
-		_, err := leftQuote(buffer)
+		_, err := leftQuote(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		s, err := parse(buffer)
+		s, err := parse(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -92,32 +93,33 @@ func String_() parsec.Combinator[rune, strings.Position, JSON] {
 	}
 }
 
-func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON] {
-	var value parsec.Combinator[rune, strings.Position, JSON]
+func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON, parsec.Stateless] {
+	var value parsec.Combinator[rune, strings.Position, JSON, parsec.Stateless]
 
 	keyComb := strings.Try(strings.Padded(whitespace, String_()))
 
 	colon := strings.Padded(
 		whitespace,
-		strings.Eq("expected collon as separatar between object key and value", ':'),
+		strings.Eq[parsec.Stateless]("expected collon as separatar between object key and value", ':'),
 	)
 
 	pair := func(
+		state parsec.Stateless,
 		buffer parsec.Buffer[rune, strings.Position],
 	) (*JSPair, parsec.Error[strings.Position]) {
 		pos := buffer.Position()
 
-		key, err := keyComb(buffer)
+		key, err := keyComb(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = strings.Padded(whitespace, colon)(buffer)
+		_, err = strings.Padded(whitespace, colon)(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		val, err := value(buffer)
+		val, err := value(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -132,20 +134,21 @@ func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON] {
 
 	comma := strings.Padded(
 		whitespace,
-		strings.Eq("expected comma as separator between key-value pairs in object", ','),
+		strings.Eq[parsec.Stateless]("expected comma as separator between key-value pairs in object", ','),
 	)
 
 	listOfPairs := strings.SepBy(0, pair, comma)
 
-	leftBracket := strings.Eq(`left bracket as start of object"`, '{')
-	rightBracket := strings.Eq(`right bracket as end of object`, '}')
+	leftBracket := strings.Eq[parsec.Stateless](`left bracket as start of object"`, '{')
+	rightBracket := strings.Eq[parsec.Stateless](`right bracket as end of object`, '}')
 
 	object := strings.Between(
 		leftBracket,
 		func(
+			state parsec.Stateless,
 			buffer parsec.Buffer[rune, strings.Position],
 		) (JSON, parsec.Error[strings.Position]) {
-			list, err := listOfPairs(buffer)
+			list, err := listOfPairs(state, buffer)
 			if err != nil {
 				return nil, err
 			}
@@ -160,17 +163,18 @@ func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON] {
 		rightBracket,
 	)
 
-	leftSquare := strings.Eq(`expected left square as start of array`, '[')
-	rightSquare := strings.Eq(`expected right square as end of array`, ']')
+	leftSquare := strings.Eq[parsec.Stateless](`expected left square as start of array`, '[')
+	rightSquare := strings.Eq[parsec.Stateless](`expected right square as end of array`, ']')
 
 	array := strings.Between(
 		leftSquare,
 		func(
+			state parsec.Stateless,
 			buffer parsec.Buffer[rune, strings.Position],
 		) (JSON, parsec.Error[strings.Position]) {
 			listOfValues := strings.SepBy(0, value, comma)
 
-			list, err := listOfValues(buffer)
+			list, err := listOfValues(state, buffer)
 			if err != nil {
 				return nil, err
 			}

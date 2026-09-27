@@ -1,6 +1,8 @@
 package timestamp
 
 import (
+	"github.com/okneniz/parsec"
+
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -43,7 +45,7 @@ func TestTimstapsParsing(t *testing.T) {
 	ohsnap.Check(t, iterations, arb, func(p ohsnap.Pair[time.Time, string]) bool {
 		str := p.First.UTC().Format(p.Second)
 
-		result, err := strings.ParseString(str, parser)
+		result, err := strings.ParseString(parsec.Stateless{}, str, parser)
 		if err != nil {
 			t.Logf("time: %v", p.First)
 			t.Logf("layout: %v", p.Second)

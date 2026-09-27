@@ -9,15 +9,15 @@ type BinaryOp[T any] func(T, T) T
 // Chainl parses zero or more values with c separated by op
 // and combines them with left associativity: ((a op b) op c).
 // When nothing is parsed, def is returned.
-func Chainl[T any, P any, S any](
-	def S,
-	c Combinator[T, P, S],
-	op Combinator[T, P, BinaryOp[S]],
-) Combinator[T, P, S] {
+func Chainl[T any, P any, O any, S any](
+	def O,
+	c Combinator[T, P, O, S],
+	op Combinator[T, P, BinaryOp[O], S],
+) Combinator[T, P, O, S] {
 	parse := Chainl1(c, op)
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		result, err := parse(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		result, err := parse(state, buffer)
 		if err != nil {
 			return def, nil
 		}
@@ -29,14 +29,14 @@ func Chainl[T any, P any, S any](
 // Chainl1 parses one or more values with c separated by op
 // and combines them with left associativity: ((a op b) op c).
 // It fails when the first application of c fails.
-func Chainl1[T any, P any, S any](
-	c Combinator[T, P, S],
-	op Combinator[T, P, BinaryOp[S]],
-) Combinator[T, P, S] {
-	var null S
+func Chainl1[T any, P any, O any, S any](
+	c Combinator[T, P, O, S],
+	op Combinator[T, P, BinaryOp[O], S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		x, err := c(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		x, err := c(state, buffer)
 		if err != nil {
 			return null, err
 		}
@@ -44,12 +44,12 @@ func Chainl1[T any, P any, S any](
 		rest := x
 
 		for !buffer.IsEOF() {
-			f, err := op(buffer)
+			f, err := op(state, buffer)
 			if err != nil {
 				break
 			}
 
-			y, err := c(buffer)
+			y, err := c(state, buffer)
 			if err != nil {
 				break
 			}
@@ -64,15 +64,15 @@ func Chainl1[T any, P any, S any](
 // Chainr parses zero or more values with c separated by op
 // and combines them with right associativity: (a op (b op c)).
 // When nothing is parsed, def is returned.
-func Chainr[T any, P any, S any](
-	def S,
-	c Combinator[T, P, S],
-	op Combinator[T, P, BinaryOp[S]],
-) Combinator[T, P, S] {
+func Chainr[T any, P any, O any, S any](
+	def O,
+	c Combinator[T, P, O, S],
+	op Combinator[T, P, BinaryOp[O], S],
+) Combinator[T, P, O, S] {
 	f := Chainr1(c, op)
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		result, err := f(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		result, err := f(state, buffer)
 		if err != nil {
 			return def, nil
 		}
@@ -84,30 +84,30 @@ func Chainr[T any, P any, S any](
 // Chainr1 parses one or more values with c separated by op
 // and combines them with right associativity: (a op (b op c)).
 // It fails when the first application of c fails.
-func Chainr1[T any, P any, S any](
-	c Combinator[T, P, S],
-	op Combinator[T, P, BinaryOp[S]],
-) Combinator[T, P, S] {
-	var null S
+func Chainr1[T any, P any, O any, S any](
+	c Combinator[T, P, O, S],
+	op Combinator[T, P, BinaryOp[O], S],
+) Combinator[T, P, O, S] {
+	var null O
 
-	return func(buffer Buffer[T, P]) (S, Error[P]) {
-		x, err := c(buffer)
+	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
+		x, err := c(state, buffer)
 		if err != nil {
 			return null, err
 		}
 
-		chain := make([]S, 0)
-		chainF := make([]func(S, S) S, 0)
+		chain := make([]O, 0)
+		chainF := make([]func(O, O) O, 0)
 
 		chain = append(chain, x)
 
 		for !buffer.IsEOF() {
-			f, err := op(buffer)
+			f, err := op(state, buffer)
 			if err != nil {
 				break
 			}
 
-			y, err := c(buffer)
+			y, err := c(state, buffer)
 			if err != nil {
 				break
 			}
@@ -136,30 +136,30 @@ func Chainr1[T any, P any, S any](
 
 // SepBy parses zero or more values of body separated by sep
 // and returns them as a slice. A trailing separator is not allowed.
-func SepBy[T any, P any, S any, B any](
+func SepBy[T any, P any, O any, A any, S any](
 	cap int,
-	body Combinator[T, P, S],
-	sep Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	body Combinator[T, P, O, S],
+	sep Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	c := Try(
 		And(
 			sep,
 			body,
-			func(_ B, x S) S { return x },
+			func(_ A, x O) O { return x },
 		),
 	)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
-		token, err := body(buffer)
+		token, err := body(state, buffer)
 		if err != nil {
 			return result, nil
 		}
 		result = append(result, token)
 
 		for !buffer.IsEOF() {
-			token, err = c(buffer)
+			token, err = c(state, buffer)
 			if err != nil {
 				break
 			}
@@ -173,19 +173,19 @@ func SepBy[T any, P any, S any, B any](
 
 // SepBy1 is like SepBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func SepBy1[T any, P any, S any, B any](
+func SepBy1[T any, P any, O any, A any, S any](
 	cap int,
 	errMessage string,
-	body Combinator[T, P, S],
-	sep Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	body Combinator[T, P, O, S],
+	sep Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	parse := SepBy(cap, body, sep)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
 
 		// ignore error because SepBy return empty list anyway
-		result, _ := parse(buffer)
+		result, _ := parse(state, buffer)
 		if len(result) == 0 {
 			return nil, NewParseError(pos, errMessage)
 		}
@@ -196,18 +196,18 @@ func SepBy1[T any, P any, S any, B any](
 
 // EndBy parses zero or more values of body, each terminated by sep,
 // like statements terminated by a semicolon.
-func EndBy[T any, P any, S any, B any](
+func EndBy[T any, P any, O any, A any, S any](
 	cap int,
-	body Combinator[T, P, S],
-	sep Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	body Combinator[T, P, O, S],
+	sep Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	c := Try(SkipAfter(sep, body))
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
 		for !buffer.IsEOF() {
-			token, err := c(buffer)
+			token, err := c(state, buffer)
 			if err != nil {
 				break
 			}
@@ -221,19 +221,19 @@ func EndBy[T any, P any, S any, B any](
 
 // EndBy1 is like EndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func EndBy1[T any, P any, S any, B any](
+func EndBy1[T any, P any, O any, A any, S any](
 	cap int,
 	errMessage string,
-	body Combinator[T, P, S],
-	sep Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	body Combinator[T, P, O, S],
+	sep Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	c := EndBy(cap, body, sep)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
 
 		// ignore error because EndBy return empty list anyway
-		result, _ := c(buffer)
+		result, _ := c(state, buffer)
 		if len(result) == 0 {
 			return nil, NewParseError(pos, errMessage)
 		}
@@ -244,25 +244,25 @@ func EndBy1[T any, P any, S any, B any](
 
 // SepEndBy parses zero or more values of body, separated by sep
 // and optionally terminated by a final sep.
-func SepEndBy[T any, P any, S any, B any](
+func SepEndBy[T any, P any, O any, A any, S any](
 	cap int,
-	body Combinator[T, P, S],
-	sep Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	body Combinator[T, P, O, S],
+	sep Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	s := Try(sep)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
 		for !buffer.IsEOF() {
-			token, err := body(buffer)
+			token, err := body(state, buffer)
 			if err != nil {
 				break
 			}
 
 			result = append(result, token)
 
-			_, err = s(buffer)
+			_, err = s(state, buffer)
 			if err != nil {
 				break
 			}
@@ -274,19 +274,19 @@ func SepEndBy[T any, P any, S any, B any](
 
 // SepEndBy1 is like SepEndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func SepEndBy1[T any, P any, S any, B any](
+func SepEndBy1[T any, P any, O any, A any, S any](
 	cap int,
 	errMessage string,
-	body Combinator[T, P, S],
-	sep Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	body Combinator[T, P, O, S],
+	sep Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	c := SepEndBy(cap, body, sep)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
 
 		// ignore error because SepEndBy return empty list anyway
-		result, _ := c(buffer)
+		result, _ := c(state, buffer)
 		if len(result) == 0 {
 			return nil, NewParseError(pos, errMessage)
 		}
@@ -298,26 +298,26 @@ func SepEndBy1[T any, P any, S any, B any](
 // ManyTill collects the results of c until the end combinator succeeds;
 // the end match itself is not included. It fails with errMessage
 // when c fails before end matches.
-func ManyTill[T any, P any, S any, B any](
+func ManyTill[T any, P any, O any, A any, S any](
 	cap int,
 	errMessage string,
-	c Combinator[T, P, S],
-	end Combinator[T, P, B],
-) Combinator[T, P, []S] {
+	c Combinator[T, P, O, S],
+	end Combinator[T, P, A, S],
+) Combinator[T, P, []O, S] {
 	needStop := Try(end)
 
-	return func(buffer Buffer[T, P]) ([]S, Error[P]) {
-		result := make([]S, 0, cap)
+	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
+		result := make([]O, 0, cap)
 
 		for !buffer.IsEOF() {
-			_, err := needStop(buffer)
+			_, err := needStop(state, buffer)
 			if err == nil {
 				break
 			}
 
 			pos := buffer.Position()
 
-			data, err := c(buffer)
+			data, err := c(state, buffer)
 			if err != nil {
 				return nil, NewParseError(pos, errMessage)
 			}
@@ -339,13 +339,13 @@ func ManyTill[T any, P any, S any, B any](
 // combinator. Wrap c in Try to keep the buffer intact after the
 // failing step. Like Many, it never ends when c succeeds without
 // consuming input.
-func Seq[T any, P any, S any](c Combinator[T, P, S]) Combinator[T, P, iter.Seq2[S, Error[P]]] {
-	return func(buffer Buffer[T, P]) (iter.Seq2[S, Error[P]], Error[P]) {
-		seq := func(yield func(S, Error[P]) bool) {
-			var null S
+func Seq[T any, P any, O any, S any](c Combinator[T, P, O, S]) Combinator[T, P, iter.Seq2[O, Error[P]], S] {
+	return func(state S, buffer Buffer[T, P]) (iter.Seq2[O, Error[P]], Error[P]) {
+		seq := func(yield func(O, Error[P]) bool) {
+			var null O
 
 			for !buffer.IsEOF() {
-				result, err := c(buffer)
+				result, err := c(state, buffer)
 				if err != nil {
 					yield(null, err)
 

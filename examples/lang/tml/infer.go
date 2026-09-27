@@ -4,10 +4,12 @@ import (
 	"fmt"
 )
 
-// typeChecker is one run of Hindley-Milner inference: a counter for fresh
-// type variables. The substitution lives in the variables themselves.
+// typeChecker is one run of Hindley-Milner inference: a counter for
+// fresh type variables and the top-level frame of schemes. The
+// substitution lives in the variables themselves.
 type typeChecker struct {
 	fresh int
+	frame []*scheme
 }
 
 // freshVar creates a new unbound type variable.
@@ -29,162 +31,237 @@ func Infer(src string) (map[string]Type, error) {
 	return inferProgram(decls)
 }
 
-// inferProgram typechecks already parsed declarations.
+// inferProgram typechecks already parsed declarations. The type
+// environment mirrors the binder stack the parser kept: one scheme
+// per binder, innermost last, over the top-level frame the program
+// addresses positionally.
 func inferProgram(decls []Decl) (map[string]Type, error) {
 	c := &typeChecker{}
-	env := map[string]*scheme{}
+	names := layout(decls)
+
+	c.frame = make([]*scheme, len(names))
+
+	// the builtin ~ of the initial stack: int -> int
+	c.frame[0] = &scheme{t: &TFun{Arg: intType, Res: intType}}
 
 	// pre-bind every top-level function with a fresh variable, so
 	// that a body may reference functions declared later; the shared
 	// variable is what carries the mutual constraints
+	pos := 1
+
 	for _, d := range decls {
-		fun, ok := d.(FunDecl)
-		if !ok {
+		if _, ok := d.(FunDecl); ok {
+			c.frame[pos] = &scheme{t: c.freshVar()}
+			pos++
+
 			continue
 		}
 
-		env[fun.Name] = &scheme{t: c.freshVar()}
+		if val, ok := d.(ValDecl); ok {
+			for _, b := range val.Binds {
+				pos += len(patVars(b.Pat))
+			}
+		}
 	}
 
+	pos = 1
+
 	for _, d := range decls {
-		if err := c.inferDecl(env, d, true); err != nil {
+		consumed, err := c.inferTopDecl(pos, d)
+		if err != nil {
 			return nil, err
 		}
+
+		pos += consumed
 	}
 
 	out := map[string]Type{}
 
-	for name, s := range env {
-		out[name] = prune(s.t)
+	for i, name := range names {
+		if name == "~" {
+			continue
+		}
+
+		out[name] = prune(c.frame[i].t)
 	}
 
 	return out, nil
 }
 
-// without copies env minus one binding.
-func without(env map[string]*scheme, name string) map[string]*scheme {
-	out := make(map[string]*scheme, len(env))
-
-	for k, v := range env {
-		if k != name {
-			out[k] = v
-		}
-	}
-
-	return out
-}
-
-// inferDecl types one declaration, extending env in place. At the top
-// level a function name is already pre-bound; inside a let it is
-// fresh, shadowing any outer binding.
-func (c *typeChecker) inferDecl(env map[string]*scheme, d Decl, top bool) error {
+// inferTopDecl types one top-level declaration into the frame slots
+// at pos and returns the slots consumed. A function name is already
+// pre-bound there; a val pattern fills its slots with generalized
+// schemes as they are inferred.
+func (c *typeChecker) inferTopDecl(pos int, d Decl) (int, error) {
 	switch decl := d.(type) {
 	case ValDecl:
+		consumed := 0
+
 		for _, b := range decl.Binds {
-			bindings := map[string]Type{}
+			outer := c.frame[:pos]
 
-			patType := c.patternType(b.Pat, bindings)
+			patType, bindings := c.patternType(b.Pat)
 
-			valueType, err := c.inferExpr(env, b.E)
+			valueType, err := c.inferExpr(outer, b.E)
 			if err != nil {
-				return err
+				return 0, err
 			}
 
 			if err := unify(patType, valueType); err != nil {
-				return err
+				return 0, err
 			}
 
 			// let-polymorphism: each variable of the pattern is
 			// generalized over what the environment does not lock
-			for name, t := range bindings {
-				env[name] = generalize(env, t)
+			for _, t := range bindings {
+				c.frame[pos] = generalize(outer, t)
+				pos++
+				consumed++
 			}
 		}
 
-		return nil
+		return consumed, nil
 	case FunDecl:
-		self := &scheme{t: c.freshVar()}
+		self := c.frame[pos]
 
-		if pre, bound := env[decl.Name]; bound && top {
-			self = pre
-		}
+		// the parameters live in an inner scope: they must not
+		// leak into the frame the declaration extends
+		body := c.frame[:pos+1]
 
-		// the parameters live in an inner scope: they must not leak
-		// into the environment the declaration extends
-		inner := map[string]*scheme{decl.Name: self}
-
-		args := make([]Type, 0, len(decl.Args))
+		var argTypes []Type
 
 		for _, arg := range decl.Args {
-			bindings := map[string]Type{}
+			t, bindings := c.patternType(arg)
 
-			t := c.patternType(arg, bindings)
+			argTypes = append(argTypes, t)
 
-			for name, bt := range bindings {
-				inner[name] = &scheme{t: bt}
+			for _, bt := range bindings {
+				body = appendEnv(body, &scheme{t: bt})
 			}
-
-			args = append(args, t)
 		}
 
-		bodyType, err := c.inferExpr(extend(env, inner), decl.Body)
+		bodyType, err := c.inferExpr(body, decl.Body)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
-		funType := bodyType
-
-		for i := len(args) - 1; i >= 0; i-- {
-			funType = &TFun{Arg: args[i], Res: funType}
-		}
+		funType := funTypeOf(argTypes, bodyType)
 
 		if err := unify(self.t, funType); err != nil {
-			return err
+			return 0, err
 		}
 
 		// generalize, but never over the variables the environment
-		// locks — including the function's own old binding
-		env[decl.Name] = generalize(without(env, decl.Name), self.t)
+		// locks — the frame below the function's own slot
+		c.frame[pos] = generalize(c.frame[:pos], self.t)
 
-		return nil
+		return 1, nil
 	}
 
-	return fmt.Errorf("type error: unknown declaration")
+	return 0, fmt.Errorf("type error: unknown declaration")
 }
 
-// extend copies env with the extra bindings layered on top.
-func extend(env map[string]*scheme, extra map[string]*scheme) map[string]*scheme {
-	out := make(map[string]*scheme, len(env)+len(extra))
+// inferLocalDecl types one declaration of a let and returns the
+// local chain extended with the bound schemes.
+func (c *typeChecker) inferLocalDecl(env []*scheme, d Decl) ([]*scheme, error) {
+	switch decl := d.(type) {
+	case ValDecl:
+		for _, b := range decl.Binds {
+			patType, bindings := c.patternType(b.Pat)
 
-	for k, v := range env {
-		out[k] = v
+			valueType, err := c.inferExpr(env, b.E)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := unify(patType, valueType); err != nil {
+				return nil, err
+			}
+
+			for _, t := range bindings {
+				env = appendEnv(env, generalize(env, t))
+			}
+		}
+
+		return env, nil
+	case FunDecl:
+		// the function name is a fresh scheme under the let,
+		// shadowing any outer binding; its slot is written after
+		// the body has fixed the type. The parameters scope over
+		// the body only — the chain the let continues from ends
+		// at the name
+		outer := env
+
+		env = appendEnv(env, &scheme{t: c.freshVar()})
+
+		self := len(env) - 1
+		afterSelf := env
+
+		var argTypes []Type
+
+		for _, arg := range decl.Args {
+			t, bindings := c.patternType(arg)
+
+			argTypes = append(argTypes, t)
+
+			for _, bt := range bindings {
+				env = appendEnv(env, &scheme{t: bt})
+			}
+		}
+
+		bodyType, err := c.inferExpr(env, decl.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		funType := funTypeOf(argTypes, bodyType)
+
+		if err := unify(afterSelf[self].t, funType); err != nil {
+			return nil, err
+		}
+
+		afterSelf[self] = generalize(outer, afterSelf[self].t)
+
+		return afterSelf, nil
 	}
 
-	for k, v := range extra {
-		out[k] = v
+	return nil, fmt.Errorf("type error: unknown declaration")
+}
+
+// funTypeOf folds the argument types over the body type.
+func funTypeOf(args []Type, body Type) Type {
+	out := body
+
+	for i := len(args) - 1; i >= 0; i-- {
+		out = &TFun{Arg: args[i], Res: out}
 	}
 
 	return out
 }
 
-// inferExpr types one expression.
-func (c *typeChecker) inferExpr(env map[string]*scheme, e Expr) (Type, error) {
+// appendEnv copies env with one more scheme on top: the snapshots
+// never share a backing array, so the scopes stay their own.
+func appendEnv(env []*scheme, s *scheme) []*scheme {
+	out := make([]*scheme, len(env), len(env)+1)
+	copy(out, env)
+
+	return append(out, s)
+}
+
+// inferExpr types one expression. The environment is the binder
+// stack the parser had: a scheme per binder, innermost last.
+func (c *typeChecker) inferExpr(env []*scheme, e Expr) (Type, error) {
 	switch expr := e.(type) {
 	case IntLit:
 		return intType, nil
 	case BoolLit:
 		return boolType, nil
-	case Ident:
-		if expr.Name == "~" {
-			return &TFun{Arg: intType, Res: intType}, nil
-		}
-
-		s, bound := env[expr.Name]
-		if !bound {
-			return nil, fmt.Errorf("type error: unbound variable %s", expr.Name)
-		}
-
-		return c.instantiate(s), nil
+	case Var:
+		return c.instantiate(env[len(env)-1-expr.Index]), nil
+	case ForwardRef:
+		return nil, fmt.Errorf("type error: unbound variable %s", expr.Name)
+	case TopVar:
+		return c.instantiate(c.frame[expr.Pos]), nil
 	case If:
 		cond, err := c.inferExpr(env, expr.Cond)
 		if err != nil {
@@ -211,17 +288,15 @@ func (c *typeChecker) inferExpr(env map[string]*scheme, e Expr) (Type, error) {
 
 		return then, nil
 	case Fn:
-		bindings := map[string]Type{}
+		arg, bindings := c.patternType(expr.Arg)
 
-		arg := c.patternType(expr.Arg, bindings)
+		inner := env
 
-		inner := map[string]*scheme{}
-
-		for name, t := range bindings {
-			inner[name] = &scheme{t: t}
+		for _, t := range bindings {
+			inner = appendEnv(inner, &scheme{t: t})
 		}
 
-		body, err := c.inferExpr(extend(env, inner), expr.Body)
+		body, err := c.inferExpr(inner, expr.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -261,16 +336,15 @@ func (c *typeChecker) inferExpr(env map[string]*scheme, e Expr) (Type, error) {
 
 		return &TTuple{Items: items}, nil
 	case Let:
-		inner := make(map[string]*scheme, len(env)+len(expr.Decls))
-
-		for k, v := range env {
-			inner[k] = v
-		}
+		inner := env
 
 		for _, d := range expr.Decls {
-			if err := c.inferDecl(inner, d, false); err != nil {
+			extended, err := c.inferLocalDecl(inner, d)
+			if err != nil {
 				return nil, err
 			}
+
+			inner = extended
 		}
 
 		return c.inferExpr(inner, expr.Body)
@@ -282,7 +356,7 @@ func (c *typeChecker) inferExpr(env map[string]*scheme, e Expr) (Type, error) {
 // inferInfix types an operator application: arithmetic on integers,
 // comparisons of integers producing booleans, and the two boolean
 // connectives.
-func (c *typeChecker) inferInfix(env map[string]*scheme, e Infix) (Type, error) {
+func (c *typeChecker) inferInfix(env []*scheme, e Infix) (Type, error) {
 	l, err := c.inferExpr(env, e.L)
 	if err != nil {
 		return nil, err
@@ -329,33 +403,36 @@ func (c *typeChecker) inferInfix(env map[string]*scheme, e Infix) (Type, error) 
 	return nil, fmt.Errorf("type error: unknown operator %s", e.Op)
 }
 
-// patternType shapes the type a pattern matches and collects the
-// types of the variables it binds.
-func (c *typeChecker) patternType(p Pat, bindings map[string]Type) Type {
+// patternType shapes the type a pattern matches and lists the types
+// of the variables it binds, in binding order.
+func (c *typeChecker) patternType(p Pat) (Type, []Type) {
 	switch pat := p.(type) {
 	case WildcardPat:
-		return c.freshVar()
+		return c.freshVar(), nil
 	case VarPat:
 		t := c.freshVar()
 
-		bindings[pat.Name] = t
-
-		return t
+		return t, []Type{t}
 	case ConstPat:
 		if pat.Text == "true" || pat.Text == "false" {
-			return boolType
+			return boolType, nil
 		}
 
-		return intType
+		return intType, nil
 	case TuplePat:
 		items := make([]Type, 0, len(pat.Items))
 
+		var bindings []Type
+
 		for _, item := range pat.Items {
-			items = append(items, c.patternType(item, bindings))
+			t, bs := c.patternType(item)
+
+			items = append(items, t)
+			bindings = append(bindings, bs...)
 		}
 
-		return &TTuple{Items: items}
+		return &TTuple{Items: items}, bindings
 	}
 
-	return c.freshVar()
+	return c.freshVar(), nil
 }

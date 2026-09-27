@@ -11,9 +11,9 @@ import (
 
 // TimeZone parses the current zone name of one of the passed locations,
 // for example "UTC" or "MSK", and returns the matching location.
-func TimeZone(
+func TimeZone[S any](
 	locations ...*time.Location,
-) parsec.Combinator[rune, Position, *time.Location] {
+) parsec.Combinator[rune, Position, *time.Location, S] {
 	m := make(map[string]*time.Location, len(locations))
 	names := make([]string, len(locations))
 
@@ -36,15 +36,15 @@ func TimeZone(
 		strings.Join(names, ","),
 	)
 
-	return MapStrings(errMessage, m)
+	return MapStrings[*time.Location, S](errMessage, m)
 }
 
 // TimeZoneByNames loads the locations by their IANA names
 // (for example "UTC" or "Europe/Moscow") and returns a combinator
 // parsing the current zone name of one of them.
-func TimeZoneByNames(
+func TimeZoneByNames[S any](
 	locationNames ...string,
-) (parsec.Combinator[rune, Position, *time.Location], error) {
+) (parsec.Combinator[rune, Position, *time.Location, S], error) {
 	locations := make([]*time.Location, 0, len(locationNames))
 
 	for _, locationName := range locationNames {
@@ -56,5 +56,5 @@ func TimeZoneByNames(
 		locations = append(locations, loc)
 	}
 
-	return TimeZone(locations...), nil
+	return TimeZone[S](locations...), nil
 }

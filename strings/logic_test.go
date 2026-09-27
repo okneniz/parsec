@@ -13,8 +13,8 @@ func TestOr(t *testing.T) {
 		{
 			comb: Or(
 				"expected symbol 'a' or digit",
-				Try(Eq("expected 'a'", 'a')),
-				Range("expected digit", '0', '9'),
+				Try(Eq[parsec.Stateless]("expected 'a'", 'a')),
+				Range[parsec.Stateless]("expected digit", '0', '9'),
 			),
 			cases: []testCase[rune]{
 				{
@@ -58,8 +58,8 @@ func TestOr(t *testing.T) {
 		{
 			comb: Or(
 				"expected symbol 'a' or digit",
-				Eq("expected 'a'", 'a'),
-				Range("expected digit", '0', '9'),
+				Eq[parsec.Stateless]("expected 'a'", 'a'),
+				Range[parsec.Stateless]("expected digit", '0', '9'),
 			),
 			cases: []testCase[rune]{
 				{
@@ -141,8 +141,8 @@ func TestAnd(t *testing.T) {
 	runTestsString(t, []test[[]rune]{
 		{
 			comb: And(
-				Eq("expected 'a'", 'a'),
-				Eq("expected 'b'", 'b'),
+				Eq[parsec.Stateless]("expected 'a'", 'a'),
+				Eq[parsec.Stateless]("expected 'b'", 'b'),
 				func(x, y rune) []rune { return []rune{x, y} },
 			),
 			cases: []testCase[[]rune]{

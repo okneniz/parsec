@@ -52,26 +52,26 @@ func (c *IHDR) String() string {
 	return b.String()
 }
 
-func IHDRChunk(size uint32) parsec.Combinator[byte, int, *IHDR] {
+func IHDRChunk(size uint32) parsec.Combinator[byte, int, *IHDR, parsec.Stateless] {
 	parseData := bytes.Count[byte](
 		int(size),
 		fmt.Sprintf("expected %d bytes of IHDR data", size),
-		bytes.Any(),
+		bytes.Any[parsec.Stateless](),
 	)
 
-	parseWidth := bytes.ReadAs[uint32](4, "expected 4 bytes of IHDR width", binary.BigEndian)
-	parseHeight := bytes.ReadAs[uint32](4, "expected 4 bytes of IHDR height", binary.BigEndian)
-	parseBitDepth := bytes.Satisfy("expected 1 byte of IHDR bit depth", true, parsec.Anything[byte])
-	parseColorType := bytes.Satisfy("expected 1 byte of color type", true, parsec.Anything[byte])
-	parseCompressionMethod := bytes.Satisfy("expected 1 byte of compression method", true, parsec.Anything[byte])
-	parseFilterMethod := bytes.Satisfy("expected 1 byte of filter method", true, parsec.Anything[byte])
-	parseInterfaceMethod := bytes.Satisfy("expected 1 byte of interface method", true, parsec.Anything[byte])
-	parseCRC := bytes.ReadAs[uint32](4, "expecte 4 bytes of CRC", binary.BigEndian)
+	parseWidth := bytes.ReadAs[uint32, parsec.Stateless](4, "expected 4 bytes of IHDR width", binary.BigEndian)
+	parseHeight := bytes.ReadAs[uint32, parsec.Stateless](4, "expected 4 bytes of IHDR height", binary.BigEndian)
+	parseBitDepth := bytes.Satisfy[parsec.Stateless]("expected 1 byte of IHDR bit depth", true, parsec.Anything[byte])
+	parseColorType := bytes.Satisfy[parsec.Stateless]("expected 1 byte of color type", true, parsec.Anything[byte])
+	parseCompressionMethod := bytes.Satisfy[parsec.Stateless]("expected 1 byte of compression method", true, parsec.Anything[byte])
+	parseFilterMethod := bytes.Satisfy[parsec.Stateless]("expected 1 byte of filter method", true, parsec.Anything[byte])
+	parseInterfaceMethod := bytes.Satisfy[parsec.Stateless]("expected 1 byte of interface method", true, parsec.Anything[byte])
+	parseCRC := bytes.ReadAs[uint32, parsec.Stateless](4, "expecte 4 bytes of CRC", binary.BigEndian)
 
-	return func(buffer parsec.Buffer[byte, int]) (*IHDR, parsec.Error[int]) {
+	return func(state parsec.Stateless, buffer parsec.Buffer[byte, int]) (*IHDR, parsec.Error[int]) {
 		pos := buffer.Position()
 
-		data, err := parseData(buffer)
+		data, err := parseData(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -80,42 +80,42 @@ func IHDRChunk(size uint32) parsec.Combinator[byte, int, *IHDR] {
 			return nil, parsec.NewParseError(buffer.Position(), seekErr.Error())
 		}
 
-		width, err := parseWidth(buffer)
+		width, err := parseWidth(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		height, err := parseHeight(buffer)
+		height, err := parseHeight(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		bitDepth, err := parseBitDepth(buffer)
+		bitDepth, err := parseBitDepth(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		colorType, err := parseColorType(buffer)
+		colorType, err := parseColorType(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		compressionMethod, err := parseCompressionMethod(buffer)
+		compressionMethod, err := parseCompressionMethod(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		filterMethod, err := parseFilterMethod(buffer)
+		filterMethod, err := parseFilterMethod(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		interfaceMethod, err := parseInterfaceMethod(buffer)
+		interfaceMethod, err := parseInterfaceMethod(state, buffer)
 		if err != nil {
 			return nil, err
 		}
 
-		crc, err := parseCRC(buffer)
+		crc, err := parseCRC(state, buffer)
 		if err != nil {
 			return nil, err
 		}

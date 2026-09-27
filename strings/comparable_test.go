@@ -11,7 +11,7 @@ func TestEq(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: Eq("expected 'c'", 'c'),
+			comb: Eq[parsec.Stateless]("expected 'c'", 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -67,7 +67,7 @@ func TestNotEq(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: NotEq("expected not c", 'c'),
+			comb: NotEq[parsec.Stateless]("expected not c", 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -123,7 +123,7 @@ func TestOneOf(t *testing.T) {
 
 	runTests(t, []test[rune]{
 		{
-			comb: OneOf("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
+			comb: OneOf[parsec.Stateless]("expected 'a', 'b' or 'c'", 'a', 'b', 'c'),
 			cases: []testCase[rune]{
 				{
 					input:  "",
@@ -194,7 +194,7 @@ func TestSequenceOf(t *testing.T) {
 
 	runTestsString(t, []test[[]rune]{
 		{
-			comb: SequenceOf("expected foo", 'f', 'o', 'o'),
+			comb: SequenceOf[parsec.Stateless]("expected foo", 'f', 'o', 'o'),
 			cases: []testCase[[]rune]{
 				{
 					input:  "",
@@ -294,7 +294,7 @@ func TestMap(t *testing.T) {
 				1,
 				"expected at least one a, b or c",
 				parsec.SkipMany(
-					NoneOf("skip not a, b or c", 'a', 'b', 'c'),
+					NoneOf[parsec.Stateless]("skip not a, b or c", 'a', 'b', 'c'),
 					Map(
 						"expected a, b or c",
 						map[rune]string{
@@ -302,7 +302,7 @@ func TestMap(t *testing.T) {
 							'b': "bar",
 							'c': "baz",
 						},
-						Any(),
+						Any[parsec.Stateless](),
 					),
 				),
 			),
@@ -366,11 +366,11 @@ func TestMapStrings(t *testing.T) {
 				1,
 				"sequence of keys",
 				SkipMany(
-					NoneOf(
+					NoneOf[parsec.Stateless](
 						"none of 'a', 'b' or 'c'",
 						'a', 'b', 'c',
 					),
-					MapStrings(
+					MapStrings[string, parsec.Stateless](
 						"expect 'a', 'b' or 'c'",
 						map[string]string{
 							"a": "foo",
@@ -439,7 +439,7 @@ func TestString(t *testing.T) {
 
 	runTests(t, []test[string]{
 		{
-			comb: String("expected foo", "foo"),
+			comb: String[parsec.Stateless]("expected foo", "foo"),
 			cases: []testCase[string]{
 				{
 					input:  "",
