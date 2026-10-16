@@ -4,8 +4,9 @@ package tml
 // names a nested expression may reference, innermost last. The
 // builtin ~ sits at the bottom of the initial stack; every fn
 // pattern, every declaration and every let pushes its binders for
-// the nested scopes and pops them on the way out — the state half
-// of the backtracking contract, because Try rewinds only the buffer.
+// the nested scopes and pops them on the way out — a scope that
+// succeeds still unwinds itself, while a failed one is recovered by
+// Try together with its buffer position.
 type state struct {
 	binders []string
 }

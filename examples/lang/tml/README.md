@@ -1,8 +1,9 @@
 # tiny ml
 
 tiny ml (tml) is a minimal Standard ML dialect — `let` bindings,
-recursive functions, `if-then-else` over integers and booleans — with
-a complete front end and semantics on ~2000 lines of Go:
+recursive functions, `if-then-else` over integers, booleans and the
+unit value `()` — with a complete front end and semantics on ~2000
+lines of Go:
 
 ```
 source → lexer → tokens → parser → AST → typechecker → interpreter → values
@@ -20,6 +21,9 @@ implementation of a classic technique, built on the parsec combinators.
 - with no datatypes in the language, the `programs/` directory still
   builds lists — a list is encoded as its own fold.
 
+A program's entry point is `fun main () = ...`: Eval calls it with
+the unit value and returns what it computes.
+
 ## The map
 
 Read the package in this order; every file is one stage of the
@@ -28,13 +32,14 @@ pipeline:
 | file | stage | the classic technique inside |
 | --- | --- | --- |
 | `lexer.go` | text → tokens | maximal munch, nested comments; produces `tokens.Token` from the shared [tokens](../../tokens) layer |
-| `parser.go` | tokens → AST | the expression ladder of [lang](../../../lang): a `lang.Parser` with the operators and the forms — if, fn, let, `~`, `()` — declared on it, and recursive descent around it for declarations and patterns |
+| `parser.go` | tokens → AST | the expression ladder of [lang](../../../lang): a `lang.Parser` with the operators and the forms — if, fn, let, `~`, `()` — declared on it, and recursive descent around it for declarations and patterns; the top level binds in two passes, so the functions see each other — the mutual recursion of tml |
 | `ast.go` | AST | s-expression printing, so tests read like trees; the nodes the lang ladder produces — literals, names, applications, infixes — are shared with lang as is |
 | `types.go` | type syntax | mutable type variables, `prune`/`unify` with occurs check, `generalize`/`instantiate` |
 | `infer.go` | AST → types | Hindley-Milner inference with let-polymorphism |
-| `value.go` | runtime values | integers, booleans, tuples, closures |
-| `eval.go` | AST → values | environment interpreter; closures capture the environment by reference, which is what makes recursion work |
-| `programs/` | the language itself | ten teaching programs, from literals to Church-encoded lists |
+| `subst.go` | term machinery | the de Bruijn trio — `shift`, `subst`, `substitutionTops` — over terms and declarations |
+| `value.go` | runtime values | the terms themselves, plus `VRec` — the recursive knot a declared function is |
+| `eval.go` | AST → values | substitution interpreter: application is a literal beta step, and the vals of a scope leave the terms through substitution |
+| `programs/` | the language itself | ten teaching programs, from literals to Church-encoded lists, each answering through its `main` |
 
 The tests mirror the map (`lexer_test.go`, `parser_test.go`,
 `infer_test.go`, `eval_test.go`, `programs_test.go`), and
@@ -81,13 +86,16 @@ HM checks declarations in sequence; tml pre-binds every top-level
 `even` and `odd` can reference each other, and each still ends up
 with the principal type `int -> bool` (`infer.go`, `Infer`).
 
-The interpreter needs no new theory: an environment maps names to
-values, `fn` evaluates to a closure capturing that environment, and
-application matches the argument against the parameter pattern and
-runs the body. Capturing *by reference* is a one-line trick that
-gives recursion and mutual recursion for free — the environment has
-been mutated to contain the function itself by the time anyone calls
-it (`eval.go`, `evalDecl` and `VClosure`).
+The interpreter needs one new idea beyond substitution: the recursive
+knot. Application is a literal beta step — `apply` matches the
+argument pattern and moves the matched values into the body with
+`substitutionTops` — and the `val`s of the top level and of every
+`let` leave the terms the same way, so a running term carries no val
+slots at all. What pure substitution cannot do is tie a function to
+itself, so the functions of a scope — the top level included — become
+one row of knots (`VRec` in `value.go`), each holding itself in its
+own slot of the row; that single row is also what makes mutual
+recursion work (`eval.go`, `evalProgram` and `apply`).
 
 ## Reading list
 
@@ -106,6 +114,9 @@ The primary sources, in order of how close they are to this code:
   walkthrough of inference on paper, good before the papers.
 - **S. Diehl, *Write You a Haskell*, the Hindley-Milner chapter** —
   inference to an AST very close to tml's, in a functional language.
+- **B. C. Pierce, *Types and Programming Languages*, chapters 5–6** —
+  nameless terms: the shift/subst machinery `subst.go` implements,
+  down to the cutoff arithmetic.
 - **H. Abelson, G. J. Sussman, *Structure and Interpretation of
   Computer Programs*, chapter 4** — the eval/apply interpreter
   pattern of `eval.go`.
@@ -128,8 +139,8 @@ Or from Go code:
 
 ```go
 types, err := tml.Infer(src)          // map[string]Type
-values, err := tml.Eval(src)          // map[string]Value
-values, err := tml.EvalFile(path)     // a program from a file
+value, err := tml.Eval(src)           // the Value of main
+value, err := tml.EvalFile(path)      // a program from a file
 ```
 
 The teaching programs in `programs/` are the language tour — each one

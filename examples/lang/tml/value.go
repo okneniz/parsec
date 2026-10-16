@@ -1,64 +1,65 @@
 package tml
 
 import (
-	"fmt"
+	"strconv"
+	"strings"
 )
 
-// Value is a tiny ml runtime value: an integer, a boolean, a tuple or
-// a closure.
-type Value interface {
-	String() string
-}
+// Value is a tiny ml runtime value. The literals and the tuples are
+// the terms themselves; a function is a knot — see VRec — so every
+// value carries the Expr interface and renders itself.
+type Value = Expr
 
-// cell is one binder's slot. The top-level frame is a row of cells
-// the declarations fill as the program runs, so a closure built
-// earlier sees a function declared later — the mutual recursion of
-// tiny ml.
-type cell struct {
-	val Value
-}
-
-// VInt is an integer value.
-type VInt int64
-
-// VBool is a boolean value.
-type VBool bool
-
-// VTuple is a tuple value.
-type VTuple []Value
-
-// VClosure is a function value: one argument pattern, the body, the
-// program frame it reads the top level through, and the environment
-// snapshot it captured.
-type VClosure struct {
-	Arg   Pat
+// VRec is a function value: the argument patterns with the body, and
+// the row of knot values its free indices resolve against, with the
+// depth they count from. The row holds the function itself in its
+// shadow slot — the substitution core cannot tie that knot, the row
+// does — which is what makes a declared fun, and the mutual recursion
+// of a whole top level, self-referential.
+type VRec struct {
+	Args  []Pat
 	Body  Expr
-	Frame []*cell
-	Env   []*cell
+	Row   []Value
+	Depth int
 }
 
-func (v VInt) String() string {
-	return fmt.Sprint(int64(v))
+func (v *VRec) String() string {
+	return "<fn>"
 }
 
-func (v VBool) String() string {
-	return fmt.Sprint(bool(v))
+// negBuiltin is the builtin ~ the initial row holds at its bottom: a
+// marker the application case of the interpreter recognizes.
+type negBuiltin struct{}
+
+func (negBuiltin) String() string {
+	return "<fn>"
 }
 
-func (v VTuple) String() string {
-	out := "("
+// renderValue renders a value the way the programs and the tests
+// read it: canonical integers and booleans, comma-separated tuples,
+// <fn> for functions.
+func renderValue(v Value) string {
+	switch value := v.(type) {
+	case IntLit:
+		return strconv.FormatInt(value.Value, 10)
+	case Tuple:
+		parts := make([]string, 0, len(value.Items))
 
-	for i, item := range v {
-		if i > 0 {
-			out += ", "
+		for _, item := range value.Items {
+			parts = append(parts, renderValue(item))
 		}
 
-		out += item.String()
+		return "(" + strings.Join(parts, ", ") + ")"
 	}
 
-	return out + ")"
+	return v.String()
 }
 
-func (v *VClosure) String() string {
-	return "<fn>"
+// appendRow copies row with one more value on top: the rows never
+// share a backing array, so the row a knot captured stays its own.
+func appendRow(row []Value, v Value) []Value {
+	out := make([]Value, len(row), len(row)+1)
+	copy(out, row)
+
+	return append(out, v)
 }

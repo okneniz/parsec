@@ -33,3 +33,5 @@ val sumDoubled = sum (map (fn n => n * 2) oneTwo)
 val append = fn l => fn r => l cons r
 
 val sumAppended = sum (append oneTwo (cons 3 nil))
+
+fun main () = (nil, cons, oneTwo, sum, length, sumOneTwo, lenOneTwo, map, sumDoubled, append, sumAppended)

@@ -51,3 +51,5 @@ val four = toInt (cmult c2 c2)
 val seven = toInt (cplus c3 c4)
 
 val eight = toInt (cmult c2 (cplus c2 c2))
+
+fun main () = (ctrue, cfalse, cand, cor, cnot, notTrue, orDemo, andDemo, c0, csucc, c1, c2, c3, c4, cplus, cmult, toInt, four, seven, eight)

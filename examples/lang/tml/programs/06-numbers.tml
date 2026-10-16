@@ -58,3 +58,5 @@ fun isqrt n =
 val root997 = isqrt 997
 
 val root1024 = isqrt 1024
+
+fun main () = (mod, gcd, gcdDemo, power, fastpow, powers, isPrime, primality, isqrt, root997, root1024)

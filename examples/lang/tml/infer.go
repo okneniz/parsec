@@ -44,30 +44,33 @@ func inferProgram(decls []Decl) (map[string]Type, error) {
 	// the builtin ~ of the initial stack: int -> int
 	c.frame[0] = &scheme{t: &TFun{Arg: intType, Res: intType}}
 
-	// pre-bind every top-level function with a fresh variable, so
-	// that a body may reference functions declared later; the shared
-	// variable is what carries the mutual constraints
-	pos := 1
+	// pre-bind every top-level function with a fresh variable, in the
+	// fun row the second parse pass laid out: the shared variable is
+	// what carries the mutual constraints, because every body sees
+	// the whole row
+	funs := 0
 
 	for _, d := range decls {
 		if _, ok := d.(FunDecl); ok {
-			c.frame[pos] = &scheme{t: c.freshVar()}
-			pos++
-
-			continue
-		}
-
-		if val, ok := d.(ValDecl); ok {
-			for _, b := range val.Binds {
-				pos += len(patVars(b.Pat))
-			}
+			funs++
+			c.frame[funs] = &scheme{t: c.freshVar()}
 		}
 	}
 
-	pos = 1
+	// the slot every declaration starts from: the fun row is laid out
+	// already, the val binders pile up after it in declaration order
+	pos := funs + 1
+	fun := 0
 
 	for _, d := range decls {
-		consumed, err := c.inferTopDecl(pos, d)
+		slot := 0
+
+		if _, ok := d.(FunDecl); ok {
+			fun++
+			slot = fun
+		}
+
+		consumed, err := c.inferTopDecl(pos, slot, d)
 		if err != nil {
 			return nil, err
 		}
@@ -88,32 +91,36 @@ func inferProgram(decls []Decl) (map[string]Type, error) {
 	return out, nil
 }
 
-// TODO : looks bad
-// layout lists the binder names of the top level in declaration
-// order, the builtin ~ first: the row the fixup pass, the
-// typechecker and the interpreter all address positionally.
+// layout lists the binders of the top level in stack order: the
+// builtin first, then every function — the pre-bound row of the
+// second parse pass — then the val binders in declaration order. The
+// typechecker addresses the row positionally; the reporting map of
+// Infer reads its names.
 func layout(decls []Decl) []string {
 	names := []string{"~"}
 
 	for _, d := range decls {
-		switch decl := d.(type) {
-		case ValDecl:
-			for _, b := range decl.Binds {
+		if fun, ok := d.(FunDecl); ok {
+			names = append(names, fun.Name)
+		}
+	}
+
+	for _, d := range decls {
+		if val, ok := d.(ValDecl); ok {
+			for _, b := range val.Binds {
 				names = append(names, patVars(b.Pat)...)
 			}
-		case FunDecl:
-			names = append(names, decl.Name)
 		}
 	}
 
 	return names
 }
 
-// inferTopDecl types one top-level declaration into the frame slots
-// at pos and returns the slots consumed. A function name is already
-// pre-bound there; a val pattern fills its slots with generalized
-// schemes as they are inferred.
-func (c *typeChecker) inferTopDecl(pos int, d Decl) (int, error) {
+// inferTopDecl types one top-level declaration into its frame slots —
+// pos for a val, slot for a fun — and returns the slots consumed. A
+// function name is already pre-bound in the fun row; a val pattern
+// fills its slots with generalized schemes as they are inferred.
+func (c *typeChecker) inferTopDecl(pos int, slot int, d Decl) (int, error) {
 	switch decl := d.(type) {
 	case ValDecl:
 		consumed := 0
@@ -143,11 +150,13 @@ func (c *typeChecker) inferTopDecl(pos int, d Decl) (int, error) {
 
 		return consumed, nil
 	case FunDecl:
-		self := c.frame[pos]
+		self := c.frame[slot]
 
-		// the parameters live in an inner scope: they must not
-		// leak into the frame the declaration extends
-		body := c.frame[:pos+1]
+		// the body sees the pre-bound slot again, as its own shadow
+		// innermost of the base, with the arguments above it; the
+		// parameters live in an inner scope and must not leak into
+		// the frame the declaration extends
+		body := appendEnv(c.frame[:pos], self)
 
 		var argTypes []Type
 
@@ -172,11 +181,16 @@ func (c *typeChecker) inferTopDecl(pos int, d Decl) (int, error) {
 			return 0, err
 		}
 
-		// generalize, but never over the variables the environment
-		// locks — the frame below the function's own slot
-		c.frame[pos] = generalize(c.frame[:pos], self.t)
+		// generalize over the base the body saw — the fun row and the
+		// vals before it — minus the own slot: its raw variable would
+		// lock the whole type and make every recursive fun monomorphic
+		locked := make([]*scheme, 0, pos-1)
+		locked = append(locked, c.frame[:slot]...)
+		locked = append(locked, c.frame[slot+1:pos]...)
 
-		return 1, nil
+		c.frame[slot] = generalize(locked, self.t)
+
+		return 0, nil
 	}
 
 	return 0, fmt.Errorf("type error: unknown declaration")
@@ -279,10 +293,8 @@ func (c *typeChecker) inferExpr(env []*scheme, e Expr) (Type, error) {
 		return boolType, nil
 	case Var:
 		return c.instantiate(env[len(env)-1-expr.Index]), nil
-	case ForwardRef:
+	case FreeVar:
 		return nil, fmt.Errorf("type error: unbound variable %s", expr.Name)
-	case TopVar:
-		return c.instantiate(c.frame[expr.Pos]), nil
 	case If:
 		cond, err := c.inferExpr(env, expr.Cond)
 		if err != nil {

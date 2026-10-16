@@ -66,8 +66,8 @@ fun odd n = if n = 0 then false else even (n - 1)
 	}
 
 	want := []string{
-		"(fun even n (if (= var(0) 0) true (app top(2) (- var(0) 1))))",
-		"(fun odd n (if (= var(0) 0) false (app var(2) (- var(0) 1))))",
+		"(fun even n (if (= var(0) 0) true (app var(2) (- var(0) 1))))",
+		"(fun odd n (if (= var(0) 0) false (app var(3) (- var(0) 1))))",
 	}
 
 	for i, d := range decls {

@@ -39,29 +39,15 @@ func (e Var) String() string {
 	return "var(" + strconv.Itoa(e.Index) + ")"
 }
 
-// ForwardRef is a reference to a name no enclosing binder holds when
-// it is read. The fixup pass of Parse resolves the ones that name a
-// top-level fun declared later — the mutual recursion of tiny ml —
-// into a TopVar; whatever survives names nothing at all, and the
-// typechecker reports it.
-type ForwardRef struct {
+// FreeVar is a free variable: a reference to a name no enclosing
+// binder holds when it is read. Nothing resolves it later — the
+// runtime knows indices only, so the typechecker reports it.
+type FreeVar struct {
 	Name string
 }
 
-func (e ForwardRef) String() string {
+func (e FreeVar) String() string {
 	return e.Name
-}
-
-// TopVar is a reference into the top-level frame by absolute
-// position. The frame is one shared row of slots the declarations
-// fill as the program runs, so a function sees the top-level names
-// declared after it — tiny ml extends recursion this way.
-type TopVar struct {
-	Pos int
-}
-
-func (e TopVar) String() string {
-	return "top(" + strconv.Itoa(e.Pos) + ")"
 }
 
 // If is a conditional expression.
@@ -97,6 +83,10 @@ type Tuple struct {
 }
 
 func (e Tuple) String() string {
+	if len(e.Items) == 0 {
+		return "()"
+	}
+
 	parts := make([]string, 0, len(e.Items)+1)
 	parts = append(parts, "tuple")
 
@@ -204,6 +194,10 @@ type TuplePat struct {
 }
 
 func (p TuplePat) String() string {
+	if len(p.Items) == 0 {
+		return "()"
+	}
+
 	parts := make([]string, 0, len(p.Items)+1)
 	parts = append(parts, "tuple")
 

@@ -35,3 +35,5 @@ val reduced = addR (rat 1 3) (rat 1 6)
 val normalized = rat 42 ~60
 
 val quarter = mulR half half
+
+fun main () = (mod, gcd, rat, addR, mulR, half, third, fiveSixths, reduced, normalized, quarter)

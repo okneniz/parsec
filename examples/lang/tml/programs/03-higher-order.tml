@@ -27,3 +27,5 @@ val double = fn n => n * 2
 
 (* compose inc double is a function: increment after doubling. *)
 val seven = compose inc double 3
+
+fun main () = (id, pair, twice, ten, compose, inc, double, seven)

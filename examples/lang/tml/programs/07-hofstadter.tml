@@ -25,3 +25,5 @@ fun q n =
   else q (n - q (n - 1)) + q (n - q (n - 2))
 
 val q10 = q 10
+
+fun main () = (female, male, pair10, q, q10)

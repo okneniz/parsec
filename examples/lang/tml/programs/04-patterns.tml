@@ -39,3 +39,5 @@ fun sign n =
   else 1
 
 val signs = (sign ~7, sign 0, sign 7)
+
+fun main () = ((x, y), sum, fst, first, add, sum2, dist, fiveSquared, sign, signs)

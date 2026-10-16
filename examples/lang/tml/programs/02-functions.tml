@@ -27,3 +27,5 @@ val fact5 = fact 5
 fun fib n = if n < 2 then n else fib (n - 1) + fib (n - 2)
 
 val fib10 = fib 10
+
+fun main () = (successor, six, add, ten, fact, fact5, fib, fib10)

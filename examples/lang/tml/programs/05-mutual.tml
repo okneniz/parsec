@@ -20,3 +20,5 @@ fun ack m n =
   else ack (m - 1) (ack m (n - 1))
 
 val ack33 = ack 3 3
+
+fun main () = (even, odd, isTenEven, ack, ack33)

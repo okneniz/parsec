@@ -86,7 +86,7 @@ choice := strings.Choice(
   - [message pack](https://github.com/okneniz/parsec/tree/master/examples/bytes/message_pack)
   - [png](https://github.com/okneniz/parsec/tree/master/examples/bytes/png)
 - [lang](https://github.com/okneniz/parsec/tree/master/lang)
-  - [tiny ml](https://github.com/okneniz/parsec/tree/master/examples/lang/tml) - a minimal Standard ML dialect (let, recursive functions, if-then-else, numbers and booleans): the two-stage parsing pipeline in miniature, with a Hindley-Milner typechecker and an interpreter on top
+  - [tiny ml](https://github.com/okneniz/parsec/tree/master/examples/lang/tml) - a minimal Standard ML dialect (let, recursive functions, if-then-else, numbers, booleans, unit): the two-stage parsing pipeline in miniature, with a Hindley-Milner typechecker and a nameless (de Bruijn) substitution interpreter on top
 
 ### Projects using parsec
 

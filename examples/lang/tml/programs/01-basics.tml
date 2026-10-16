@@ -24,3 +24,8 @@ val comparison = 1 < 2
 (* andalso and orelse are the boolean connectives; andalso binds
  * tighter, and both evaluate their right side only when needed. *)
 val logic = (1 < 2) andalso (2 < 1) orelse true
+
+(* A program is its main: Eval calls it with the unit value () and
+ * returns what it computes — here, every answer of the lesson. *)
+fun main () = (answer, precedence, grouped, negative, comparison, logic)
+

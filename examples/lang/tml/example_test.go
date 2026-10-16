@@ -23,8 +23,8 @@ val _ = let val x = even 10 in if x then 1 else ~1 end
 		fmt.Println(d)
 	}
 	// Output:
-	// (fun even n (if (= var(0) 0) true (app top(2) (- var(0) 1))))
-	// (fun odd n (if (= var(0) 0) false (app var(2) (- var(0) 1))))
+	// (fun even n (if (= var(0) 0) true (app var(2) (- var(0) 1))))
+	// (fun odd n (if (= var(0) 0) false (app var(3) (- var(0) 1))))
 	// (val (_ (let (val (x (app var(1) 10))) in (if var(0) 1 (app var(3) 1)) end)))
 }
 
@@ -49,21 +49,17 @@ fun add x y = x + y
 }
 
 func Example_eval() {
-	env, err := Eval(`
+	value, err := Eval(`
 fun fact n = if n = 0 then 1 else n * fact (n - 1)
 fun fib n = if n < 2 then n else fib (n - 1) + fib (n - 2)
 
-val answer = fact 5 + fib 10
-val pair = (answer, answer < 100)
+fun main () = (fact 5 + fib 10, fact 5 < fib 10)
 `)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(env)
+	fmt.Println(renderValue(value))
 	// Output:
-	// answer = 175
-	// fact = <fn>
-	// fib = <fn>
-	// pair = (175, false)
+	// (175, false)
 }

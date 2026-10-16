@@ -54,19 +54,57 @@ func newParser() *parser {
 }
 
 // Parse lexes src and parses it as a tiny ml program: a sequence of
-// val and fun declarations, resolved to de Bruijn indices.
+// val and fun declarations, resolved to de Bruijn indices. The top
+// level binds in two passes: the first collects the names of the
+// functions, the second — with the names already on the binder stack
+// — resolves every reference to them, so the functions see each
+// other regardless of declaration order.
 func Parse(src string) ([]Decl, error) {
-	buf := strings.Buffer([]rune(src))
+	first, err := parseProgram(src, newState())
+	if err != nil {
+		return nil, err
+	}
+
+	funs := funNames(first)
+
+	// no functions to pre-bind: the second pass would start from the
+	// same state as the first and parse the same program
+	if len(funs) == 0 {
+		return first, nil
+	}
+
 	st := newState()
-	parseAST := newParser().makeDeclarationsParser()
+	st.push(funs...)
+
+	return parseProgram(src, st)
+}
+
+// funNames lists the names of the top-level functions in declaration
+// order: the row the second parse pass pre-binds on the binder stack.
+func funNames(decls []Decl) []string {
+	funs := []string{}
+
+	for _, d := range decls {
+		if fun, ok := d.(FunDecl); ok {
+			funs = append(funs, fun.Name)
+		}
+	}
+
+	return funs
+}
+
+// parseProgram runs the declarations parser over a fresh buffer with
+// the given state and checks that nothing is left of the input. The
+// funs bind through the pre-bound row of the state.
+func parseProgram(src string, st *state) ([]Decl, error) {
+	buf := strings.Buffer([]rune(src))
+	p := newParser()
+	parseAST := p.makeDeclarationsParser(p.makePreboundFuncDeclarationParser())
 
 	ast, err := parseAST(st, buf)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO : looks like bad design
-	fixup(ast)
 
 	// the end check asks the stepper itself what is left: trailing
 	// whitespace and comments are not input, anything else is
@@ -92,118 +130,20 @@ func Parse(src string) ([]Decl, error) {
 	return ast, nil
 }
 
-// fixup resolves the forward references that name a top-level fun
-// declared later — the mutual recursion of tiny ml — into TopVar
-// slots of the top-level frame. A forward reference to anything else
-// names no binder at all; the typechecker reports it.
-func fixup(decls []Decl) {
-	funs := map[string]int{}
-
-	pos := 1
-	for _, d := range decls {
-		switch decl := d.(type) {
-		case ValDecl:
-			for _, b := range decl.Binds {
-				pos += len(patVars(b.Pat))
-			}
-		case FunDecl:
-			if _, seen := funs[decl.Name]; !seen {
-				funs[decl.Name] = pos
-			}
-
-			pos++
-		}
-	}
-
-	var walk func(e Expr) Expr
-
-	walk = func(e Expr) Expr {
-		switch expr := e.(type) {
-		case ForwardRef:
-			if pos, ok := funs[expr.Name]; ok {
-				return TopVar{Pos: pos}
-			}
-
-			return expr
-		case If:
-			expr.Cond = walk(expr.Cond)
-			expr.Then = walk(expr.Then)
-			expr.Else = walk(expr.Else)
-
-			return expr
-		case Fn:
-			expr.Body = walk(expr.Body)
-
-			return expr
-		case App:
-			expr.Fn = walk(expr.Fn)
-			expr.Arg = walk(expr.Arg)
-
-			return expr
-		case Infix:
-			expr.L = walk(expr.L)
-			expr.R = walk(expr.R)
-
-			return expr
-		case Tuple:
-			for i, item := range expr.Items {
-				expr.Items[i] = walk(item)
-			}
-
-			return expr
-		case Let:
-			for i := range expr.Decls {
-				switch decl := expr.Decls[i].(type) {
-				case ValDecl:
-					for j := range decl.Binds {
-						decl.Binds[j].E = walk(decl.Binds[j].E)
-					}
-
-					expr.Decls[i] = decl
-				case FunDecl:
-					decl.Body = walk(decl.Body)
-
-					expr.Decls[i] = decl
-				}
-			}
-
-			expr.Body = walk(expr.Body)
-
-			return expr
-		}
-
-		return e
-	}
-
-	for i := range decls {
-		switch decl := decls[i].(type) {
-		case ValDecl:
-			for j := range decl.Binds {
-				decl.Binds[j].E = walk(decl.Binds[j].E)
-			}
-
-			decls[i] = decl
-		case FunDecl:
-			decl.Body = walk(decl.Body)
-
-			decls[i] = decl
-		}
-	}
-}
-
 // ---------------------------------------------------------------------------
 // Declarations
 
-// makeDeclarationsParser parses declarations until the next token cannot start one.
-// The caller checks its own end condition: the end of input, or the
-// in keyword of a let. The leading token selects the form from a
-// MapAs table keyed by the whole token and is discarded; a new
-// declaration form is a new table key. A declaration that starts but
-// does not parse stops the list as well — the caller's end check
-// reports it.
-func (p *parser) makeDeclarationsParser() Parser[[]Decl] {
+// makeDeclarationsParser parses declarations until the next token
+// cannot start one. The caller checks its own end condition: the end
+// of input, or the in keyword of a let. The leading token selects
+// the form from a MapAs table keyed by the whole token and is
+// discarded; a new declaration form is a new table key. A declaration
+// that starts but does not parse stops the list as well — the
+// caller's end check reports it. The fun form arrives as an
+// argument: a top-level fun binds through its pre-bound slot, a let
+// fun pushes its own name.
+func (p *parser) makeDeclarationsParser(parseFuncDeclaration Parser[Decl]) Parser[[]Decl] {
 	parseValDeclaration := p.makeValDeclarationParser()
-	parseFuncDeclaration := p.makeFuncDeclarationParser()
 
 	forms := map[Token]Parser[Decl]{
 		{Kind: KindKeyword, Lexeme: "val"}: parseValDeclaration,
@@ -213,7 +153,6 @@ func (p *parser) makeDeclarationsParser() Parser[[]Decl] {
 	parseDeclaration := parsec.MapAs(
 		"expected declaration",
 		forms,
-		// TODO : looks strange
 		tokens.Satisfy(p.lexer, "expected declaration", parsec.Anything[Token]),
 	)
 
@@ -253,11 +192,12 @@ func (p *parser) makeValDeclarationParser() Parser[Decl] {
 	}
 }
 
-// makeFuncDeclarationParser parses the rest of a recursive function declaration, fun
-// f x1 ... xn = exp with atomic argument patterns; the fun keyword
-// is already consumed. The name and the arguments bind inside the
-// body — recursion — and, like every declaration binder, over
-// everything that follows.
+// makeFuncDeclarationParser parses the rest of a recursive function
+// declaration, fun f x1 ... xn = exp with atomic argument patterns;
+// the fun keyword is already consumed. The name and the arguments
+// bind inside the body — recursion — and the name, like every
+// declaration binder, over everything that follows: this is the fun
+// of a let body.
 func (p *parser) makeFuncDeclarationParser() Parser[Decl] {
 	parseEq := tokens.Exact(p.lexer, KindOperator, "=")
 	parseIdent := tokens.OfKind(p.lexer, KindIdent)
@@ -297,6 +237,55 @@ func (p *parser) makeFuncDeclarationParser() Parser[Decl] {
 		// the arguments scope over the body only; the name binds
 		// over the rest of the program
 		st.popTo(base + 1)
+
+		decl := FunDecl{
+			Name: string(name.Lexeme),
+			Args: args,
+			Body: body,
+		}
+
+		return decl, nil
+	}
+}
+
+// makePreboundFuncDeclarationParser is the top-level fun. Its slot
+// sits in the pre-bound fun row the second parse pass starts with, so
+// the shadow it pushes for the body — and the arguments with it —
+// pops away completely.
+func (p *parser) makePreboundFuncDeclarationParser() Parser[Decl] {
+	parseEq := tokens.Exact(p.lexer, KindOperator, "=")
+	parseIdent := tokens.OfKind(p.lexer, KindIdent)
+	parseArg := p.makeAtomicPatternParser()
+	parseArg = parsec.Try(parseArg)
+	parseArgs := parsec.Many(0, parseArg)
+
+	return func(st *state, buf parsec.Buffer[rune, Position]) (Decl, Error) {
+		name, nerr := parseIdent(st, buf)
+		if nerr != nil {
+			return nil, nerr
+		}
+
+		args, err := parseArgs(st, buf)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, err := parseEq(st, buf); err != nil {
+			return nil, err
+		}
+
+		base := st.depth()
+
+		st.push(string(name.Lexeme))
+		st.push(patVarsAll(args)...)
+		defer st.popTo(base)
+
+		// the ladder is assigned after the declarations are built —
+		// the field is read here, at call time
+		body, berr := p.parseExpression(st, buf)
+		if berr != nil {
+			return nil, berr
+		}
 
 		decl := FunDecl{
 			Name: string(name.Lexeme),
@@ -405,7 +394,7 @@ func (p *parser) makeLetFormParser(ladder lang.Ladder[*state]) Parser[Expr] {
 	parseLet := tokens.Exact(ladder.Lex, KindKeyword, "let")
 	parseIn := tokens.Exact(ladder.Lex, KindKeyword, "in")
 	parseEnd := tokens.Exact(ladder.Lex, KindKeyword, "end")
-	parseDeclarations := p.makeDeclarationsParser()
+	parseDeclarations := p.makeDeclarationsParser(p.makeFuncDeclarationParser())
 
 	return func(st *state, buf parsec.Buffer[rune, Position]) (Expr, Error) {
 		if _, err := parseLet(st, buf); err != nil {
@@ -487,11 +476,17 @@ func (p *parser) makeNegatedFormParser(l lang.Ladder[*state]) Parser[Expr] {
 func (p *parser) parenForm(ladder lang.Ladder[*state]) Parser[Expr] {
 	parseLeftParen := tokens.Exact(ladder.Lex, KindSymbol, "(")
 	parseRightParen := tokens.Exact(ladder.Lex, KindSymbol, ")")
+	parseEmptyTuple := parsec.Try(parseRightParen)
 	parseComma := parsec.Try(tokens.Exact(ladder.Lex, KindSymbol, ","))
 
 	return func(st *state, buf parsec.Buffer[rune, Position]) (Expr, Error) {
 		if _, err := parseLeftParen(st, buf); err != nil {
 			return nil, err
+		}
+
+		// the unit () is the empty tuple
+		if _, err := parseEmptyTuple(st, buf); err == nil {
+			return Tuple{}, nil
 		}
 
 		first, ferr := ladder.Expr(st, buf)
@@ -542,8 +537,8 @@ func boolOperand(lexeme Lexeme, value bool) lang.Operand[*state] {
 
 // varOperand is the extra operand that resolves identifiers into
 // variable references: a name on the binder stack becomes its de
-// Bruijn index, a name off the stack a forward reference the fixup
-// pass of Parse resolves against the whole program.
+// Bruijn index, a name off the stack a free variable the typechecker
+// reports.
 func varOperand(lex Lexer) Parser[Expr] {
 	ident := tokens.OfKind(lex, KindIdent)
 
@@ -559,7 +554,7 @@ func varOperand(lex Lexer) Parser[Expr] {
 			return Var{Index: i}, nil
 		}
 
-		return ForwardRef{Name: name}, nil
+		return FreeVar{Name: name}, nil
 	}
 }
 
@@ -648,6 +643,7 @@ func (p *parser) makeNegativeLiteralPattern() parsec.Combinator[rune, Position, 
 func (p *parser) makeTuplePatternParser() parsec.Combinator[rune, Position, Pat, *state] {
 	parseLeftParen := tokens.Exact(p.lexer, KindSymbol, "(")
 	parseRightParen := tokens.Exact(p.lexer, KindSymbol, ")")
+	parseEmptyTuple := parsec.Try(parseRightParen)
 	parseComma := parsec.Try(tokens.Exact(p.lexer, KindSymbol, ","))
 
 	return func(st *state, buf parsec.Buffer[rune, Position]) (Pat, Error) {
@@ -655,8 +651,11 @@ func (p *parser) makeTuplePatternParser() parsec.Combinator[rune, Position, Pat,
 			return nil, err
 		}
 
-		// TODO : why not use scope / closure?
-		//
+		// the unit pattern () is the empty tuple
+		if _, err := parseEmptyTuple(st, buf); err == nil {
+			return TuplePat{}, nil
+		}
+
 		// atpat's Choice builds this form, so the reference stays
 		// in the body; one build serves every element
 		parseAtomicPattern := p.makeAtomicPatternParser()
