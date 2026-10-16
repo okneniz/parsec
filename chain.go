@@ -136,7 +136,7 @@ func Chainr1[T any, P any, O any, S any](
 
 // SepBy parses zero or more values of body separated by sep
 // and returns them as a slice. A trailing separator is not allowed.
-func SepBy[T any, P any, O any, A any, S any](
+func SepBy[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
@@ -173,7 +173,7 @@ func SepBy[T any, P any, O any, A any, S any](
 
 // SepBy1 is like SepBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func SepBy1[T any, P any, O any, A any, S any](
+func SepBy1[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	errMessage string,
 	body Combinator[T, P, O, S],
@@ -196,7 +196,7 @@ func SepBy1[T any, P any, O any, A any, S any](
 
 // EndBy parses zero or more values of body, each terminated by sep,
 // like statements terminated by a semicolon.
-func EndBy[T any, P any, O any, A any, S any](
+func EndBy[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
@@ -221,7 +221,7 @@ func EndBy[T any, P any, O any, A any, S any](
 
 // EndBy1 is like EndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func EndBy1[T any, P any, O any, A any, S any](
+func EndBy1[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	errMessage string,
 	body Combinator[T, P, O, S],
@@ -244,7 +244,7 @@ func EndBy1[T any, P any, O any, A any, S any](
 
 // SepEndBy parses zero or more values of body, separated by sep
 // and optionally terminated by a final sep.
-func SepEndBy[T any, P any, O any, A any, S any](
+func SepEndBy[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
@@ -274,7 +274,7 @@ func SepEndBy[T any, P any, O any, A any, S any](
 
 // SepEndBy1 is like SepEndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func SepEndBy1[T any, P any, O any, A any, S any](
+func SepEndBy1[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	errMessage string,
 	body Combinator[T, P, O, S],
@@ -298,7 +298,7 @@ func SepEndBy1[T any, P any, O any, A any, S any](
 // ManyTill collects the results of c until the end combinator succeeds;
 // the end match itself is not included. It fails with errMessage
 // when c fails before end matches.
-func ManyTill[T any, P any, O any, A any, S any](
+func ManyTill[T any, P any, O any, A any, S Recoverable[S]](
 	cap int,
 	errMessage string,
 	c Combinator[T, P, O, S],

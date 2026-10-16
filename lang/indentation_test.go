@@ -74,6 +74,23 @@ type indentState struct {
 	pending []Token
 }
 
+func (s *indentState) Clone() *indentState {
+	clone := indentState{
+		stack:   make([]int, 0, len(s.stack)),
+		pending: make([]Token, 0, len(s.pending)),
+	}
+
+	clone.stack = append(clone.stack, s.stack...)
+	clone.pending = append(clone.pending, s.pending...)
+
+	return &clone
+}
+
+func (s *indentState) Recover(clone *indentState) {
+	s.stack = clone.stack
+	s.pending = clone.pending
+}
+
 func newIndentState() *indentState {
 	return &indentState{stack: []int{0}}
 }

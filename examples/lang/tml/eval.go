@@ -7,13 +7,13 @@ import (
 
 // Eval parses, typechecks and interprets src, returning the values of
 // the top-level bindings.
-func Eval(src string) (Env, error) {
-	decls, err := Parse(src)
+func Eval(code string) (Env, error) {
+	ast, err := Parse(code)
 	if err != nil {
 		return nil, err
 	}
 
-	return evalProgram(decls)
+	return evalProgram(ast)
 }
 
 // EvalFile reads a tiny ml program from a file and evaluates it.

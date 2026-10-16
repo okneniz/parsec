@@ -23,6 +23,7 @@ func TestDeBruijnIndices(t *testing.T) {
 		want string
 	}{
 		// the innermost binder of the same name wins
+		{"fn x => x", "(fn var(0))"},
 		{"fn x => fn x => x", "(fn (fn var(0)))"},
 		{"fn x => fn y => x", "(fn (fn var(1)))"},
 		{"fn x => fn y => y", "(fn (fn var(0)))"},

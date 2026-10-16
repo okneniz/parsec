@@ -74,7 +74,7 @@ func Dot[S any]() parsec.Combinator[rune, Position, rune, S] {
 
 // Unsigned parses an unsigned decimal integer of type O
 // (for example int or uint16). Leading zeros are accepted.
-func Unsigned[O parsec.Integer, S any]() parsec.Combinator[rune, Position, O, S] {
+func Unsigned[O parsec.Integer, S parsec.Recoverable[S]]() parsec.Combinator[rune, Position, O, S] {
 	digit := Try[rune, S](Digit[S]("digit"))
 	zero := rune('0')
 
@@ -104,7 +104,7 @@ func Unsigned[O parsec.Integer, S any]() parsec.Combinator[rune, Position, O, S]
 // UnsignedN parses an unsigned decimal integer of type O
 // consisting of exactly n digits, for example a year or a month field
 // of a fixed-width timestamp.
-func UnsignedN[O parsec.Integer, S any](n int, errMessage string) parsec.Combinator[rune, Position, O, S] {
+func UnsignedN[O parsec.Integer, S parsec.Recoverable[S]](n int, errMessage string) parsec.Combinator[rune, Position, O, S] {
 	digit := Try[rune, S](Digit[S]("digit"))
 	zero := rune('0')
 

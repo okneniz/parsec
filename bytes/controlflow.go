@@ -55,7 +55,7 @@ func SkipAfter[A any, O any, S any](
 
 // Padded skips a sequence of items parsed by the skip combinator
 // before and after body.
-func Padded[A any, O any, S any](
+func Padded[A any, O any, S parsec.Recoverable[S]](
 	skip parsec.Combinator[byte, int, A, S],
 	body parsec.Combinator[byte, int, O, S],
 ) parsec.Combinator[byte, int, O, S] {

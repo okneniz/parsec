@@ -86,7 +86,7 @@ type Fixity struct {
 // forms. The type parameter S is the parser state its combinators
 // carry — the same state the Definition the language lexes with
 // is generic in.
-type Parser[S any] struct {
+type Parser[S parsec.Recoverable[S]] struct {
 	fixity      map[string]Fixity
 	ternary     map[string]ternaryDef
 	prefix      map[string]struct{}
@@ -96,7 +96,7 @@ type Parser[S any] struct {
 }
 
 // NewParser creates a parser with an empty operator table.
-func NewParser[S any]() *Parser[S] {
+func NewParser[S parsec.Recoverable[S]]() *Parser[S] {
 	return &Parser[S]{
 		fixity:  map[string]Fixity{},
 		ternary: map[string]ternaryDef{},
@@ -191,9 +191,12 @@ func (p *Parser[S]) PrefixForm(forms ...Form[S]) *Parser[S] {
 // whole ladder reads through. Every entry point carries the same
 // parser state S.
 type Ladder[S any] struct {
-	Lex  tokens.Lexer[Kind, Lexeme, S]
+	Lex tokens.Lexer[Kind, Lexeme, S]
+	// TODO : rename to ParseExpression
 	Expr parsec.Combinator[rune, strings.Position, Expr, S]
+	// TODO : rename to ParseAtom
 	Atom parsec.Combinator[rune, strings.Position, Expr, S]
+	// TODO : rename to ParseForm
 	From func(prec int) parsec.Combinator[rune, strings.Position, Expr, S]
 }
 

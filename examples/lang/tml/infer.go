@@ -88,6 +88,27 @@ func inferProgram(decls []Decl) (map[string]Type, error) {
 	return out, nil
 }
 
+// TODO : looks bad
+// layout lists the binder names of the top level in declaration
+// order, the builtin ~ first: the row the fixup pass, the
+// typechecker and the interpreter all address positionally.
+func layout(decls []Decl) []string {
+	names := []string{"~"}
+
+	for _, d := range decls {
+		switch decl := d.(type) {
+		case ValDecl:
+			for _, b := range decl.Binds {
+				names = append(names, patVars(b.Pat)...)
+			}
+		case FunDecl:
+			names = append(names, decl.Name)
+		}
+	}
+
+	return names
+}
+
 // inferTopDecl types one top-level declaration into the frame slots
 // at pos and returns the slots consumed. A function name is already
 // pre-bound there; a val pattern fills its slots with generalized

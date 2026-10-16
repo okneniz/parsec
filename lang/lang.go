@@ -16,7 +16,7 @@ import (
 //		state,
 //		strings.Buffer([]rune(src)),
 //	)
-func New[S any](
+func New[S parsec.Recoverable[S]](
 	def Definition[S],
 	p *Parser[S],
 	extras ...Operand[S],

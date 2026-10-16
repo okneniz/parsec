@@ -11,7 +11,7 @@ import (
 
 // lex runs the Lexer stepper to the end of input: the test-side
 // replacement of the deleted lang.Lex.
-func lex[S any](def Definition[S], state S, src string) ([]Token, error) {
+func lex[S parsec.Recoverable[S]](def Definition[S], state S, src string) ([]Token, error) {
 	buf := strings.Buffer([]rune(src))
 	next := Lexer(def)
 
@@ -33,7 +33,7 @@ func lex[S any](def Definition[S], state S, src string) ([]Token, error) {
 }
 
 // lexemes is a shorthand for the flat token text of a source.
-func lexemes[S any](t *testing.T, def Definition[S], state S, src string) []string {
+func lexemes[S parsec.Recoverable[S]](t *testing.T, def Definition[S], state S, src string) []string {
 	t.Helper()
 
 	stream, err := lex(def, state, src)

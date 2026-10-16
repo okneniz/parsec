@@ -73,8 +73,12 @@ var definition = lang.Definition[*state]{
 	Operators:   []string{"=>", "="},
 	Punctuation: "_(),",
 	Integers:    true,
-	Custom:      []func(*state, parsec.Buffer[rune, strings.Position]) (Token, error){symbolicIdentifier},
+	Custom: []func(*state, parsec.Buffer[rune, strings.Position]) (Token, error){
+		symbolicIdentifier,
+	},
 }
+
+// TODO : avoid global variables, make constructor
 
 // lexer is the one-token stepper of tiny ml, generated from the
 // definition by the lang package.
@@ -85,8 +89,10 @@ var lexer = lang.Lexer(definition)
 func Lex(src string) ([]Token, error) {
 	buf := strings.Buffer([]rune(src))
 	st := newState()
+	// TODO : pass capacity as argument
 	stream := make([]Token, 0, 64)
 
+	// TODO : why not just many?
 	for {
 		tok, err := lexer(st, buf)
 		if errors.Is(err, parsec.ErrEndOfFile) {

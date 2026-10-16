@@ -121,7 +121,7 @@ func SkipAfter[T any, P any, A any, O any, S any](
 // SkipMany skips a sequence of items parsed by the skip combinator
 // and then applies body. Unlike Many it allocates nothing for
 // the skipped part.
-func SkipMany[T any, P any, A any, O any, S any](
+func SkipMany[T any, P any, A any, O any, S Recoverable[S]](
 	skip Combinator[T, P, A, S],
 	body Combinator[T, P, O, S],
 ) Combinator[T, P, O, S] {
@@ -141,7 +141,7 @@ func SkipMany[T any, P any, A any, O any, S any](
 
 // Padded skips a sequence of items parsed by the skip combinator
 // before and after body.
-func Padded[T any, P any, A any, O any, S any](
+func Padded[T any, P any, A any, O any, S Recoverable[S]](
 	skip Combinator[T, P, A, S],
 	body Combinator[T, P, O, S],
 ) Combinator[T, P, O, S] {

@@ -58,7 +58,7 @@ func SkipAfter[A any, O any, S any](
 // SkipMany skips a sequence of items parsed by the skip combinator
 // and then applies body. Unlike Many it allocates nothing for
 // the skipped part.
-func SkipMany[A any, O any, S any](
+func SkipMany[A any, O any, S parsec.Recoverable[S]](
 	skip parsec.Combinator[rune, Position, A, S],
 	body parsec.Combinator[rune, Position, O, S],
 ) parsec.Combinator[rune, Position, O, S] {
@@ -67,7 +67,7 @@ func SkipMany[A any, O any, S any](
 
 // Padded skips a sequence of items parsed by the skip combinator
 // before and after body.
-func Padded[A any, O any, S any](
+func Padded[A any, O any, S parsec.Recoverable[S]](
 	skip parsec.Combinator[rune, Position, A, S],
 	body parsec.Combinator[rune, Position, O, S],
 ) parsec.Combinator[rune, Position, O, S] {

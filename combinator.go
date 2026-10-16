@@ -50,38 +50,6 @@ func Any[T any, P any, S any]() Combinator[T, P, T, S] {
 	}
 }
 
-// Try applies c and, when it fails, rewinds the buffer to the previous position.
-// This is the backtracking primitive of the library: greedy combinators like
-// Satisfy, Eq, Range and others consume input even when they fail,
-// so every combinator which can fail inside an alternative branch
-// (see Choice, Or) or in a loop (see Many and similar) must be wrapped
-// in Try to make backtracking possible.
-// The state is not rewound: a combinator that changes it must restore
-// the change itself before failing, so a retried alternative sees the
-// state as it was before the failed one.
-func Try[T any, P any, O any, S any](c Combinator[T, P, O, S]) Combinator[T, P, O, S] {
-	var null O
-
-	return func(state S, buffer Buffer[T, P]) (O, Error[P]) {
-		pos := buffer.Position()
-
-		result, err := c(state, buffer)
-		if err != nil {
-			if seekErr := buffer.Seek(pos); seekErr != nil {
-				return null, NewParseError(
-					buffer.Position(),
-					seekErr.Error(),
-					err,
-				)
-			}
-
-			return null, err
-		}
-
-		return result, nil
-	}
-}
-
 // Between parses open, then body, then close,
 // and returns only the result of body.
 func Between[T any, P any, A any, B any, O any, S any](

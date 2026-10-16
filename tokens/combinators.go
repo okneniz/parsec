@@ -12,7 +12,10 @@ import (
 // reports the exhausted input with parsec.ErrEndOfFile — the same
 // sentinel the buffers return. The stepper carries the parser state
 // of type S, the same value the combinators carry.
-type Lexer[K comparable, L comparable, S any] func(state S, buf parsec.Buffer[rune, strings.Position]) (Token[K, L], error)
+type Lexer[K comparable, L comparable, S any] func(
+	state S,
+	buf parsec.Buffer[rune, strings.Position],
+) (Token[K, L], error)
 
 var anyRune = strings.Any[parsec.Stateless]()
 
@@ -20,7 +23,9 @@ var anyRune = strings.Any[parsec.Stateless]()
 // rune up to and including the end of the line. A line comment has
 // no fatal errors of its own — the only failure is the missing start
 // marker, with the input left intact.
-func LineComment[S any](start string) parsec.Combinator[rune, strings.Position, bool, S] {
+func LineComment[S parsec.Recoverable[S]](
+	start string,
+) parsec.Combinator[rune, strings.Position, bool, S] {
 	mark := strings.Try(strings.String[S]("line comment", start))
 
 	return func(state S, buf parsec.Buffer[rune, strings.Position]) (bool, parsec.Error[strings.Position]) {
@@ -50,7 +55,7 @@ func LineComment[S any](start string) parsec.Combinator[rune, strings.Position, 
 // combinators do not provide. An unterminated comment fails; the
 // caller keeps the opening probe separate, so a missing comment
 // stays distinguishable from a broken one.
-func CommentBody[S any](
+func CommentBody[S parsec.Recoverable[S]](
 	open string,
 	end string,
 	nested bool,
@@ -59,6 +64,7 @@ func CommentBody[S any](
 	endMark := strings.Try(strings.String[S]("comment end", end))
 
 	return func(state S, buf parsec.Buffer[rune, strings.Position]) (bool, parsec.Error[strings.Position]) {
+		// TODO : why not Count(comb)?
 		for depth := 1; depth > 0; {
 			if buf.IsEOF() {
 				return false, parsec.NewParseError(buf.Position(), "unterminated comment")

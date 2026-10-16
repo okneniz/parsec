@@ -6,6 +6,11 @@ import (
 	"github.com/okneniz/parsec/lang"
 )
 
+// Decl is a declaration node.
+type Decl interface {
+	String() string
+}
+
 // Expr is an expression node. The contract is the one of the lang
 // ladder: a node renders itself as a string.
 type Expr = lang.Expr
@@ -20,10 +25,18 @@ type BoolLit struct {
 	Value bool
 }
 
+func (e BoolLit) String() string {
+	return strconv.FormatBool(e.Value)
+}
+
 // Var is a variable reference by de Bruijn index: 0 is the innermost
 // enclosing binder, 1 the next one out.
 type Var struct {
 	Index int
+}
+
+func (e Var) String() string {
+	return "var(" + strconv.Itoa(e.Index) + ")"
 }
 
 // ForwardRef is a reference to a name no enclosing binder holds when
@@ -35,6 +48,10 @@ type ForwardRef struct {
 	Name string
 }
 
+func (e ForwardRef) String() string {
+	return e.Name
+}
+
 // TopVar is a reference into the top-level frame by absolute
 // position. The frame is one shared row of slots the declarations
 // fill as the program runs, so a function sees the top-level names
@@ -43,15 +60,27 @@ type TopVar struct {
 	Pos int
 }
 
+func (e TopVar) String() string {
+	return "top(" + strconv.Itoa(e.Pos) + ")"
+}
+
 // If is a conditional expression.
 type If struct {
 	Cond, Then, Else Expr
+}
+
+func (e If) String() string {
+	return paren("if", e.Cond.String(), e.Then.String(), e.Else.String())
 }
 
 // Fn is a single-clause function expression: fn pat => body.
 type Fn struct {
 	Arg  Pat
 	Body Expr
+}
+
+func (e Fn) String() string {
+	return paren("fn", e.Body.String())
 }
 
 // App is function application; application binds tighter than any
@@ -67,85 +96,6 @@ type Tuple struct {
 	Items []Expr
 }
 
-// Let is a let expression with a single-expression body.
-type Let struct {
-	Decls []Decl
-	Body  Expr
-}
-
-// Decl is a declaration node.
-type Decl interface {
-	String() string
-}
-
-// ValBind is one pat = exp binding of a val declaration.
-type ValBind struct {
-	Pat Pat
-	E   Expr
-}
-
-// ValDecl is a val declaration.
-type ValDecl struct {
-	Binds []ValBind
-}
-
-// FunDecl is a recursive function declaration: fun f x1 ... xn = body,
-// with atomic argument patterns.
-type FunDecl struct {
-	Name string
-	Args []Pat
-	Body Expr
-}
-
-// Pat is a pattern node. Tiny ml patterns are first-order: variables,
-// wildcards, literals and tuples of those — no constructors, because
-// there are no datatypes to construct.
-type Pat interface {
-	String() string
-}
-
-// WildcardPat is the _ pattern.
-type WildcardPat struct{}
-
-// VarPat is a variable pattern.
-type VarPat struct {
-	Name string
-}
-
-// ConstPat is an integer or boolean literal pattern.
-type ConstPat struct {
-	Text string
-}
-
-// TuplePat is a tuple pattern.
-type TuplePat struct {
-	Items []Pat
-}
-
-func (e BoolLit) String() string {
-	return strconv.FormatBool(e.Value)
-}
-
-func (e Var) String() string {
-	return "var(" + strconv.Itoa(e.Index) + ")"
-}
-
-func (e ForwardRef) String() string {
-	return e.Name
-}
-
-func (e TopVar) String() string {
-	return "top(" + strconv.Itoa(e.Pos) + ")"
-}
-
-func (e If) String() string {
-	return paren("if", e.Cond.String(), e.Then.String(), e.Else.String())
-}
-
-func (e Fn) String() string {
-	return paren("fn", e.Body.String())
-}
-
 func (e Tuple) String() string {
 	parts := make([]string, 0, len(e.Items)+1)
 	parts = append(parts, "tuple")
@@ -155,6 +105,12 @@ func (e Tuple) String() string {
 	}
 
 	return paren(parts...)
+}
+
+// Let is a let expression with a single-expression body.
+type Let struct {
+	Decls []Decl
+	Body  Expr
 }
 
 func (e Let) String() string {
@@ -169,6 +125,17 @@ func (e Let) String() string {
 	return paren(parts...)
 }
 
+// ValDecl is a val declaration.
+type ValDecl struct {
+	Binds []ValBind
+}
+
+// ValBind is one pat = exp binding of a val declaration.
+type ValBind struct {
+	Pat Pat
+	E   Expr
+}
+
 func (d ValDecl) String() string {
 	parts := []string{"val"}
 
@@ -177,6 +144,14 @@ func (d ValDecl) String() string {
 	}
 
 	return paren(parts...)
+}
+
+// FunDecl is a recursive function declaration: fun f x1 ... xn = body,
+// with atomic argument patterns.
+type FunDecl struct {
+	Name string
+	Args []Pat
+	Body Expr
 }
 
 func (d FunDecl) String() string {
@@ -191,16 +166,41 @@ func (d FunDecl) String() string {
 	return paren(parts...)
 }
 
+// Pat is a pattern node. Tiny ml patterns are first-order: variables,
+// wildcards, literals and tuples of those — no constructors, because
+// there are no datatypes to construct.
+type Pat interface {
+	String() string
+}
+
+// WildcardPat is the _ pattern.
+type WildcardPat struct{}
+
 func (WildcardPat) String() string {
 	return "_"
+}
+
+// VarPat is a variable pattern.
+type VarPat struct {
+	Name string // TODO : здесь должен быть индекс
 }
 
 func (p VarPat) String() string {
 	return p.Name
 }
 
+// ConstPat is an integer or boolean literal pattern.
+type ConstPat struct {
+	Text string
+}
+
 func (p ConstPat) String() string {
 	return p.Text
+}
+
+// TuplePat is a tuple pattern.
+type TuplePat struct {
+	Items []Pat
 }
 
 func (p TuplePat) String() string {

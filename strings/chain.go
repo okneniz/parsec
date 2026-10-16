@@ -41,7 +41,7 @@ func Chainr[O any, S any](
 // Chainr1 parses one or more values with c separated by op
 // and combines them with right associativity: (a op (b op c)).
 // It fails when the first application of c fails.
-func Chainr1[O any, S any](
+func Chainr1[O any, S parsec.Recoverable[S]](
 	c parsec.Combinator[rune, Position, O, S],
 	op parsec.Combinator[rune, Position, parsec.BinaryOp[O], S],
 ) parsec.Combinator[rune, Position, O, S] {
@@ -50,7 +50,7 @@ func Chainr1[O any, S any](
 
 // SepBy parses zero or more values of body separated by sep
 // and returns them as a slice. A trailing separator is not allowed.
-func SepBy[O any, A any, S any](
+func SepBy[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	body parsec.Combinator[rune, Position, O, S],
 	sep parsec.Combinator[rune, Position, A, S],
@@ -60,7 +60,7 @@ func SepBy[O any, A any, S any](
 
 // SepBy1 is like SepBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func SepBy1[O any, A any, S any](
+func SepBy1[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	errMessage string,
 	body parsec.Combinator[rune, Position, O, S],
@@ -71,7 +71,7 @@ func SepBy1[O any, A any, S any](
 
 // EndBy parses zero or more values of body, each terminated by sep,
 // like statements terminated by a semicolon.
-func EndBy[O any, A any, S any](
+func EndBy[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	body parsec.Combinator[rune, Position, O, S],
 	sep parsec.Combinator[rune, Position, A, S],
@@ -81,7 +81,7 @@ func EndBy[O any, A any, S any](
 
 // EndBy1 is like EndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func EndBy1[O any, A any, S any](
+func EndBy1[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	errMessage string,
 	body parsec.Combinator[rune, Position, O, S],
@@ -92,7 +92,7 @@ func EndBy1[O any, A any, S any](
 
 // SepEndBy parses zero or more values of body, separated by sep
 // and optionally terminated by a final sep.
-func SepEndBy[O any, A any, S any](
+func SepEndBy[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	body parsec.Combinator[rune, Position, O, S],
 	sep parsec.Combinator[rune, Position, A, S],
@@ -102,7 +102,7 @@ func SepEndBy[O any, A any, S any](
 
 // SepEndBy1 is like SepEndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
-func SepEndBy1[O any, A any, S any](
+func SepEndBy1[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	errMessage string,
 	body parsec.Combinator[rune, Position, O, S],
@@ -114,7 +114,7 @@ func SepEndBy1[O any, A any, S any](
 // ManyTill collects the results of c until the end combinator succeeds;
 // the end match itself is not included. It fails with errMessage
 // when c fails before end matches.
-func ManyTill[O any, A any, S any](
+func ManyTill[O any, A any, S parsec.Recoverable[S]](
 	cap int,
 	errMessage string,
 	c parsec.Combinator[rune, Position, O, S],
@@ -133,7 +133,7 @@ func ManyTill[O any, A any, S any](
 // combinator. Wrap c in Try to keep the buffer intact after the
 // failing step. Like Many, it never ends when c succeeds without
 // consuming input.
-func Seq[O any, S any](
+func Seq[O any, S parsec.Recoverable[S]](
 	c parsec.Combinator[rune, Position, O, S],
 ) parsec.Combinator[rune, Position, iter.Seq2[O, parsec.Error[Position]], S] {
 	return parsec.Seq[rune, Position, O, S](c)

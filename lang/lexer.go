@@ -33,7 +33,7 @@ var ErrNoMatch = errors.New("no match")
 // parameter S is the parser state the Custom combinators and the
 // generated Lexer carry — the same state the expression machinery
 // of a Parser carries, so a stepper sees what the parser sees.
-type Definition[S any] struct {
+type Definition[S parsec.Recoverable[S]] struct {
 	// LineComment starts a comment which runs to the end of the line,
 	// as in "//" or "#"; empty disables line comments.
 	LineComment string
@@ -145,7 +145,7 @@ func (def Definition[S]) operatorTree() parsec.Tree[rune, strings.Position, Toke
 
 // Lexer turns the definition into a one-token stepper which carries
 // the same state as the language parser.
-func Lexer[S any](def Definition[S]) tokens.Lexer[Kind, Lexeme, S] {
+func Lexer[S parsec.Recoverable[S]](def Definition[S]) tokens.Lexer[Kind, Lexeme, S] {
 	def = def.withDefaults()
 	token := def.token()
 	trivia := def.trivia()
@@ -165,7 +165,7 @@ func Lexer[S any](def Definition[S]) tokens.Lexer[Kind, Lexeme, S] {
 
 // nextToken parses one token: custom combinators first, then the
 // built-in dispatch by the leading rune.
-func nextToken[S any](
+func nextToken[S parsec.Recoverable[S]](
 	state S,
 	def Definition[S],
 	token parsec.Combinator[rune, strings.Position, Token, S],
