@@ -51,76 +51,76 @@ func Chainr1[O any, S any](
 // SepBy parses zero or more values of body separated by sep
 // and returns them as a slice. A trailing separator is not allowed.
 func SepBy[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	body parsec.Combinator[byte, int, O, S],
 	sep parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.SepBy[byte, int, O, A, S](cap, body, sep)
+	return parsec.SepBy[byte, int, O, A, S](limit, body, sep)
 }
 
 // SepBy1 is like SepBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
 func SepBy1[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	body parsec.Combinator[byte, int, O, S],
 	sep parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.SepBy1[byte, int, O, A, S](cap, errMessage, body, sep)
+	return parsec.SepBy1[byte, int, O, A, S](limit, errMessage, body, sep)
 }
 
 // EndBy parses zero or more values of body, each terminated by sep,
 // like statements terminated by a semicolon.
 func EndBy[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	body parsec.Combinator[byte, int, O, S],
 	sep parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.EndBy[byte, int, O, A, S](cap, body, sep)
+	return parsec.EndBy[byte, int, O, A, S](limit, body, sep)
 }
 
 // EndBy1 is like EndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
 func EndBy1[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	body parsec.Combinator[byte, int, O, S],
 	sep parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.EndBy1[byte, int, O, A, S](cap, errMessage, body, sep)
+	return parsec.EndBy1[byte, int, O, A, S](limit, errMessage, body, sep)
 }
 
 // SepEndBy parses zero or more values of body, separated by sep
 // and optionally terminated by a final sep.
 func SepEndBy[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	body parsec.Combinator[byte, int, O, S],
 	sep parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.SepEndBy[byte, int, O, A, S](cap, body, sep)
+	return parsec.SepEndBy[byte, int, O, A, S](limit, body, sep)
 }
 
 // SepEndBy1 is like SepEndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
 func SepEndBy1[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	body parsec.Combinator[byte, int, O, S],
 	sep parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.SepEndBy1[byte, int, O, A, S](cap, errMessage, body, sep)
+	return parsec.SepEndBy1[byte, int, O, A, S](limit, errMessage, body, sep)
 }
 
 // ManyTill collects the results of c until the end combinator succeeds;
 // the end match itself is not included. It fails with errMessage
 // when c fails before end matches.
 func ManyTill[O any, A any, S parsec.Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	c parsec.Combinator[byte, int, O, S],
 	end parsec.Combinator[byte, int, A, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.ManyTill[byte, int, O, A, S](cap, errMessage, c, end)
+	return parsec.ManyTill[byte, int, O, A, S](limit, errMessage, c, end)
 }
 
 // Seq applies c lazily and repeatedly: running the combinator on a

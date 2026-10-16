@@ -1,9 +1,9 @@
 package xml
 
 import (
-	"github.com/okneniz/parsec"
-
 	"testing"
+
+	"github.com/okneniz/parsec"
 
 	"github.com/okneniz/parsec/strings"
 	"github.com/stretchr/testify/require"

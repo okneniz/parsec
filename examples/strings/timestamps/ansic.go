@@ -8,7 +8,7 @@ import (
 	"github.com/okneniz/parsec/strings"
 )
 
-// ANSIC = "Mon Jan _2 15:04:05 2006"
+// ANSIC = "Mon Jan _2 15:04:05 2006".
 func ansic() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Stateless] {
 	dayOfWeek := dayOfWeekPrefix()
 	day := paddedDayNum()
@@ -47,7 +47,7 @@ func ansic() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Statel
 			return nil, err
 		}
 
-		min, err := minute(state, buffer)
+		minutes, err := minute(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func ansic() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Statel
 			return nil, parsec.NewParseError(buffer.Position(), sysErr.Error())
 		}
 
-		result := time.Date(y, m, d, h, min, sec, 0, loc)
+		result := time.Date(y, m, d, h, minutes, sec, 0, loc)
 		if result.Weekday() != dw {
 			return nil, parsec.NewParseError(
 				buffer.Position(),

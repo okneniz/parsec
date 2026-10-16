@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/okneniz/parsec"
@@ -106,7 +107,7 @@ func Satisfy[K comparable, L comparable, S any](
 		if err != nil {
 			// a positional lexical error is chained, not flattened:
 			// its type and message stay reachable through Previous
-			if parseErr, ok := err.(parsec.Error[strings.Position]); ok {
+			if parseErr, ok := errors.AsType[parsec.Error[strings.Position]](err); ok {
 				return tok, parsec.NewParseError(pos, msg, parseErr)
 			}
 

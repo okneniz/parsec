@@ -1,6 +1,7 @@
 package xml
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/okneniz/parsec/strings"
@@ -65,13 +66,15 @@ type Event struct {
 func (e Event) String() string {
 	switch e.Kind {
 	case KindStartTag, KindEmptyTag:
-		line := fmt.Sprintf("%s %s", e.Kind, e.Name)
+		var out bytes.Buffer
+
+		fmt.Fprintf(&out, "%s %s", e.Kind, e.Name)
 
 		for _, attr := range e.Attrs {
-			line += fmt.Sprintf(" %s=%q", attr.Name, attr.Value)
+			fmt.Fprintf(&out, " %s=%q", attr.Name, attr.Value)
 		}
 
-		return line
+		return out.String()
 	case KindEndTag:
 		return fmt.Sprintf("%s %s", e.Kind, e.Name)
 	case KindProcInst:

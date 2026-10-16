@@ -54,7 +54,7 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 		size := ohsnap.First(a.arbComplexSize.Generate())
 		arr := make([]JSON, size)
 
-		for i := 0; i < size; i++ {
+		for i := range size {
 			arr[i] = a.generate(deep + 1)
 		}
 
@@ -63,7 +63,7 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 		size := ohsnap.First(a.arbComplexSize.Generate())
 
 		m := make(map[string]JSON, size)
-		for i := 0; i < size; i++ {
+		for range size {
 			key := ohsnap.First(a.arbString.Generate())
 			value := a.generate(deep)
 			m[key] = value

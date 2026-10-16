@@ -9,9 +9,7 @@ import (
 	"github.com/okneniz/parsec/bytes"
 )
 
-var (
-	ErrImpossibleDataType = errors.New("0xc1 - impossible data type")
-)
+var ErrImpossibleDataType = errors.New("0xc1 - impossible data type")
 
 // https://github.com/msgpack/msgpack/blob/master/spec.md
 func MessagePack() parsec.Combinator[byte, int, Type, parsec.Stateless] {
@@ -194,7 +192,7 @@ func stringParser[T bytes.Number](
 		pos := buffer.Position()
 
 		data := make([]byte, int(size))
-		for i := 0; i < int(size); i++ {
+		for i := range int(size) {
 			x, err := buffer.Read(true)
 			if err != nil {
 				return String(""), parsec.NewParseError(
@@ -226,7 +224,7 @@ func binaryParser[T bytes.Number](size int) parsec.Combinator[byte, int, Type, p
 		pos := buffer.Position()
 
 		data := make([]byte, int(size))
-		for i := 0; i < int(size); i++ {
+		for i := range int(size) {
 			x, err := buffer.Read(true)
 			if err != nil {
 				return nil, parsec.NewParseError(
@@ -253,7 +251,7 @@ func arrayParser[T bytes.Number](
 		}
 
 		data := make(Array, int(size))
-		for i := 0; i < int(size); i++ {
+		for i := range int(size) {
 			x, err := parseValue(state, buffer)
 			if err != nil {
 				return nil, err
@@ -278,7 +276,7 @@ func mapParser[T bytes.Number](
 
 		data := make(Map, int(size))
 
-		for i := 0; i < int(size); i++ {
+		for i := range int(size) {
 			key, err := parseValue(state, buffer)
 			if err != nil {
 				return nil, err
@@ -319,7 +317,7 @@ func extParser[T bytes.Number](
 		}
 
 		data := make([]byte, int(size))
-		for i := 0; i < int(size); i++ {
+		for i := range int(size) {
 			x, err := buffer.Read(true)
 			if err != nil {
 				return nil, parsec.NewParseError(pos, errMessage)

@@ -367,7 +367,7 @@ func TestKeywordInfix(t *testing.T) {
 // of the conditional among its symbols.
 func ternaryDefinition() Definition[parsec.Stateless] {
 	def := testDefinition()
-	def.Punctuation = def.Punctuation + "?:"
+	def.Punctuation += "?:"
 
 	return def
 }

@@ -93,7 +93,7 @@ func Unsigned[O parsec.Integer, S parsec.Recoverable[S]]() parsec.Combinator[run
 				break
 			}
 
-			result = result * 10
+			result *= 10
 			result += O(token - zero)
 		}
 
@@ -118,13 +118,13 @@ func UnsignedN[O parsec.Integer, S parsec.Recoverable[S]](n int, errMessage stri
 
 		result = O(token - zero)
 
-		for i := 0; i < n-1; i++ {
+		for range n - 1 {
 			token, err = digit(state, buffer)
 			if err != nil {
 				return 0, err
 			}
 
-			result = result * 10
+			result *= 10
 			result += O(token - zero)
 		}
 

@@ -7,20 +7,20 @@ import (
 // Concat applies the cs combinators one by one and concatenates
 // their slice results into a single slice.
 func Concat[O any, S any](
-	cap int,
+	limit int,
 	cs ...parsec.Combinator[byte, int, []O, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.Concat[byte, int, O, S](cap, cs...)
+	return parsec.Concat[byte, int, O, S](limit, cs...)
 }
 
 // Sequence applies the cs combinators one by one
 // and collects their results into a slice.
 // It fails as soon as any of them fails.
 func Sequence[O any, S any](
-	cap int,
+	limit int,
 	cs ...parsec.Combinator[byte, int, O, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.Sequence[byte, int, O, S](cap, cs...)
+	return parsec.Sequence[byte, int, O, S](limit, cs...)
 }
 
 // Choice searches for a combinator that succeeds on the input data

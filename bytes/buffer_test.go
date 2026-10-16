@@ -6,6 +6,7 @@ import (
 
 	"github.com/okneniz/parsec"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBuffer(t *testing.T) {
@@ -262,27 +263,28 @@ func TestBuffer(t *testing.T) {
 			for i, call := range test.calls {
 				t.Logf("call %d", i)
 
-				if call.read != nil {
+				switch {
+				case call.read != nil:
 					result, err := b.Read(call.read.greedy)
 
 					if call.read.err == nil {
-						assert.NoError(t, err)
+						require.NoError(t, err)
 					} else {
-						assert.Error(t, err)
-						assert.EqualError(t, err, call.read.err.Error())
+						require.Error(t, err)
+						require.EqualError(t, err, call.read.err.Error())
 					}
 
 					assert.Equal(t, result, call.read.output)
-				} else if call.seek != nil {
+				case call.seek != nil:
 					err := b.Seek(call.seek.pos)
 
 					if call.seek.err == nil {
-						assert.NoError(t, err)
+						require.NoError(t, err)
 					} else {
-						assert.Error(t, err)
-						assert.EqualError(t, err, call.seek.err.Error())
+						require.Error(t, err)
+						require.EqualError(t, err, call.seek.err.Error())
 					}
-				} else {
+				default:
 					t.Fatal("invalid test")
 				}
 

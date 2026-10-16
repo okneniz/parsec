@@ -1,11 +1,11 @@
 package timestamp
 
 import (
-	"github.com/okneniz/parsec"
-
 	"math/rand/v2"
 	"testing"
 	"time"
+
+	"github.com/okneniz/parsec"
 
 	"github.com/okneniz/oh-snap"
 

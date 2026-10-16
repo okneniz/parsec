@@ -191,7 +191,7 @@ func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON, parsec.
 	// obj := parsec.Trace(t, "object", object)
 	// arr := parsec.Trace(t, "array", array)
 
-	bool := Bool()
+	boolean := Bool()
 	null := Null()
 	num := Number_()
 	str := String_()
@@ -202,7 +202,7 @@ func Value(t testing.TB) parsec.Combinator[rune, strings.Position, JSON, parsec.
 		whitespace,
 		strings.Choice(
 			"expected JSON value",
-			strings.Try(bool),
+			strings.Try(boolean),
 			strings.Try(null),
 			strings.Try(num),
 			strings.Try(str),

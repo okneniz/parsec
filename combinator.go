@@ -135,7 +135,7 @@ func Unexpected[T any, P any, O any, S any](
 
 		result, err := step(state, buf)
 		if err != nil {
-			if parseErr, ok := err.(Error[P]); ok {
+			if parseErr, ok := errors.AsType[Error[P]](err); ok {
 				return null, parseErr
 			}
 

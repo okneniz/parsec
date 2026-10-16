@@ -2,6 +2,7 @@ package tml
 
 import (
 	"fmt"
+	"slices"
 )
 
 // typeChecker is one run of Hindley-Milner inference: a counter for
@@ -267,8 +268,8 @@ func (c *typeChecker) inferLocalDecl(env []*scheme, d Decl) ([]*scheme, error) {
 func funTypeOf(args []Type, body Type) Type {
 	out := body
 
-	for i := len(args) - 1; i >= 0; i-- {
-		out = &TFun{Arg: args[i], Res: out}
+	for _, arg := range slices.Backward(args) {
+		out = &TFun{Arg: arg, Res: out}
 	}
 
 	return out

@@ -1,5 +1,7 @@
 package tml
 
+import "slices"
+
 // state is the parser state of tiny ml: the stack of the binder
 // names a nested expression may reference, innermost last. The
 // builtin ~ sits at the bottom of the initial stack; every fn
@@ -41,8 +43,8 @@ func (s *state) popTo(n int) {
 // lookup returns the de Bruijn index of the innermost binder named
 // name: 0 is the innermost binder of all.
 func (s *state) lookup(name string) (int, bool) {
-	for i := len(s.binders) - 1; i >= 0; i-- {
-		if s.binders[i] == name {
+	for i, binder := range slices.Backward(s.binders) {
+		if binder == name {
 			return len(s.binders) - 1 - i, true
 		}
 	}

@@ -511,7 +511,7 @@ func bodyUntil(end string, errMessage string) parsec.Combinator[rune, strings.Po
 				continue
 			}
 
-			for i := 0; i < matched; i++ {
+			for i := range matched {
 				out = append(out, rune(end[i]))
 			}
 

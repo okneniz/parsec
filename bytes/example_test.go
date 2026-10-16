@@ -1,10 +1,10 @@
 package bytes_test
 
 import (
-	"github.com/okneniz/parsec"
-
 	"encoding/binary"
 	"fmt"
+
+	"github.com/okneniz/parsec"
 
 	. "github.com/okneniz/parsec/bytes"
 )

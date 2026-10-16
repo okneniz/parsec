@@ -137,7 +137,7 @@ func Chainr1[T any, P any, O any, S any](
 // SepBy parses zero or more values of body separated by sep
 // and returns them as a slice. A trailing separator is not allowed.
 func SepBy[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
 ) Combinator[T, P, []O, S] {
@@ -150,7 +150,7 @@ func SepBy[T any, P any, O any, A any, S Recoverable[S]](
 	)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		token, err := body(state, buffer)
 		if err != nil {
@@ -174,12 +174,12 @@ func SepBy[T any, P any, O any, A any, S Recoverable[S]](
 // SepBy1 is like SepBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
 func SepBy1[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
 ) Combinator[T, P, []O, S] {
-	parse := SepBy(cap, body, sep)
+	parse := SepBy(limit, body, sep)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
@@ -197,14 +197,14 @@ func SepBy1[T any, P any, O any, A any, S Recoverable[S]](
 // EndBy parses zero or more values of body, each terminated by sep,
 // like statements terminated by a semicolon.
 func EndBy[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
 ) Combinator[T, P, []O, S] {
 	c := Try(SkipAfter(sep, body))
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		for !buffer.IsEOF() {
 			token, err := c(state, buffer)
@@ -222,12 +222,12 @@ func EndBy[T any, P any, O any, A any, S Recoverable[S]](
 // EndBy1 is like EndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
 func EndBy1[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
 ) Combinator[T, P, []O, S] {
-	c := EndBy(cap, body, sep)
+	c := EndBy(limit, body, sep)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
@@ -245,14 +245,14 @@ func EndBy1[T any, P any, O any, A any, S Recoverable[S]](
 // SepEndBy parses zero or more values of body, separated by sep
 // and optionally terminated by a final sep.
 func SepEndBy[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
 ) Combinator[T, P, []O, S] {
 	s := Try(sep)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		for !buffer.IsEOF() {
 			token, err := body(state, buffer)
@@ -275,12 +275,12 @@ func SepEndBy[T any, P any, O any, A any, S Recoverable[S]](
 // SepEndBy1 is like SepEndBy but requires at least one value:
 // it fails with errMessage when nothing could be parsed.
 func SepEndBy1[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	body Combinator[T, P, O, S],
 	sep Combinator[T, P, A, S],
 ) Combinator[T, P, []O, S] {
-	c := SepEndBy(cap, body, sep)
+	c := SepEndBy(limit, body, sep)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
@@ -299,7 +299,7 @@ func SepEndBy1[T any, P any, O any, A any, S Recoverable[S]](
 // the end match itself is not included. It fails with errMessage
 // when c fails before end matches.
 func ManyTill[T any, P any, O any, A any, S Recoverable[S]](
-	cap int,
+	limit int,
 	errMessage string,
 	c Combinator[T, P, O, S],
 	end Combinator[T, P, A, S],
@@ -307,7 +307,7 @@ func ManyTill[T any, P any, O any, A any, S Recoverable[S]](
 	needStop := Try(end)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		for !buffer.IsEOF() {
 			_, err := needStop(state, buffer)

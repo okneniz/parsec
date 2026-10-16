@@ -147,7 +147,7 @@ func JSEq(x, y JSON) bool {
 			return false
 		}
 
-		for i := 0; i < len(xv.values); i++ {
+		for i := range xv.values {
 			if !JSEq(xv.values[i], yv.values[i]) {
 				return false
 			}

@@ -25,9 +25,11 @@ type parser struct {
 	lexer           Lexer
 }
 
-type Lexer = tokens.Lexer[Kind, Lexeme, *state]
-type Parser[T any] = parsec.Combinator[rune, Position, T, *state]
-type Error = parsec.Error[Position]
+type (
+	Lexer         = tokens.Lexer[Kind, Lexeme, *state]
+	Parser[T any] = parsec.Combinator[rune, Position, T, *state]
+	Error         = parsec.Error[Position]
+)
 
 func newParser() *parser {
 	p := &parser{

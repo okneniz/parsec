@@ -126,6 +126,7 @@ func TestLexerDefinitions(t *testing.T) {
 // the punctuation, and — through Custom, the way the doc suggests —
 // raw strings and rune literals, which a Definition cannot describe.
 // It is a lexer for reading Go, not a front end: hex digits and
+// float parts lex as plain integers and identifiers.
 func goDefinition() Definition[parsec.Stateless] {
 	return Definition[parsec.Stateless]{
 		LineComment:    "//",
@@ -156,6 +157,7 @@ func goDefinition() Definition[parsec.Stateless] {
 }
 
 // rawString lexes a Go raw string literal: a backquote run whose
+// content is taken verbatim, without escapes.
 func rawString(_ parsec.Stateless, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 	r, err := buf.Read(true)
 	if err != nil || r != '`' {

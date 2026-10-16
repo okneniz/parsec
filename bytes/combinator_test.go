@@ -11,6 +11,7 @@ import (
 
 	ohsnap "github.com/okneniz/oh-snap"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/okneniz/parsec"
 )
@@ -48,10 +49,10 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 					result, err := Parse(parsec.Stateless{}, testCase.input, test.comb)
 
 					if testCase.err != nil {
-						assert.Error(t, err)
+						require.Error(t, err)
 						assert.Equal(t, err.Error(), testCase.err.Error())
 					} else {
-						assert.NoError(t, err)
+						require.NoError(t, err)
 					}
 
 					assert.Equal(t, testCase.output, result)
@@ -81,13 +82,13 @@ func runTestsSlice[T comparable](t *testing.T, tests []test[[]T]) {
 					result, err := Parse(parsec.Stateless{}, testCase.input, test.comb)
 
 					if testCase.err != nil {
-						assert.Error(t, err)
-						assert.EqualError(t, err, testCase.err.Error())
+						require.Error(t, err)
+						require.EqualError(t, err, testCase.err.Error())
 					} else {
-						assert.NoError(t, err)
+						require.NoError(t, err)
 					}
 
-					assert.EqualValues(t, testCase.output, result)
+					assert.Equal(t, testCase.output, result)
 				})
 			}
 		})

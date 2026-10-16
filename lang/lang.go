@@ -1,6 +1,8 @@
 package lang
 
 import (
+	"errors"
+
 	"github.com/okneniz/parsec"
 	"github.com/okneniz/parsec/strings"
 )
@@ -52,7 +54,7 @@ func New[S parsec.Recoverable[S]](
 // located converts an error to the parsec.Error the combinator must
 // return; the errors raised by the parser already carry positions.
 func located(buf parsec.Buffer[rune, strings.Position], err error) parsec.Error[strings.Position] {
-	if parseErr, ok := err.(parsec.Error[strings.Position]); ok {
+	if parseErr, ok := errors.AsType[parsec.Error[strings.Position]](err); ok {
 		return parseErr
 	}
 

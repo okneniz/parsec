@@ -1,13 +1,15 @@
 package strings
 
 import (
-	"github.com/okneniz/parsec"
-
 	"testing"
 	"time"
+
+	"github.com/okneniz/parsec"
+
 	_ "time/tzdata"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTimeZone(t *testing.T) {
@@ -21,7 +23,7 @@ func TestTimeZone(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(parsec.Stateless{}, zone, comb)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result, "expected pointer to time zone")
 			assert.Equal(t, result.String(), zone)
 		}
@@ -35,7 +37,7 @@ func TestTimeZone(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(parsec.Stateless{}, zone, comb)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Nil(t, result, nil)
 		}
 	})
@@ -62,7 +64,7 @@ func TestTimeZoneByNames(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(parsec.Stateless{}, zone, comb)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result, "expected pointer to time zone")
 			assert.Equal(t, result.String(), zone)
 		}
@@ -78,7 +80,7 @@ func TestTimeZoneByNames(t *testing.T) {
 
 		for _, zone := range zones {
 			result, err := ParseString(parsec.Stateless{}, zone, comb)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Nil(t, result)
 		}
 	})

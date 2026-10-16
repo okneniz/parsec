@@ -1,14 +1,14 @@
 package cards
 
 import (
-	"github.com/okneniz/parsec"
-
 	"maps"
 	"math/rand/v2"
 	"slices"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/okneniz/parsec"
 
 	ohsnap "github.com/okneniz/oh-snap"
 	. "github.com/okneniz/parsec/strings"
@@ -56,7 +56,7 @@ func TestCards(t *testing.T) {
 	arb := ohsnap.Map(
 		ohsnap.Combine(arbNoice, arbCards),
 		func(x ohsnap.Pair[[]string, []string]) string {
-			data := append(x.First, x.Second...)
+			data := slices.Concat(x.First, x.Second)
 
 			rnd.Shuffle(len(data), func(i, j int) {
 				data[i], data[j] = data[j], data[i]

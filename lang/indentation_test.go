@@ -43,7 +43,6 @@ func TestLexerIndentation(t *testing.T) {
 			require.Equal(t, test.want, lexemeKinds(t, stream))
 		})
 	}
-
 }
 
 func TestLexerIndentationErrors(t *testing.T) {
@@ -135,7 +134,8 @@ func lexemeKinds(t *testing.T, stream []Token) []string {
 // narrower closes blocks, a blank line only ends its own line. The
 // dedents of one line queue ahead of the tokens that follow, which
 // the customs-are-tried-every-token contract allows. The end of
-// input ends the last line without closing dedents: the stepper
+// input ends the last line without closing dedents: the next call
+// meets the end of input.
 func indentTokens(state *indentState, buf parsec.Buffer[rune, strings.Position]) (Token, error) {
 	if n := len(state.pending); n > 0 {
 		tok := state.pending[0]

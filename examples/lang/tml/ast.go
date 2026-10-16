@@ -2,6 +2,7 @@ package tml
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/okneniz/parsec/lang"
 )
@@ -210,15 +211,5 @@ func (p TuplePat) String() string {
 
 // paren renders parts as a parenthesized space-separated form.
 func paren(parts ...string) string {
-	out := ""
-
-	for i, part := range parts {
-		if i > 0 {
-			out += " "
-		}
-
-		out += part
-	}
-
-	return "(" + out + ")"
+	return "(" + strings.Join(parts, " ") + ")"
 }

@@ -349,7 +349,7 @@ func (def Definition[S]) identifier() parsec.Combinator[rune, strings.Position, 
 }
 
 func stringRest[S any](escapes map[rune]rune) parsec.Combinator[rune, strings.Position, Token, S] {
-	any := strings.Any[S]()
+	anyRune := strings.Any[S]()
 
 	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Token, parsec.Error[strings.Position]) {
 		var text []rune
@@ -359,7 +359,7 @@ func stringRest[S any](escapes map[rune]rune) parsec.Combinator[rune, strings.Po
 				return Token{}, parsec.NewParseError(buf.Position(), "unterminated string literal")
 			}
 
-			r, rerr := any(state, buf)
+			r, rerr := anyRune(state, buf)
 			if rerr != nil {
 				return Token{}, rerr
 			}
@@ -369,7 +369,7 @@ func stringRest[S any](escapes map[rune]rune) parsec.Combinator[rune, strings.Po
 			}
 
 			if r == '\\' {
-				e, eerr := any(state, buf)
+				e, eerr := anyRune(state, buf)
 				if eerr != nil {
 					return Token{}, eerr
 				}

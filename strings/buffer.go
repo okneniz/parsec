@@ -4,9 +4,7 @@ import (
 	"github.com/okneniz/parsec"
 )
 
-var (
-	defaultNewLineRunes = map[rune]struct{}{'\n': {}}
-)
+var defaultNewLineRunes = map[rune]struct{}{'\n': {}}
 
 type buffer struct {
 	data         []rune

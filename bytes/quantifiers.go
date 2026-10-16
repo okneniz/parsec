@@ -18,28 +18,28 @@ func Optional[O any, S any](
 // everything collected so far, possibly an empty slice.
 // Wrap c in Try to stop without consuming input.
 func Many[O any, S any](
-	cap int,
+	limit int,
 	c parsec.Combinator[byte, int, O, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.Many[byte, int, O, S](cap, c)
+	return parsec.Many[byte, int, O, S](limit, c)
 }
 
 // Some is like Many but requires at least one item:
 // it fails with errMessage when nothing could be parsed.
 func Some[O any, S any](
-	cap int,
+	limit int,
 	errMessage string,
 	c parsec.Combinator[byte, int, O, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.Some[byte, int, O, S](cap, errMessage, c)
+	return parsec.Some[byte, int, O, S](limit, errMessage, c)
 }
 
-// Count applies c exactly cap times and collects the results.
+// Count applies c exactly limit times and collects the results.
 // It fails with errMessage as soon as any application fails.
 func Count[O any, S any](
-	cap int,
+	limit int,
 	errMessage string,
 	c parsec.Combinator[byte, int, O, S],
 ) parsec.Combinator[byte, int, []O, S] {
-	return parsec.Count[byte, int, O, S](cap, errMessage, c)
+	return parsec.Count[byte, int, O, S](limit, errMessage, c)
 }

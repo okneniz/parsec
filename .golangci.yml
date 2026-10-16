@@ -1,10 +1,31 @@
 version: "2"
 
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
 linters:
   default: standard
   enable:
     - misspell
     - unconvert
+    - copyloopvar
+    - errname
+    - errorlint
+    - exptostd
+    - gocritic
+    - godot
+    - intrange
+    - modernize
+    - nolintlint
+    - nonamedreturns
+    - predeclared
+    - recvcheck
+    - testifylint
+    - unparam
+    - usetesting
+    - wastedassign
+    - whitespace
   settings:
     staticcheck:
       checks:
@@ -21,4 +42,4 @@ linters:
 
 formatters:
   enable:
-    - gofmt
+    - gofumpt

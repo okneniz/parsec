@@ -1,9 +1,9 @@
 package xml_test
 
 import (
-	"github.com/okneniz/parsec"
-
 	"fmt"
+
+	"github.com/okneniz/parsec"
 
 	"github.com/okneniz/parsec/examples/strings/xml"
 	"github.com/okneniz/parsec/strings"

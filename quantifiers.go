@@ -19,9 +19,9 @@ func Optional[T any, P any, O any, S any](c Combinator[T, P, O, S], def O) Combi
 // It stops at the first error or at the end of the buffer and returns
 // everything collected so far, possibly an empty slice.
 // Wrap c in Try to stop without consuming input.
-func Many[T any, P any, O any, S any](cap int, c Combinator[T, P, O, S]) Combinator[T, P, []O, S] {
+func Many[T any, P any, O any, S any](limit int, c Combinator[T, P, O, S]) Combinator[T, P, []O, S] {
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		for !buffer.IsEOF() {
 			x, err := c(state, buffer)
@@ -39,11 +39,11 @@ func Many[T any, P any, O any, S any](cap int, c Combinator[T, P, O, S]) Combina
 // Some is like Many but requires at least one item:
 // it fails with errMessage when nothing could be parsed.
 func Some[T any, P any, O any, S any](
-	cap int,
+	limit int,
 	errMessage string,
 	c Combinator[T, P, O, S],
 ) Combinator[T, P, []O, S] {
-	parse := Many(cap, c)
+	parse := Many(limit, c)
 
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
 		pos := buffer.Position()
@@ -58,14 +58,14 @@ func Some[T any, P any, O any, S any](
 	}
 }
 
-// Count applies c exactly cap times and collects the results.
+// Count applies c exactly limit times and collects the results.
 // It fails with errMessage as soon as any application fails.
 func Count[T any, P any, O any, S any](
-	cap int,
+	limit int,
 	errMessage string,
 	c Combinator[T, P, O, S],
 ) Combinator[T, P, []O, S] {
-	f, err := Quantifier(errMessage, cap, cap, c)
+	f, err := Quantifier(errMessage, limit, limit, c)
 	if err != nil {
 		panic(err)
 	}
@@ -102,7 +102,7 @@ func Quantifier[T any, P any, O any, S any](
 		start := buf.Position()
 		result := make([]O, 0, to-from)
 
-		for i := 0; i < to; i++ {
+		for range to {
 			pos := buf.Position()
 
 			n, err := c(state, buf)

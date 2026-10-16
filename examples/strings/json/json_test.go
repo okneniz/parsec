@@ -1,11 +1,11 @@
 package json
 
 import (
-	"github.com/okneniz/parsec"
-
 	"math/rand/v2"
 	"testing"
 	"time"
+
+	"github.com/okneniz/parsec"
 
 	ohsnap "github.com/okneniz/oh-snap"
 	"github.com/okneniz/parsec/strings"

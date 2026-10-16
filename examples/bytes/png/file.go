@@ -20,7 +20,6 @@ func (f *File) String() string {
 	b := new(strings.Builder)
 
 	for _, chunk := range f.chunks {
-
 		b.WriteString(chunk.Type())
 		b.WriteString(":\n")
 		b.WriteString(chunk.String())

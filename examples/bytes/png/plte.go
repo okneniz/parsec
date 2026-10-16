@@ -105,7 +105,7 @@ func PLTEChunk(size uint32) parsec.Combinator[byte, int, *PLTE, parsec.Stateless
 
 		entries := make([]*RGB, 0, size/3)
 
-		for i := uint32(0); i < size/3; i++ {
+		for range size / 3 {
 			red, err := parseRED(state, buffer)
 			if err != nil {
 				return nil, err

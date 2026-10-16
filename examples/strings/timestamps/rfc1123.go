@@ -8,7 +8,7 @@ import (
 	"github.com/okneniz/parsec/strings"
 )
 
-// RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"
+// RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST".
 func rfc1123() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Stateless] {
 	dayOfWeek := dayOfWeekPrefix()
 	comma := strings.Comma[parsec.Stateless]()
@@ -60,7 +60,7 @@ func rfc1123() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Stat
 			return nil, err
 		}
 
-		min, err := minute(state, buffer)
+		minutes, err := minute(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func rfc1123() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Stat
 			return nil, err
 		}
 
-		result := time.Date(y, m, d, h, min, sec, 0, loc)
+		result := time.Date(y, m, d, h, minutes, sec, 0, loc)
 		if result.Weekday() != dw {
 			return nil, parsec.NewParseError(
 				buffer.Position(),

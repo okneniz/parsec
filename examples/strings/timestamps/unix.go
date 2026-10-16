@@ -8,7 +8,7 @@ import (
 	"github.com/okneniz/parsec/strings"
 )
 
-// UnixDate = "Mon Jan _2 15:04:05 MST 2006"
+// UnixDate = "Mon Jan _2 15:04:05 MST 2006".
 func unixDate() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Stateless] {
 	dayOfWeek := dayOfWeekPrefix()
 	month := monthPrefix()
@@ -49,7 +49,7 @@ func unixDate() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Sta
 			return nil, err
 		}
 
-		min, err := minute(state, buffer)
+		minutes, err := minute(state, buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func unixDate() parsec.Combinator[rune, strings.Position, *time.Time, parsec.Sta
 			return nil, err
 		}
 
-		result := time.Date(y, m, d, h, min, sec, 0, loc)
+		result := time.Date(y, m, d, h, minutes, sec, 0, loc)
 		if result.Weekday() != dw {
 			return nil, parsec.NewParseError(
 				buffer.Position(),

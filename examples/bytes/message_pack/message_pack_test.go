@@ -3,7 +3,6 @@ package message_pack
 import (
 	"fmt"
 	"math"
-
 	"math/rand"
 	"strings"
 	"testing"
@@ -17,7 +16,7 @@ func TestMain_MessagePack(t *testing.T) {
 	t.Parallel()
 
 	t.Run("fixed", func(t *testing.T) {
-		examples := []interface{}{
+		examples := []any{
 			math.MaxFloat32,
 			math.MaxFloat64,
 			math.MaxInt,
@@ -41,7 +40,7 @@ func TestMain_MessagePack(t *testing.T) {
 			-33,
 			0,
 			1,
-			[]interface{}{nil, true, false, 1, 2, 3, "test"},
+			[]any{nil, true, false, 1, 2, 3, "test"},
 		}
 
 		for _, expected := range examples {
@@ -58,7 +57,7 @@ func TestMain_MessagePack(t *testing.T) {
 
 		t.Run("string", func(t *testing.T) {
 			t.Run("fixstr", func(t *testing.T) {
-				for i := 0; i < examplesCount; i++ {
+				for range examplesCount {
 					size := rnd[int](0, 31)
 					expected := randStringRunes(size)
 					check[String](t, expected)
@@ -66,7 +65,7 @@ func TestMain_MessagePack(t *testing.T) {
 			})
 
 			t.Run("str 8", func(t *testing.T) {
-				for i := 0; i < examplesCount; i++ {
+				for range examplesCount {
 					size := rnd[int](32, math.Pow(2, 8)-1)
 					expected := randStringRunes(size)
 					check[String](t, expected)
@@ -74,7 +73,7 @@ func TestMain_MessagePack(t *testing.T) {
 			})
 
 			t.Run("str 16", func(t *testing.T) {
-				for i := 0; i < examplesCount; i++ {
+				for range examplesCount {
 					size := rnd[int](math.Pow(2, 8), math.Pow(2, 16)-1)
 					expected := randStringRunes(size)
 					check[String](t, expected)
@@ -99,7 +98,7 @@ func TestMain_MessagePack(t *testing.T) {
 				})
 
 				t.Run("int 16", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rnd[int16](math.MinInt16, math.MaxInt16)
 						check[Signed16](t, number)
 						check[Signed16](t, -number)
@@ -107,7 +106,7 @@ func TestMain_MessagePack(t *testing.T) {
 				})
 
 				t.Run("int 32", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rnd[int32](math.MinInt32, math.MaxInt32)
 						check[Signed32](t, number)
 						check[Signed32](t, -number)
@@ -115,7 +114,7 @@ func TestMain_MessagePack(t *testing.T) {
 				})
 
 				t.Run("int 64", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rnd[int64](math.MinInt64, math.MaxInt64)
 						check[Signed64](t, number)
 						check[Signed64](t, -number)
@@ -123,7 +122,7 @@ func TestMain_MessagePack(t *testing.T) {
 				})
 
 				t.Run("float 32", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rand.Float32()
 						check[Float32](t, number)
 						check[Float32](t, -number)
@@ -131,7 +130,7 @@ func TestMain_MessagePack(t *testing.T) {
 				})
 
 				t.Run("float 64", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rand.Float64()
 						check[Float64](t, number)
 						check[Float64](t, -number)
@@ -141,27 +140,27 @@ func TestMain_MessagePack(t *testing.T) {
 
 			t.Run("unsigned", func(t *testing.T) {
 				t.Run("positive fixint", func(t *testing.T) {
-					for i := 0; i < int(math.Pow(2, 7)-1); i++ {
+					for i := range int(math.Pow(2, 7) - 1) {
 						check[Unsigned8](t, i)
 					}
 				})
 
 				t.Run("uint 16", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rnd[uint16](0, math.MaxInt16)
 						check[Unsigned16](t, number)
 					}
 				})
 
 				t.Run("uint 32", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rnd[uint32](0, math.MaxUint32)
 						check[Unsigned32](t, number)
 					}
 				})
 
 				t.Run("uint 64", func(t *testing.T) {
-					for i := 0; i < examplesCount; i++ {
+					for range examplesCount {
 						number := rnd[uint64](0, math.MaxUint64)
 						check[Unsigned64](t, number)
 					}
@@ -171,21 +170,21 @@ func TestMain_MessagePack(t *testing.T) {
 
 		t.Run("binary", func(t *testing.T) {
 			t.Run("bin 8", func(t *testing.T) {
-				max := math.Pow(2, 8) - 1
+				hi := math.Pow(2, 8) - 1
 
-				for i := 0; i < examplesCount; i++ {
-					size := rnd[int](0, max)
+				for range examplesCount {
+					size := rnd[int](0, hi)
 					data := randBytes(size)
 					check[Binary](t, data)
 				}
 			})
 
 			t.Run("bin 16", func(t *testing.T) {
-				min := math.Pow(2, 8)
-				max := math.Pow(2, 16) - 1
+				lo := math.Pow(2, 8)
+				hi := math.Pow(2, 16) - 1
 
-				for i := 0; i < examplesCount; i++ {
-					size := rnd[int](min, max)
+				for range examplesCount {
+					size := rnd[int](lo, hi)
 					data := randBytes(size)
 					check[Binary](t, data)
 				}
@@ -205,11 +204,11 @@ func TestMain_MessagePack(t *testing.T) {
 	})
 }
 
-func rnd[T parsec.Integer](min, max float64) T {
-	return T(rand.Intn(int(max - min + 1 + min)))
+func rnd[T parsec.Integer](lo, hi float64) T {
+	return T(rand.Intn(int(hi - lo + 1 + lo)))
 }
 
-func check[T any](t *testing.T, expected interface{}) {
+func check[T any](t *testing.T, expected any) {
 	t.Helper()
 
 	data, err := mpack.Marshal(expected)
@@ -264,7 +263,7 @@ func toBinary(data []byte) string {
 
 func randBytes(count int) []byte {
 	data := make([]byte, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		data[i] = rnd[uint8](0, math.MaxUint8)
 	}
 	return data

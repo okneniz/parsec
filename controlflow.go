@@ -3,11 +3,11 @@ package parsec
 // Concat applies the cs combinators one by one and concatenates
 // their slice results into a single slice.
 func Concat[T any, P any, O any, S any](
-	cap int,
+	limit int,
 	cs ...Combinator[T, P, []O, S],
 ) Combinator[T, P, []O, S] {
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		for _, c := range cs {
 			t, err := c(state, buffer)
@@ -26,11 +26,11 @@ func Concat[T any, P any, O any, S any](
 // and collects their results into a slice.
 // It fails as soon as any of them fails.
 func Sequence[T any, P any, O any, S any](
-	cap int,
+	limit int,
 	cs ...Combinator[T, P, O, S],
 ) Combinator[T, P, []O, S] {
 	return func(state S, buffer Buffer[T, P]) ([]O, Error[P]) {
-		result := make([]O, 0, cap)
+		result := make([]O, 0, limit)
 
 		for _, c := range cs {
 			t, err := c(state, buffer)

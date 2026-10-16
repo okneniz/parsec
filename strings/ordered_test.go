@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/okneniz/parsec"
 )
@@ -44,7 +45,7 @@ func runTests[T comparable](t *testing.T, tests []test[T]) {
 					if testCase.err != nil {
 						assert.Equal(t, err.Error(), testCase.err.Error())
 					} else {
-						assert.NoError(t, err)
+						require.NoError(t, err)
 					}
 
 					assert.Equal(t, testCase.output, result)
@@ -74,12 +75,12 @@ func runTestsString[T comparable](t *testing.T, tests []test[[]T]) {
 					result, err := ParseString(parsec.Stateless{}, testCase.input, test.comb)
 
 					if testCase.err != nil {
-						assert.EqualError(t, err, testCase.err.Error())
+						require.EqualError(t, err, testCase.err.Error())
 					} else {
-						assert.NoError(t, err)
+						require.NoError(t, err)
 					}
 
-					assert.EqualValues(t, testCase.output, result)
+					assert.Equal(t, testCase.output, result)
 				})
 			}
 		})
