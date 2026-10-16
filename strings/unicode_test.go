@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/okneniz/oh-snap/arbitrary"
 	"github.com/okneniz/parsec"
 )
 
@@ -26,67 +27,67 @@ func TestUnicodeHelpers(t *testing.T) {
 		// {
 		// 	name:   "control",
 		// 	parser: Control[parsec.Stateless]("expected control char"),
-		// 	arb:    ohsnap.RuneFromTable(rnd, unicode.C),
+		// 	arb:    arbitrary.RuneFromTable(rnd, unicode.C),
 		// },
 		{
 			name:   "digit",
 			parser: Digit[parsec.Stateless]("expected digit"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Digit),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Digit),
 		},
 		{
 			name:   "Graphic",
 			parser: Graphic[parsec.Stateless]("expected graphic"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.L),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.L),
 		},
 		{
 			name:   "Letter",
 			parser: Letter[parsec.Stateless]("expected letter"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Letter),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Letter),
 		},
 		{
 			name:   "Lower",
 			parser: Lower[parsec.Stateless]("expected lower"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Lower),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Lower),
 		},
 		{
 			name:   "Mark",
 			parser: Mark[parsec.Stateless]("expected mark"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Mark),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Mark),
 		},
 		{
 			name:   "Number",
 			parser: Number[parsec.Stateless]("expected number"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Number),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Number),
 		},
 		{
 			name:   "Punct",
 			parser: Punct[parsec.Stateless]("expected punct"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Punct),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Punct),
 		},
 		{
 			name:   "Space",
 			parser: Space[parsec.Stateless]("expected space"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Space),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Space),
 		},
 		{
 			name:   "Print",
 			parser: Print[parsec.Stateless]("expected print"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Title),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Title),
 		},
 		{
 			name:   "Symbol",
 			parser: Symbol[parsec.Stateless]("expected symbol"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Symbol),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Symbol),
 		},
 		{
 			name:   "Title",
 			parser: Title[parsec.Stateless]("expected title"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Title),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Title),
 		},
 		{
 			name:   "Upper",
 			parser: Upper[parsec.Stateless]("expected upper"),
-			arb:    ohsnap.RuneFromTable(rnd, unicode.Upper),
+			arb:    arbitrary.RuneFromTable(rnd, unicode.Upper),
 		},
 	}
 
@@ -139,7 +140,7 @@ func checkRangeTable(t *testing.T, rnd *rand.Rand, tbl *unicode.RangeTable) func
 	t.Helper()
 
 	const iterations = 100_000
-	arb := ohsnap.RuneFromTable(rnd, tbl)
+	arb := arbitrary.RuneFromTable(rnd, tbl)
 
 	parseChar := RangeTable[parsec.Stateless]("expected char from table", tbl)
 

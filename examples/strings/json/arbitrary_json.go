@@ -6,6 +6,7 @@ import (
 	"math/rand/v2"
 
 	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/okneniz/oh-snap/arbitrary"
 )
 
 type arbitraryJSON struct {
@@ -28,11 +29,11 @@ func newArbitraryJSON(
 ) *arbitraryJSON {
 	return &arbitraryJSON{
 		rand:           rnd,
-		arbBool:        ohsnap.ArbitraryBool(rnd),
-		arbInt:         ohsnap.ArbitraryInt(rnd, 0, math.MaxInt),
-		arbString:      ohsnap.ArbitraryString(rnd, "abcdefghijklmnopqrstuvwxyz", 3, 15),
-		arbComplexSize: ohsnap.ArbitraryInt(rnd, 0, 5),
-		arbType:        ohsnap.ArbitraryInt(rnd, 0, 5),
+		arbBool:        arbitrary.Bool(rnd),
+		arbInt:         arbitrary.Int(rnd, 0, math.MaxInt),
+		arbString:      arbitrary.String(rnd, "abcdefghijklmnopqrstuvwxyz", 3, 15),
+		arbComplexSize: arbitrary.Int(rnd, 0, 5),
+		arbType:        arbitrary.Int(rnd, 0, 5),
 
 		maxDeep: 5,
 	}
@@ -43,15 +44,15 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 		return JSNull{}
 	}
 
-	switch ohsnap.First(a.arbType.Generate()) {
+	switch a.arbType.Generate() {
 	case 0:
-		return JSBool{ohsnap.First(a.arbBool.Generate())}
+		return JSBool{a.arbBool.Generate()}
 	case 1:
-		return JSNumber{ohsnap.First(a.arbInt.Generate())}
+		return JSNumber{a.arbInt.Generate()}
 	case 2:
-		return JSString{ohsnap.First(a.arbString.Generate())}
+		return JSString{a.arbString.Generate()}
 	case 3:
-		size := ohsnap.First(a.arbComplexSize.Generate())
+		size := a.arbComplexSize.Generate()
 		arr := make([]JSON, size)
 
 		for i := range size {
@@ -60,11 +61,11 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 
 		return JSArray{arr}
 	case 4:
-		size := ohsnap.First(a.arbComplexSize.Generate())
+		size := a.arbComplexSize.Generate()
 
 		m := make(map[string]JSON, size)
 		for range size {
-			key := ohsnap.First(a.arbString.Generate())
+			key := a.arbString.Generate()
 			value := a.generate(deep)
 			m[key] = value
 		}
@@ -77,14 +78,11 @@ func (a *arbitraryJSON) generate(deep int) JSON {
 	}
 }
 
-func (a *arbitraryJSON) Generate() iter.Seq[JSON] {
-	return func(yield func(JSON) bool) {
-		for yield(a.generate(0)) {
-		}
-	}
+func (a *arbitraryJSON) Generate() JSON {
+	return a.generate(0)
 }
 
 func (a *arbitraryJSON) Shrink(value JSON) iter.Seq[JSON] {
 	// without shrinking
-	return ohsnap.Empty[JSON]()
+	return func(func(JSON) bool) {}
 }

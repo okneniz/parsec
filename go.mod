@@ -3,7 +3,7 @@ module github.com/okneniz/parsec
 go 1.26.0
 
 require (
-	github.com/okneniz/oh-snap v0.0.1
+	github.com/okneniz/oh-snap v0.0.3
 	github.com/stretchr/testify v1.12.1
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 )

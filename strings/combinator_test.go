@@ -5,8 +5,10 @@ import (
 	"math/rand/v2"
 	"testing"
 	"time"
+	"unicode"
 
 	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/okneniz/oh-snap/arbitrary"
 	"github.com/okneniz/parsec"
 )
 
@@ -118,7 +120,7 @@ func TestAny(t *testing.T) {
 		rnd := rand.New(rand.NewPCG(0, uint64(seed)))
 		comb := Any[parsec.Stateless]()
 
-		ohsnap.Check(t, 1000, ohsnap.NewBuilder(rnd).Rune(), func(r rune) bool {
+		ohsnap.Check(t, 1000, arbitrary.Rune(rnd, 0, unicode.MaxRune), func(r rune) bool {
 			result, err := Parse(parsec.Stateless{}, []rune{r}, comb)
 			if err != nil {
 				t.Logf("input: %v", []rune{r})

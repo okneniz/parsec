@@ -8,6 +8,7 @@ import (
 	"github.com/okneniz/parsec"
 
 	"github.com/okneniz/oh-snap"
+	"github.com/okneniz/oh-snap/arbitrary"
 
 	"github.com/okneniz/parsec/strings"
 )
@@ -20,7 +21,7 @@ func TestTimstapsParsing(t *testing.T) {
 
 	rnd := rand.New(rand.NewPCG(0, uint64(seed)))
 
-	arbTime := ohsnap.ArbitraryTime(
+	arbTime := arbitrary.Time(
 		rnd,
 		time.Date(1990, 5, 30, 0, 0, 0, 0, time.UTC),
 		time.Date(2025, 5, 30, 0, 0, 0, 0, time.UTC),

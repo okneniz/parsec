@@ -10,6 +10,7 @@ import (
 	"time"
 
 	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/okneniz/oh-snap/arbitrary"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -168,7 +169,7 @@ func TestAny(t *testing.T) {
 		rnd := rand.New(rand.NewPCG(0, uint64(seed)))
 		comb := Any[parsec.Stateless]()
 
-		ohsnap.Check(t, 1000, ohsnap.NewBuilder(rnd).Byte(), func(b byte) bool {
+		ohsnap.Check(t, 1000, arbitrary.Byte(rnd, 0, math.MaxUint8), func(b byte) bool {
 			result, err := Parse(parsec.Stateless{}, []byte{b}, comb)
 			if err != nil {
 				t.Logf("input: %v", []byte{b})
@@ -376,7 +377,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint8(),
+				arbitrary.Uint8(rnd, 0, math.MaxUint8),
 				binary.BigEndian,
 				ReadAs[uint8, parsec.Stateless](1, "E", binary.BigEndian),
 			)
@@ -387,7 +388,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint8(),
+				arbitrary.Uint8(rnd, 0, math.MaxUint8),
 				binary.LittleEndian,
 				ReadAs[uint8, parsec.Stateless](1, "E", binary.LittleEndian),
 			)
@@ -402,7 +403,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint16(),
+				arbitrary.Uint16(rnd, 0, math.MaxUint16),
 				binary.BigEndian,
 				ReadAs[uint16, parsec.Stateless](2, "E", binary.BigEndian),
 			)
@@ -413,7 +414,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint16(),
+				arbitrary.Uint16(rnd, 0, math.MaxUint16),
 				binary.LittleEndian,
 				ReadAs[uint16, parsec.Stateless](2, "E", binary.LittleEndian),
 			)
@@ -428,7 +429,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint32(),
+				arbitrary.Uint32(rnd, 0, math.MaxUint32),
 				binary.BigEndian,
 				ReadAs[uint32, parsec.Stateless](4, "E", binary.BigEndian),
 			)
@@ -439,7 +440,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint32(),
+				arbitrary.Uint32(rnd, 0, math.MaxUint32),
 				binary.LittleEndian,
 				ReadAs[uint32, parsec.Stateless](4, "E", binary.LittleEndian),
 			)
@@ -454,7 +455,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint64(),
+				arbitrary.Uint64(rnd, 0, math.MaxUint64),
 				binary.BigEndian,
 				ReadAs[uint64, parsec.Stateless](8, "E", binary.BigEndian),
 			)
@@ -465,7 +466,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Uint64(),
+				arbitrary.Uint64(rnd, 0, math.MaxUint64),
 				binary.LittleEndian,
 				ReadAs[uint64, parsec.Stateless](8, "E", binary.LittleEndian),
 			)
@@ -480,7 +481,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int8(),
+				arbitrary.Int8(rnd, 0, math.MaxInt8),
 				binary.BigEndian,
 				ReadAs[int8, parsec.Stateless](1, "E", binary.BigEndian),
 			)
@@ -491,7 +492,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int8(),
+				arbitrary.Int8(rnd, 0, math.MaxInt8),
 				binary.LittleEndian,
 				ReadAs[int8, parsec.Stateless](1, "E", binary.LittleEndian),
 			)
@@ -506,7 +507,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int16(),
+				arbitrary.Int16(rnd, 0, math.MaxInt16),
 				binary.BigEndian,
 				ReadAs[int16, parsec.Stateless](2, "E", binary.BigEndian),
 			)
@@ -517,7 +518,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int16(),
+				arbitrary.Int16(rnd, 0, math.MaxInt16),
 				binary.LittleEndian,
 				ReadAs[int16, parsec.Stateless](2, "E", binary.LittleEndian),
 			)
@@ -532,7 +533,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int32(),
+				arbitrary.Int32(rnd, 0, math.MaxInt32),
 				binary.BigEndian,
 				ReadAs[int32, parsec.Stateless](4, "E", binary.BigEndian),
 			)
@@ -543,7 +544,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int32(),
+				arbitrary.Int32(rnd, 0, math.MaxInt32),
 				binary.LittleEndian,
 				ReadAs[int32, parsec.Stateless](4, "E", binary.LittleEndian),
 			)
@@ -558,7 +559,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int64(),
+				arbitrary.Int64(rnd, 0, math.MaxInt64),
 				binary.BigEndian,
 				ReadAs[int64, parsec.Stateless](8, "E", binary.BigEndian),
 			)
@@ -569,7 +570,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Int64(),
+				arbitrary.Int64(rnd, 0, math.MaxInt64),
 				binary.LittleEndian,
 				ReadAs[int64, parsec.Stateless](8, "E", binary.LittleEndian),
 			)
@@ -584,7 +585,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Float32(),
+				arbitrary.Float32(rnd, 0, math.MaxFloat32),
 				binary.BigEndian,
 				ReadAs[float32, parsec.Stateless](4, "E", binary.BigEndian),
 			)
@@ -595,7 +596,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Float32(),
+				arbitrary.Float32(rnd, 0, math.MaxFloat32),
 				binary.LittleEndian,
 				ReadAs[float32, parsec.Stateless](4, "E", binary.LittleEndian),
 			)
@@ -610,7 +611,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Float64(),
+				arbitrary.Float64(rnd, 0, math.MaxFloat64),
 				binary.BigEndian,
 				ReadAs[float64, parsec.Stateless](8, "E", binary.BigEndian),
 			)
@@ -621,7 +622,7 @@ func TestReadAs(t *testing.T) {
 
 			checkReadAs(
 				t,
-				ohsnap.NewBuilder(rnd).Float64(),
+				arbitrary.Float64(rnd, 0, math.MaxFloat64),
 				binary.LittleEndian,
 				ReadAs[float64, parsec.Stateless](8, "E", binary.LittleEndian),
 			)

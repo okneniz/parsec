@@ -463,6 +463,8 @@ github.com/nunnatsa/ginkgolinter v0.24.0 h1:Mp0EagluLFP98JatP6nqp/gGEoljNG97uf9A
 github.com/nunnatsa/ginkgolinter v0.24.0/go.mod h1:2ZMRuzX6+3XXyY6UZOwb6n+MCocVGbkIsDBC4vuWz5c=
 github.com/okneniz/oh-snap v0.0.1 h1:lLfvLP0h9DqpXKP0fngZSHGEP68pF4tTo3wcfG9sZH4=
 github.com/okneniz/oh-snap v0.0.1/go.mod h1:uTSdxe5FwA4VEBH0cblEJ9QI1gULWCY5VhNRU7TQPig=
+github.com/okneniz/oh-snap v0.0.3 h1:Grm/kGiPCkmo23Pd45DZEc5YAyqqpAmasohXU9PIhbQ=
+github.com/okneniz/oh-snap v0.0.3/go.mod h1:uTSdxe5FwA4VEBH0cblEJ9QI1gULWCY5VhNRU7TQPig=
 github.com/onsi/ginkgo/v2 v2.32.0 h1:Hw7s2pVrQo/8Yz5N77qdnpHaoc+c6cC9WIV1Jce+J6E=
 github.com/onsi/ginkgo/v2 v2.32.0/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
 github.com/onsi/gomega v1.42.1 h1:iN1rCUX+44NZ1Dc97MPoeFYbFR0vh8zxoxMFwKdyZ6I=

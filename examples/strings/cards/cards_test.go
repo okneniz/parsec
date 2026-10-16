@@ -11,6 +11,7 @@ import (
 	"github.com/okneniz/parsec"
 
 	ohsnap "github.com/okneniz/oh-snap"
+	"github.com/okneniz/oh-snap/arbitrary"
 	. "github.com/okneniz/parsec/strings"
 )
 
@@ -31,9 +32,9 @@ func TestCards(t *testing.T) {
 	noice := Many(10, Try(NotRange[parsec.Stateless]("expected not digit", '0', '9')))
 	parse := Skip(noice, SepEndBy(0, cards, noice))
 
-	arbNoice := ohsnap.ArbitrarySlice(
+	arbNoice := arbitrary.Slice(
 		rnd,
-		ohsnap.ArbitraryString(rnd, "abcdefghijklmnopqrstuvwxyz", 1, 100),
+		arbitrary.String(rnd, "abcdefghijklmnopqrstuvwxyz", 1, 100),
 		10,
 		20,
 	)
@@ -51,7 +52,7 @@ func TestCards(t *testing.T) {
 	const expectedSize = 4
 
 	arbCard := ohsnap.OneOfValue(rnd, slices.Collect(maps.Keys(cardsNums))...)
-	arbCards := ohsnap.ArbitrarySlice(rnd, arbCard, expectedSize, expectedSize)
+	arbCards := arbitrary.Slice(rnd, arbCard, expectedSize, expectedSize)
 
 	arb := ohsnap.Map(
 		ohsnap.Combine(arbNoice, arbCards),
