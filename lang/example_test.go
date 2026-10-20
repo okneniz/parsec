@@ -83,7 +83,8 @@ func ExampleParser_PrefixForm() {
 
 // A ternary conditional operator: right associative, sitting between
 // the assignment and the additive operators, its middle part a full
-// expression.
+// expression — or omitted, as in a ?: c of gnu c, which parses into a
+// Conditional with a nil Then.
 func ExampleParser_Ternary() {
 	def := lang.Definition[parsec.Stateless]{
 		Operators:   []string{"+", "*"},
@@ -113,7 +114,15 @@ func ExampleParser_Ternary() {
 	}
 
 	fmt.Println(chained)
+
+	omitted, oerr := parse(parsec.Stateless{}, strings.Buffer([]rune("x = a + 1 ?: c")))
+	if oerr != nil {
+		panic(oerr)
+	}
+
+	fmt.Println(omitted)
 	// Output:
 	// (= x (?: a b c))
 	// (?: a b (?: c d e))
+	// (= x (?: (+ a 1) c))
 }

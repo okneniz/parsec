@@ -47,6 +47,9 @@ type Binary struct {
 	L, R Expr
 }
 
+// Conditional is the operator a ? b : c. Then is nil when the middle
+// operand is omitted, a ?: c of gnu c: the parser reports the
+// omission and leaves what stands in for the middle to the consumer.
 type Conditional struct {
 	Cond Expr
 	Then Expr
@@ -74,6 +77,10 @@ func (e Binary) String() string {
 }
 
 func (e Conditional) String() string {
+	if e.Then == nil {
+		return "(?: " + e.Cond.String() + " " + e.Else.String() + ")"
+	}
+
 	return "(?: " + e.Cond.String() + " " + e.Then.String() + " " + e.Else.String() + ")"
 }
 
@@ -130,8 +137,11 @@ func (p *Parser[S]) InfixRight(prec int, ops ...string) *Parser[S] {
 // condition reduces the operators tighter than the conditional into
 // itself, the middle part is a full expression — the comma and the
 // assignment of c live in it — and the else branch recurses at the
-// precedence of the conditional. The colon must not carry fixity of
-// its own: the middle part would take it for an infix operator.
+// precedence of the conditional. The middle part may be omitted, the
+// colon following the question directly: a ?: c of gnu c parses into
+// a Conditional with a nil Then, and a language without the form
+// rejects it in the consumer. The colon must not carry fixity of its
+// own: the middle part would take it for an infix operator.
 func (p *Parser[S]) Ternary(prec int, question, colon string) *Parser[S] {
 	p.ternary[question] = ternaryDef{colon: colon, prec: prec}
 	return p
@@ -307,13 +317,14 @@ func (p *Parser[S]) expr(
 	}))
 
 	// the colons of the conditional operators match by lexeme too,
-	// whatever kind their tokens carry
+	// whatever kind their tokens carry; a probe, since the colon may
+	// follow the question directly
 	colons := make(map[string]parsec.Combinator[rune, strings.Position, Token, S], len(p.ternary))
 
 	for question, def := range p.ternary {
-		colons[question] = tokens.Satisfy(lex, "conditional colon", func(t Token) bool {
+		colons[question] = parsec.Try(tokens.Satisfy(lex, "conditional colon", func(t Token) bool {
 			return string(t.Lexeme) == def.colon
-		})
+		}))
 	}
 
 	return func(state S, buf parsec.Buffer[rune, strings.Position]) (Expr, parsec.Error[strings.Position]) {
@@ -337,20 +348,28 @@ func (p *Parser[S]) expr(
 				// whole conditional
 				items = reduceInfix(items, p.fixity, Fixity{Prec: def.prec})
 				cond := items[len(items)-1].expr
+				colon := colons[string(next.Lexeme)]
 
-				// the middle part is a full expression, like the one
-				// in parentheses — the comma and the assignment of c
-				// live here
-				then, terr := rec(state, buf)
-				if terr != nil {
-					return nil, terr
-				}
+				// the middle part may be omitted, the colon right after
+				// the question — a ?: c of gnu c; present, it is a full
+				// expression, like the one in parentheses — the comma
+				// and the assignment of c live here
+				var then Expr
 
-				if _, cerr := colons[string(next.Lexeme)](state, buf); cerr != nil {
-					return nil, parsec.NewParseError(
-						buf.Position(),
-						"expected "+strconv.Quote(def.colon)+" to close the conditional operator "+strconv.Quote(string(next.Lexeme)),
-					)
+				if _, cerr := colon(state, buf); cerr != nil {
+					middle, merr := rec(state, buf)
+					if merr != nil {
+						return nil, merr
+					}
+
+					if _, cerr = colon(state, buf); cerr != nil {
+						return nil, parsec.NewParseError(
+							buf.Position(),
+							"expected "+strconv.Quote(def.colon)+" to close the conditional operator "+strconv.Quote(string(next.Lexeme)),
+						)
+					}
+
+					then = middle
 				}
 
 				// the else branch recurses at the precedence of the

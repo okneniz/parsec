@@ -401,6 +401,15 @@ func TestTernary(t *testing.T) {
 		{"a ? b : c, d", "(, (?: a b c) d)"},
 		{"a, b, c", "(, (, a b) c)"},
 		{"(a, b)", "(, a b)"},
+		{"a ?: b", "(?: a b)"},
+		{"a ? : b", "(?: a b)"},
+		{"a ?: b ?: c", "(?: a (?: b c))"},
+		{"a ?: b ? c : d", "(?: a (?: b c d))"},
+		{"a ? b ?: c : d", "(?: a (?: b c) d)"},
+		{"x = a ?: b", "(= x (?: a b))"},
+		{"a + 1 ?: b", "(?: (+ a 1) b)"},
+		{"a ?: b, c", "(, (?: a b) c)"},
+		{"(a ?: b) + 1", "(+ (?: a b) 1)"},
 	}
 
 	parse := New(ternaryDefinition(), p)
@@ -428,8 +437,9 @@ func TestTernaryErrors(t *testing.T) {
 		want string
 	}{
 		{"missing colon", "a ? b", "to close the conditional operator"},
-		{"missing middle", "a ? : c", "expected operand"},
+		{"missing else", "a ?:", "expected operand"},
 		{"missing condition", "? a : b", "expected operand"},
+		{"stray colon", "a ?: b : c", "expected end of input"},
 	}
 
 	for _, test := range tests {

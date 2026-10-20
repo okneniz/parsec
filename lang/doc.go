@@ -39,9 +39,9 @@
 // andalso and orelse of sml are infix operators of their own level.
 // Ternary declares the conditional the table cannot hold in one
 // lexeme, its question and its colon: right associative, the middle
-// part a full expression. An operator of the lowest precedence is
-// how a comma operator fits — the sub-levels of the ladder keep it
-// out of the argument lists.
+// part a full expression or omitted — a ?: c of gnu c. An operator
+// of the lowest precedence is how a comma operator fits — the
+// sub-levels of the ladder keep it out of the argument lists.
 //
 // The forms a language has beyond operators — if e then e else e
 // above the infix chain, a sizeof e or a let among the operands —
